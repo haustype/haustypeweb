@@ -27,20 +27,23 @@ const font = fontData[slug ?? ''] ?? { name: slug ?? 'Font' };
 >
   <Header />
   <main class="bg-haus-grey min-h-screen">
-    <article class="grid grid-cols-6 gap-4 w-full max-w-content mx-auto px-8 py-16">
-      <header class="col-span-6">
-        <h1 class="text-[20px] font-normal text-black mb-8">{font.name}</h1>
+    <article class="w-full px-8 py-16">
+      <header class="w-full max-w-content mx-auto mb-8">
+        <h1 class="text-[20px] font-normal text-black">{font.name}</h1>
       </header>
-      <div class="col-span-6 md:col-span-4">
+      <div class="w-full">
         <fontdue-type-testers collection-slug={slug} />
       </div>
-      <div class="col-span-6 md:col-span-2">
+      <div class="w-full max-w-content mx-auto mt-8">
         {font.collectionId && (
           <fontdue-buy-button
             collection-id={font.collectionId}
             collection-name={font.name}
           />
         )}
+      </div>
+      <div class="w-full mt-16">
+        <fontdue-character-viewer collection-slug={slug} />
       </div>
     </article>
   </main>
