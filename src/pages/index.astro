@@ -36,9 +36,13 @@ const fontsInUse = [
   description={aboutText}
   image="/hero.png"
 >
-  <Header />
+  <div class="h-screen flex flex-col overflow-hidden">
+    <Header />
+    <main class="flex-1 flex min-h-0">
+      <Hero items={heroItems} />
+    </main>
+  </div>
   <main>
-    <Hero items={heroItems} />
     <About text={aboutText} />
     <TypefacesGrid typefaces={typefaces} />
     <FontsInUseCarousel items={fontsInUse} />
