@@ -5,7 +5,7 @@ import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://your-site.netlify.app', // Update after Netlify deployment
+  site: 'https://haustypeweb.netlify.app',
   integrations: [
     tailwind(),
     sitemap(),

@@ -7,9 +7,9 @@ import TypefacesGrid from '../components/TypefacesGrid.astro';
 import FontsInUseCarousel from '../components/FontsInUseCarousel.astro';
 import Footer from '../components/Footer.astro';
 
-// Placeholder data - will be replaced by CMS
+// Hero display - red book specimen (haus_03)
 const heroItems = [
-  { type: 'image' as const, src: '/hero.jpg', alt: 'Haus Type font display - Gemini, Grissom, Young' },
+  { type: 'image' as const, src: '/hero.png', alt: 'Haus Type font display - Gemini, Grissom, Young' },
 ];
 
 const aboutText = 'Haus Type is a type foundry situated in the heart of Valencia, Spain. For more than twenty years we have been creating retail and custom-made typefaces for global businesses.';
@@ -23,18 +23,18 @@ const typefaces = [
   { name: 'Psyche Delica', category: 'Burly', slug: 'psyche-delica', styles: 23 },
 ];
 
-// Placeholder images - replace with real client work via CMS
+// Fonts In Use carousel - client work showcase
 const fontsInUse = [
-  { image: '/hero.jpg', alt: 'Font showcase' },
-  { image: '/hero.jpg', alt: 'Font in use example' },
-  { image: '/hero.jpg', alt: 'Client work example' },
+  { image: '/fonts-in-use/illusions.png', alt: 'Bruce Nauman Illusions exhibition on architectural facade' },
+  { image: '/fonts-in-use/super-juicy.png', alt: 'SUPER JUICY packaging' },
+  { image: '/fonts-in-use/mezcal.png', alt: 'Mezcal de Oaxaca brochure' },
 ];
 ---
 
 <BaseLayout
   title="Haus Type | Type Foundry"
   description={aboutText}
-  image="/hero.jpg"
+  image="/hero.png"
 >
   <Header />
   <main>
