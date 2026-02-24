@@ -13,22 +13,22 @@ const { items } = Astro.props;
 const carouselId = `carousel-${Math.random().toString(36).slice(2)}`;
 ---
 
-<section class="bg-haus-grey pt-10 md:pt-12 pb-[100px]">
-  <div class="w-full max-w-content mx-auto px-[30px]">
+<section class="bg-haus-grey pt-10 md:pt-12 pb-12">
+  <div class="w-full max-w-content mx-auto px-8">
     <h2 class="text-[20px] font-normal text-black mb-8">
       Fonts In Use
     </h2>
     <div class="relative">
       <div class="carousel-viewport w-full overflow-hidden" id={`${carouselId}-viewport`}>
         <div class="carousel-track flex gap-4 transition-transform duration-300 ease-out" id={`${carouselId}-track`}>
-          {items.map((item) => (
+          {[...items, ...items].map((item, i) => (
             <div class="carousel-slide flex-shrink-0 flex-[0_0_100%] md:flex-[0_0_calc(50%-8px)] lg:flex-[0_0_calc(33.333%-11px)]">
               <img
                 src={item.image}
                 alt={item.alt}
                 width={600}
                 height={400}
-                class="w-full h-auto object-cover rounded-[10px]"
+                class="w-full h-auto object-cover rounded-lg"
               />
             </div>
           ))}
@@ -36,21 +36,21 @@ const carouselId = `carousel-${Math.random().toString(36).slice(2)}`;
       </div>
       <button
         type="button"
-        class="carousel-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-4 w-10 h-10 flex items-center justify-center bg-haus-black text-white rounded-full hover:bg-stone-800 transition-colors focus:outline-none focus:ring-2 focus:ring-haus-red"
+        class="carousel-prev absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-haus-black text-white rounded-full hover:bg-stone-800 transition-colors focus:outline-none focus:ring-2 focus:ring-haus-red z-10"
         aria-label="Previous slide"
         data-carousel-id={carouselId}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M15 18l-6-6 6-6"/>
         </svg>
       </button>
       <button
         type="button"
-        class="carousel-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-4 w-10 h-10 flex items-center justify-center bg-haus-black text-white rounded-full hover:bg-stone-800 transition-colors focus:outline-none focus:ring-2 focus:ring-haus-red"
+        class="carousel-next absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-haus-black text-white rounded-full hover:bg-stone-800 transition-colors focus:outline-none focus:ring-2 focus:ring-haus-red z-10"
         aria-label="Next slide"
         data-carousel-id={carouselId}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18l6-6-6-6"/>
         </svg>
       </button>
@@ -68,14 +68,16 @@ const carouselId = `carousel-${Math.random().toString(36).slice(2)}`;
     if (!viewport || !track || !prevBtn || !nextBtn) return;
 
     const slides = track.querySelectorAll('.carousel-slide');
-    if (slides.length <= 1) {
+    const total = slides.length;
+    const count = total / 2;
+
+    if (count <= 1) {
       prevBtn.setAttribute('aria-hidden', 'true');
       nextBtn.setAttribute('aria-hidden', 'true');
       return;
     }
 
     let index = 0;
-    const total = slides.length;
     const gap = 16;
 
     function getSlideWidth() {
@@ -83,26 +85,48 @@ const carouselId = `carousel-${Math.random().toString(36).slice(2)}`;
       return slide ? slide.offsetWidth + gap : 0;
     }
 
-    function updateCarousel() {
+    function goTo(i, animate) {
       const slideWidth = getSlideWidth();
-      const offset = -index * slideWidth;
+      const offset = -i * slideWidth;
+      track.style.transition = animate ? 'transform 300ms ease-out' : 'none';
       track.style.transform = `translateX(${offset}px)`;
     }
 
+    function handleTransitionEnd() {
+      if (index >= count) {
+        index = 0;
+        goTo(0, false);
+      } else if (index < 0) {
+        index = count - 1;
+        goTo(count - 1, false);
+      }
+    }
+
     prevBtn.addEventListener('click', () => {
-      index = (index - 1 + total) % total;
-      updateCarousel();
+      if (index === 0) {
+        index = count;
+        goTo(count, false);
+        requestAnimationFrame(() => {
+          index = count - 1;
+          goTo(count - 1, true);
+        });
+      } else {
+        index--;
+        goTo(index, true);
+      }
     });
 
     nextBtn.addEventListener('click', () => {
-      index = (index + 1) % total;
-      updateCarousel();
+      index++;
+      goTo(index, true);
     });
 
-    const resizeObserver = new ResizeObserver(() => updateCarousel());
+    track.addEventListener('transitionend', handleTransitionEnd);
+
+    const resizeObserver = new ResizeObserver(() => goTo(index, false));
     resizeObserver.observe(viewport);
 
-    requestAnimationFrame(() => updateCarousel());
+    requestAnimationFrame(() => goTo(0, false));
   }
 
   if (document.readyState === 'loading') {

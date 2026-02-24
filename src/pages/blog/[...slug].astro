@@ -23,7 +23,7 @@ const { Content } = await post.render();
 >
   <Header />
   <main class="bg-haus-grey min-h-screen">
-    <article class="grid grid-cols-6 gap-4 w-full max-w-content mx-auto px-[30px] py-16">
+    <article class="grid grid-cols-6 gap-4 w-full max-w-content mx-auto px-8 py-16">
       <header class="col-span-6 md:col-span-4 md:col-start-2">
         <h1 class="text-3xl md:text-4xl font-bold text-black mb-4">{post.data.title}</h1>
         <time datetime={post.data.pubDate.toISOString()} class="text-stone-500 text-sm">

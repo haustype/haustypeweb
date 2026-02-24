@@ -9,7 +9,7 @@ const navItems = [
 ---
 
 <header class="text-white" style="background-color: #0a0a0a;">
-  <div class="relative flex justify-between items-center w-full max-w-content mx-auto px-[30px] py-3">
+  <div class="relative flex justify-between items-center w-full max-w-content mx-auto px-8 py-4">
     <a href="/" class="flex items-center gap-2 font-normal text-base tracking-tight hover:opacity-80 transition-opacity z-10">
       <img src="/logo.svg" alt="" class="h-[13px] w-auto" aria-hidden="true" />
       Haus Type
@@ -26,7 +26,7 @@ const navItems = [
     </a>
   </div>
   <!-- Mobile nav -->
-  <nav class="md:hidden px-[30px] pb-3 flex flex-wrap gap-4" aria-label="Mobile navigation">
+  <nav class="md:hidden px-8 pb-4 flex flex-wrap gap-4" aria-label="Mobile navigation">
     {navItems.map((item) => (
       <a href={item.href} class="text-base hover:opacity-80 transition-opacity">
         {item.label}
