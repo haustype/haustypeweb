@@ -36,11 +36,11 @@ const fontsInUse = [
   description={aboutText}
   image="/hero.png"
 >
-  <div class="h-screen flex flex-col overflow-hidden">
-    <Header />
-    <main class="flex-1 flex min-h-0">
-      <Hero items={heroItems} />
-    </main>
+  <div class="relative">
+    <Hero items={heroItems} />
+    <div class="absolute top-0 left-0 right-0 z-10">
+      <Header />
+    </div>
   </div>
   <main>
     <About text={aboutText} />
