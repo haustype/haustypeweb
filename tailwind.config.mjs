@@ -16,6 +16,9 @@ export default {
       gridTemplateColumns: {
         '6': 'repeat(6, minmax(0, 1fr))',
       },
+      maxWidth: {
+        'content': '1512px',
+      },
     },
   },
   plugins: [typography],
