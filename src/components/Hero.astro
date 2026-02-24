@@ -11,8 +11,8 @@ const { items } = Astro.props;
 const currentItem = items[0] ?? { type: 'image', src: '/hero-placeholder.jpg', alt: 'Haus Type font display' };
 ---
 
-<section class="bg-haus-black min-h-screen flex items-center justify-center">
-  <div class="w-full max-w-content px-[30px] flex justify-center items-center">
+<section class="bg-haus-black h-screen flex items-center justify-center">
+  <div class="w-full max-w-content px-[30px] flex justify-center items-center h-full">
       {currentItem.type === 'video' ? (
         <video
           src={currentItem.src}
@@ -20,7 +20,7 @@ const currentItem = items[0] ?? { type: 'image', src: '/hero-placeholder.jpg', a
           muted
           loop
           playsinline
-          class="max-w-full max-h-[85vh] object-contain"
+          class="max-w-full max-h-[65vh] w-auto object-contain"
         />
       ) : (
         <img
@@ -28,7 +28,7 @@ const currentItem = items[0] ?? { type: 'image', src: '/hero-placeholder.jpg', a
           alt={currentItem.alt ?? 'Font showcase'}
           width={1200}
           height={800}
-          class="max-w-full max-h-[85vh] object-contain"
+          class="max-w-full max-h-[65vh] w-auto object-contain"
           fetchpriority="high"
         />
       )}
