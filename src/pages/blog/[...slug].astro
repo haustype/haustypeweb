@@ -1,0 +1,39 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+---
+
+<BaseLayout
+  title={`${post.data.title} | Haus Type`}
+  description={post.data.description}
+  image={post.data.image}
+>
+  <Header />
+  <main class="bg-haus-grey min-h-screen">
+    <article class="grid grid-cols-6 gap-6 max-w-7xl mx-auto px-6 py-16">
+      <header class="col-span-6 md:col-span-4 md:col-start-2">
+        <h1 class="text-3xl md:text-4xl font-bold text-black mb-4">{post.data.title}</h1>
+        <time datetime={post.data.pubDate.toISOString()} class="text-stone-500 text-sm">
+          {post.data.pubDate.toLocaleDateString('en-GB', { dateStyle: 'long' })}
+        </time>
+      </header>
+      <div class="col-span-6 md:col-span-4 md:col-start-2 prose prose-lg max-w-none">
+        <Content />
+      </div>
+    </article>
+  </main>
+  <Footer />
+</BaseLayout>

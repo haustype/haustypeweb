@@ -1,0 +1,19 @@
+---
+interface Props {
+  name: string;
+  category: string;
+  styles: number;
+  slug: string;
+}
+
+const { name, category, styles } = Astro.props;
+---
+
+<a href={`/fonts/${Astro.props.slug}`} class="block bg-white rounded-sm p-6 md:p-8 shadow-sm hover:shadow-md transition-shadow group">
+  <h3 class="text-2xl md:text-3xl font-bold text-black mb-2 group-hover:text-haus-red transition-colors" style="font-family: var(--font-display, inherit)">
+    {name}
+  </h3>
+  <p class="text-sm text-stone-500">
+    {category} · {styles} {styles === 1 ? 'style' : 'styles'}
+  </p>
+</a>

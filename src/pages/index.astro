@@ -1,0 +1,47 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import About from '../components/About.astro';
+import TypefacesGrid from '../components/TypefacesGrid.astro';
+import FontsInUseCarousel from '../components/FontsInUseCarousel.astro';
+import Footer from '../components/Footer.astro';
+
+// Placeholder data - will be replaced by CMS
+const heroItems = [
+  { type: 'image' as const, src: '/hero.jpg', alt: 'Haus Type font display - Gemini, Grissom, Young' },
+];
+
+const aboutText = 'Haus Type is a type foundry situated in the heart of Valencia, Spain. For more than twenty years we have been creating retail and custom-made typefaces for global businesses.';
+
+const typefaces = [
+  { name: 'Guglielmo Marconi', category: 'Squarza', styles: 1, slug: 'guglielmo-marconi' },
+  { name: 'Aerial Quango', category: 'Cimbria', styles: 5, slug: 'aerial-quango' },
+  { name: 'Salsiccia', category: 'Salicola', slug: 'salsiccia', styles: 1 },
+  { name: 'Cinema Clubs', category: 'Metroatic', slug: 'cinema-clubs', styles: 0 },
+  { name: 'Puerto Vallarta', category: 'Chronique', slug: 'puerto-vallarta', styles: 1 },
+  { name: 'Psyche Delica', category: 'Burly', slug: 'psyche-delica', styles: 23 },
+];
+
+// Placeholder images - replace with real client work via CMS
+const fontsInUse = [
+  { image: '/hero.jpg', alt: 'Font showcase' },
+  { image: '/hero.jpg', alt: 'Font in use example' },
+  { image: '/hero.jpg', alt: 'Client work example' },
+];
+---
+
+<BaseLayout
+  title="Haus Type | Type Foundry"
+  description={aboutText}
+  image="/hero.jpg"
+>
+  <Header />
+  <main>
+    <Hero items={heroItems} />
+    <About text={aboutText} />
+    <TypefacesGrid typefaces={typefaces} />
+    <FontsInUseCarousel items={fontsInUse} />
+  </main>
+  <Footer />
+</BaseLayout>

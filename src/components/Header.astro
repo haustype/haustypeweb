@@ -1,0 +1,35 @@
+---
+const navItems = [
+  { href: '/fonts', label: 'Fonts' },
+  { href: '/in-use', label: 'In Use' },
+  { href: '/projects', label: 'Projects' },
+  { href: '/stuff', label: 'Stuff' },
+  { href: '/information', label: 'Information' },
+];
+---
+
+<header class="bg-haus-black text-white">
+  <div class="grid grid-cols-6 gap-4 max-w-7xl mx-auto px-6 py-4 items-center">
+    <a href="/" class="col-span-2 md:col-span-1 font-bold text-lg tracking-tight hover:opacity-80 transition-opacity">
+      Haus Type
+    </a>
+    <nav class="hidden md:flex col-span-4 justify-center gap-8" aria-label="Main navigation">
+      {navItems.map((item) => (
+        <a href={item.href} class="text-sm uppercase tracking-wider hover:opacity-80 transition-opacity">
+          {item.label}
+        </a>
+      ))}
+    </nav>
+    <a href="/cart" class="col-span-2 md:col-span-1 text-right text-sm uppercase tracking-wider hover:opacity-80 transition-opacity">
+      Cart
+    </a>
+  </div>
+  <!-- Mobile nav -->
+  <nav class="md:hidden px-6 pb-4 flex flex-wrap gap-4" aria-label="Mobile navigation">
+    {navItems.map((item) => (
+      <a href={item.href} class="text-sm uppercase tracking-wider hover:opacity-80 transition-opacity">
+        {item.label}
+      </a>
+    ))}
+  </nav>
+</header>
