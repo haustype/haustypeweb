@@ -28,8 +28,23 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+    <link rel="stylesheet" href="https://js.fontdue.com/fontdue.css" />
+    <script type="module">
+      import fontdue from "https://js.fontdue.com/fontdue.esm.js";
+      fontdue.initialize({
+        url: "https://store.haustype.com",
+        config: {
+          typeTester: {
+            selectButton: true,
+            selectButtonLabel: "Buy",
+            selectButtonStyle: "outlined",
+          },
+        },
+      });
+    </script>
   </head>
   <body>
+    <fontdue-store-modal></fontdue-store-modal>
     <slot />
   </body>
 </html>

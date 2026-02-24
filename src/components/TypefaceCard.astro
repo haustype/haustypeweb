@@ -5,27 +5,38 @@ interface Props {
   styles: number;
   slug: string;
   image: string;
+  collectionId?: string;
 }
 
-const { name, category, styles, image } = Astro.props;
+const { name, category, styles, image, collectionId } = Astro.props;
 ---
 
-<a href={`/fonts/${Astro.props.slug}`} class="block bg-white rounded-lg overflow-hidden group">
-  <div class="pt-12 md:pt-16 px-6 md:px-8 pb-6 md:pb-8 flex justify-center items-center">
-    <img
-      src={image}
-      alt={name}
-      width={280}
-      height={200}
-      class="w-[280px] h-[200px] object-contain"
-    />
-  </div>
-  <div class="p-4 md:p-6 flex justify-between items-baseline gap-4">
-    <h3 class="text-base font-normal text-black group-hover:text-haus-red transition-colors truncate">
-      {name}
-    </h3>
-    <span class="text-base text-stone-500 flex-shrink-0">
-      {styles} {styles === 1 ? 'style' : 'styles'}
-    </span>
-  </div>
-</a>
+<div class="block bg-white rounded-lg overflow-hidden group">
+  <a href={`/fonts/${Astro.props.slug}`} class="block">
+    <div class="pt-12 md:pt-16 px-6 md:px-8 pb-6 md:pb-8 flex justify-center items-center">
+      <img
+        src={image}
+        alt={name}
+        width={280}
+        height={200}
+        class="w-[280px] h-[200px] object-contain"
+      />
+    </div>
+    <div class="p-4 md:p-6 flex justify-between items-baseline gap-4">
+      <h3 class="text-base font-normal text-black group-hover:text-haus-red transition-colors truncate">
+        {name}
+      </h3>
+      <span class="text-base text-stone-500 flex-shrink-0">
+        {styles} {styles === 1 ? 'style' : 'styles'}
+      </span>
+    </div>
+  </a>
+  {collectionId && (
+    <div class="px-4 md:px-6 pb-4 md:pb-6">
+      <fontdue-buy-button
+        collection-id={collectionId}
+        collection-name={name}
+      />
+    </div>
+  )}
+</div>

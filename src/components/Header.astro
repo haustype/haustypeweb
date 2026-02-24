@@ -21,9 +21,14 @@ const navItems = [
         </a>
       ))}
     </nav>
-    <a href="/cart" class="text-base hover:opacity-80 transition-opacity z-10 ml-auto">
+    <button
+      type="button"
+      fontdue-click="open-store-modal"
+      fontdue-store-route="cart"
+      class="text-base hover:opacity-80 transition-opacity z-10 ml-auto bg-transparent border-none cursor-pointer font-inherit"
+    >
       Cart
-    </a>
+    </button>
   </div>
   <!-- Mobile nav -->
   <nav class="md:hidden px-8 pb-4 flex flex-wrap gap-4" aria-label="Mobile navigation">

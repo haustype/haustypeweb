@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+export async function getStaticPaths() {
+  const fontSlugs = ['metrostile', 'guglielmo-marconi', 'aerial-quango', 'salsiccia', 'cinema-clubs', 'puerto-vallarta', 'psyche-delica'];
+  return fontSlugs.map((slug) => ({ params: { slug } }));
+}
+
+const { slug } = Astro.params;
+const fontData: Record<string, { name: string; collectionId?: string }> = {
+  metrostile: { name: 'Metrostile', collectionId: 'Rm9udENvbGxlY3Rpb246MTkzNzI0Mzc0MDk1NTc3NDcwMA==' },
+  'guglielmo-marconi': { name: 'Guglielmo Marconi*' },
+  'aerial-quango': { name: 'Aerial Quango' },
+  salsiccia: { name: 'SALS ICCIA' },
+  'cinema-clubs': { name: 'Cinema Clubs' },
+  'puerto-vallarta': { name: 'Puerto Vallarta' },
+  'psyche-delica': { name: 'PSYCHE DELICA' },
+};
+const font = fontData[slug ?? ''] ?? { name: slug ?? 'Font' };
+---
+
+<BaseLayout
+  title={`${font.name} | Haus Type`}
+  description={`${font.name} - Explore and purchase from Haus Type foundry.`}
+>
+  <Header />
+  <main class="bg-haus-grey min-h-screen">
+    <article class="grid grid-cols-6 gap-4 w-full max-w-content mx-auto px-8 py-16">
+      <header class="col-span-6">
+        <h1 class="text-[20px] font-normal text-black mb-8">{font.name}</h1>
+      </header>
+      <div class="col-span-6 md:col-span-4">
+        <fontdue-type-testers collection-slug={slug} />
+      </div>
+      <div class="col-span-6 md:col-span-2">
+        {font.collectionId && (
+          <fontdue-buy-button
+            collection-id={font.collectionId}
+            collection-name={font.name}
+          />
+        )}
+      </div>
+    </article>
+  </main>
+  <Footer />
+</BaseLayout>
