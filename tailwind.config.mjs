@@ -6,9 +6,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        'haus-black': '#000000',
+        'haus-black': '#0a0a0a',
         'haus-red': '#E31E24',
-        'haus-grey': '#F5F5F0',
+        'haus-grey': '#f0f0f0',
       },
       fontFamily: {
         sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
