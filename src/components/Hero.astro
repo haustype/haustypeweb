@@ -11,7 +11,7 @@ const { items } = Astro.props;
 const currentItem = items[0] ?? { type: 'image', src: '/hero-placeholder.jpg', alt: 'Haus Type font display' };
 ---
 
-<section class="bg-haus-black h-screen flex items-center justify-center">
+<section class="h-screen flex items-center justify-center" style="background-color: #0a0a0a;">
   <div class="w-full max-w-content px-[30px] flex justify-center items-center h-full">
       {currentItem.type === 'video' ? (
         <video
