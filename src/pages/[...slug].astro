@@ -2,32 +2,74 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import PortableText from '../components/PortableText.astro';
 import { getCollection } from 'astro:content';
+import { safeLoadQuery } from '../sanity/lib/safe-fetch';
 
 export async function getStaticPaths() {
+  const { data: sanityPages } = await safeLoadQuery<Array<{ slug?: { current: string } }>>({
+    query: `*[_type == "page"]{ slug }`,
+  });
+
+  if (sanityPages?.length) {
+    return sanityPages.map((p) => ({
+      params: { slug: p.slug?.current ?? '' },
+      props: { source: 'sanity' as const },
+    }));
+  }
+
   const pages = await getCollection('pages');
   return pages.map((page) => ({
     params: { slug: page.slug },
-    props: { page },
+    props: { page, source: 'astro' as const },
   }));
 }
 
-const { page } = Astro.props;
-const { Content } = await page.render();
+const { slug } = Astro.params;
+const { source, page: astroPage } = Astro.props;
+
+let title = '';
+let description = '';
+let body: unknown = null;
+
+if (source === 'sanity') {
+  const { data: page } = await safeLoadQuery<{
+    title: string;
+    description?: string;
+    body?: unknown;
+  }>({
+    query: `*[_type == "page" && slug.current == $slug][0]{ title, description, body }`,
+    params: { slug },
+  });
+  if (page) {
+    title = page.title;
+    description = page.description ?? '';
+    body = page.body;
+  }
+} else if (astroPage) {
+  title = astroPage.data.title;
+  description = astroPage.data.description ?? '';
+}
+
+const astroContent = astroPage ? await astroPage.render() : null;
 ---
 
 <BaseLayout
-  title={`${page.data.title} | Haus Type`}
-  description={page.data.description}
+  title={`${title} | Haus Type`}
+  description={description}
 >
   <Header />
   <main class="bg-haus-grey min-h-screen">
     <article class="grid grid-cols-6 gap-4 w-full max-w-content mx-auto px-8 py-16">
       <header class="col-span-6">
-        <h1 class="text-3xl md:text-4xl font-bold text-black">{page.data.title}</h1>
+        <h1 class="text-3xl md:text-4xl font-normal text-black">{title}</h1>
       </header>
       <div class="col-span-6 md:col-span-4 prose prose-lg max-w-none">
-        <Content />
+        {source === 'sanity' && body ? (
+          <PortableText value={body} />
+        ) : astroContent ? (
+          <astroContent.Content />
+        ) : null}
       </div>
     </article>
   </main>

@@ -6,6 +6,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        black: '#0a0a0a',
         'haus-black': '#0a0a0a',
         'haus-red': '#E31E24',
         'haus-grey': '#f0f0f0',
@@ -21,5 +22,13 @@ export default {
       },
     },
   },
-  plugins: [typography],
+  plugins: [
+    typography({
+      DEFAULT: {
+        css: {
+          'h1, h2, h3, h4, h5, h6': { fontWeight: '400' },
+        },
+      },
+    }),
+  ],
 };

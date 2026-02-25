@@ -2,14 +2,24 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
+import { safeLoadQuery } from '../../sanity/lib/safe-fetch';
 
 export async function getStaticPaths() {
-  const fontSlugs = ['metrostile', 'guglielmo-marconi', 'aerial-quango', 'salsiccia', 'cinema-clubs', 'puerto-vallarta', 'psyche-delica'];
-  return fontSlugs.map((slug) => ({ params: { slug } }));
+  const { data: typefaces } = await safeLoadQuery<Array<{ slug?: { current: string } }>>({
+    query: `*[_type == "typeface"]{ slug }`,
+  });
+
+  if (typefaces?.length) {
+    return typefaces.map((t) => ({
+      params: { slug: t.slug?.current ?? '' },
+    }));
+  }
+
+  const fallbackSlugs = ['metrostile', 'guglielmo-marconi', 'aerial-quango', 'salsiccia', 'cinema-clubs', 'puerto-vallarta', 'psyche-delica'];
+  return fallbackSlugs.map((slug) => ({ params: { slug } }));
 }
 
-const { slug } = Astro.params;
-const fontData: Record<string, { name: string; collectionId?: string }> = {
+const fallbackFonts: Record<string, { name: string; collectionId?: string }> = {
   metrostile: { name: 'Metrostile', collectionId: 'Rm9udENvbGxlY3Rpb246MTkzNzI0Mzc0MDk1NTc3NDcwMA==' },
   'guglielmo-marconi': { name: 'Guglielmo Marconi*' },
   'aerial-quango': { name: 'Aerial Quango' },
@@ -18,7 +28,20 @@ const fontData: Record<string, { name: string; collectionId?: string }> = {
   'puerto-vallarta': { name: 'Puerto Vallarta' },
   'psyche-delica': { name: 'PSYCHE DELICA' },
 };
-const font = fontData[slug ?? ''] ?? { name: slug ?? 'Font' };
+
+const { slug } = Astro.params;
+
+const { data: typefacesData } = await safeLoadQuery<Array<{
+  name: string;
+  slug?: { current: string };
+  collectionId?: string;
+}>>({
+  query: `*[_type == "typeface"]{ name, slug, collectionId }`,
+});
+
+const font = typefacesData?.find((t) => t.slug?.current === slug)
+  ? { name: typefacesData.find((t) => t.slug?.current === slug)!.name, collectionId: typefacesData.find((t) => t.slug?.current === slug)!.collectionId }
+  : fallbackFonts[slug ?? ''] ?? { name: slug ?? 'Font' };
 ---
 
 <BaseLayout

@@ -10,6 +10,9 @@ dist/
 .env.*
 !.env.example
 
+# Sanity
+.sanity/
+
 # IDE
 .idea/
 .vscode/

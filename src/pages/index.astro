@@ -6,15 +6,15 @@ import About from '../components/About.astro';
 import TypefacesGrid from '../components/TypefacesGrid.astro';
 import FontsInUseCarousel from '../components/FontsInUseCarousel.astro';
 import Footer from '../components/Footer.astro';
+import { safeLoadQuery } from '../sanity/lib/safe-fetch';
+import { urlForImage } from '../sanity/lib/url-for-image';
 
-// Hero display - red book specimen (haus_03)
-const heroItems = [
+// Fallback data when Sanity isn't configured
+const fallbackHeroItems = [
   { type: 'image' as const, src: '/hero.png', alt: 'Haus Type font display - Gemini, Grissom, Young' },
 ];
-
-const aboutText = 'Haus Type is a type foundry situated in the heart of Valencia, Spain. For more than twenty years we have been creating retail and custom-made typefaces for global businesses.';
-
-const typefaces = [
+const fallbackAboutText = 'Haus Type is a type foundry situated in the heart of Valencia, Spain. For more than twenty years we have been creating retail and custom-made typefaces for global businesses.';
+const fallbackTypefaces = [
   { name: 'Metrostile', category: 'Sans', styles: 1, slug: 'metrostile', image: '/typefaces/haus_19.png' },
   { name: 'Guglielmo Marconi*', category: 'Squoza', styles: 14, slug: 'guglielmo-marconi', image: '/typefaces/haus_07.png' },
   { name: 'Aerial Quango', category: 'Cimbric', styles: 0, slug: 'aerial-quango', image: '/typefaces/haus_10.png' },
@@ -23,13 +23,83 @@ const typefaces = [
   { name: 'Puerto Vallarta', category: 'Chroniques', slug: 'puerto-vallarta', styles: 1, image: '/typefaces/haus_22.png' },
   { name: 'PSYCHE DELICA', category: 'Early', slug: 'psyche-delica', styles: 20, image: '/typefaces/haus_25.png' },
 ];
-
-// Fonts In Use carousel - client work showcase
-const fontsInUse = [
+const fallbackFontsInUse = [
   { image: '/fonts-in-use/illusions.png', alt: 'Bruce Nauman Illusions exhibition on architectural facade' },
   { image: '/fonts-in-use/super-juicy.png', alt: 'SUPER JUICY packaging' },
   { image: '/fonts-in-use/mezcal.png', alt: 'Mezcal de Oaxaca brochure' },
 ];
+
+// Fetch from Sanity
+const { data: settings } = await safeLoadQuery<{
+  aboutText?: string;
+  heroItems?: Array<{ type?: string; image?: unknown; videoUrl?: string; alt?: string }>;
+  fontsInUse?: Array<{ image?: unknown; alt?: string }>;
+} | null>({
+  query: `*[_type == "siteSettings"][0]{
+    aboutText,
+    heroItems,
+    fontsInUse
+  }`,
+});
+
+const { data: typefacesData } = await safeLoadQuery<Array<{
+  name: string;
+  slug?: { current: string };
+  category?: string;
+  styles?: number;
+  image?: unknown;
+  collectionId?: string;
+}>>({
+  query: `*[_type == "typeface"] | order(order asc){
+    name,
+    slug,
+    category,
+    styles,
+    image,
+    collectionId
+  }`,
+});
+
+// Use Sanity data if available, else fallback
+const siteSettings = settings ?? {};
+const heroItems: Array<{ type: 'image' | 'video'; src: string; alt?: string }> =
+  siteSettings.heroItems?.length
+    ? siteSettings.heroItems.map((item) => {
+        const src =
+          item.type === 'video'
+            ? item.videoUrl ?? ''
+            : item.image
+              ? urlForImage(item.image).url()
+              : '';
+        return {
+          type: (item.type as 'image' | 'video') ?? 'image',
+          src,
+          alt: item.alt,
+        };
+      }).filter((i) => i.src)
+    : fallbackHeroItems;
+
+const aboutText = siteSettings.aboutText ?? fallbackAboutText;
+
+const typefaces =
+  typefacesData?.length
+    ? typefacesData.map((t) => ({
+        name: t.name,
+        category: t.category ?? '',
+        styles: t.styles ?? 0,
+        slug: t.slug?.current ?? t.name.toLowerCase().replace(/\s+/g, '-'),
+        image: t.image ? urlForImage(t.image).width(560).height(400).url() : '/typefaces/haus_19.png',
+        collectionId: t.collectionId,
+      }))
+    : fallbackTypefaces;
+
+const fontsInUse =
+  siteSettings.fontsInUse?.length
+    ? siteSettings.fontsInUse.map((item) => ({
+        image: item.image ? urlForImage(item.image).width(600).height(400).url() : '',
+        alt: item.alt ?? '',
+      })).filter((i) => i.image)
+    : fallbackFontsInUse;
 ---
 
 <BaseLayout

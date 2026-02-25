@@ -2,36 +2,93 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
+import PortableText from '../../components/PortableText.astro';
 import { getCollection } from 'astro:content';
+import { safeLoadQuery } from '../../sanity/lib/safe-fetch';
 
 export async function getStaticPaths() {
+  // Try Sanity first
+  const { data: sanityPosts } = await safeLoadQuery<Array<{ slug?: { current: string } }>>({
+    query: `*[_type == "post" && !draft]{ slug }`,
+  });
+
+  if (sanityPosts?.length) {
+    return sanityPosts.map((p) => ({
+      params: { slug: p.slug?.current ?? '' },
+      props: { source: 'sanity' as const },
+    }));
+  }
+
   const posts = await getCollection('blog', ({ data }) => !data.draft);
   return posts.map((post) => ({
     params: { slug: post.slug },
-    props: { post },
+    props: { post, source: 'astro' as const },
   }));
 }
 
-const { post } = Astro.props;
-const { Content } = await post.render();
+const { slug } = Astro.params;
+const { source, post: astroPost } = Astro.props;
+
+let title = '';
+let description = '';
+let pubDate: Date = new Date();
+let body: unknown = null;
+let image: string | undefined;
+
+if (source === 'sanity') {
+  const { data: post } = await safeLoadQuery<{
+    title: string;
+    description?: string;
+    publishedAt?: string;
+    mainImage?: unknown;
+    body?: unknown;
+  }>({
+    query: `*[_type == "post" && slug.current == $slug && !draft][0]{
+      title,
+      description,
+      publishedAt,
+      mainImage,
+      body
+    }`,
+    params: { slug },
+  });
+  if (post) {
+    title = post.title;
+    description = post.description ?? '';
+    pubDate = post.publishedAt ? new Date(post.publishedAt) : new Date();
+    body = post.body;
+    image = post.mainImage ? (await import('../../sanity/lib/url-for-image')).urlForImage(post.mainImage).url() : undefined;
+  }
+} else if (astroPost) {
+  title = astroPost.data.title;
+  description = astroPost.data.description ?? '';
+  pubDate = astroPost.data.pubDate;
+  image = astroPost.data.image;
+}
+
+const astroContent = astroPost ? await astroPost.render() : null;
 ---
 
 <BaseLayout
-  title={`${post.data.title} | Haus Type`}
-  description={post.data.description}
-  image={post.data.image}
+  title={`${title} | Haus Type`}
+  description={description}
+  image={image}
 >
   <Header />
   <main class="bg-haus-grey min-h-screen">
     <article class="grid grid-cols-6 gap-4 w-full max-w-content mx-auto px-8 py-16">
       <header class="col-span-6 md:col-span-4 md:col-start-2">
-        <h1 class="text-3xl md:text-4xl font-bold text-black mb-4">{post.data.title}</h1>
-        <time datetime={post.data.pubDate.toISOString()} class="text-stone-500 text-sm">
-          {post.data.pubDate.toLocaleDateString('en-GB', { dateStyle: 'long' })}
+        <h1 class="text-3xl md:text-4xl font-normal text-black mb-4">{title}</h1>
+        <time datetime={pubDate.toISOString()} class="text-stone-500 text-sm">
+          {pubDate.toLocaleDateString('en-GB', { dateStyle: 'long' })}
         </time>
       </header>
       <div class="col-span-6 md:col-span-4 md:col-start-2 prose prose-lg max-w-none">
-        <Content />
+        {source === 'sanity' && body ? (
+          <PortableText value={body} />
+        ) : astroContent ? (
+          <astroContent.Content />
+        ) : null}
       </div>
     </article>
   </main>

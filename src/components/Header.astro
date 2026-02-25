@@ -14,7 +14,7 @@ const navItems = [
       <img src="/logo.svg" alt="" class="h-[13px] w-auto" aria-hidden="true" />
       Haus Type
     </a>
-    <nav class="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 gap-6" aria-label="Main navigation">
+    <nav class="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 gap-[0.96rem]" aria-label="Main navigation">
       {navItems.map((item) => (
         <a href={item.href} class="text-base px-4 py-2 hover:opacity-80 transition-opacity">
           {item.label}
@@ -31,7 +31,7 @@ const navItems = [
     </button>
   </div>
   <!-- Mobile nav -->
-  <nav class="md:hidden px-8 pb-4 flex flex-wrap gap-4" aria-label="Mobile navigation">
+  <nav class="md:hidden px-8 pb-4 flex flex-wrap gap-[0.64rem]" aria-label="Mobile navigation">
     {navItems.map((item) => (
       <a href={item.href} class="text-base hover:opacity-80 transition-opacity">
         {item.label}
