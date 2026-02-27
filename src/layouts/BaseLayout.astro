@@ -28,6 +28,9 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+    <link rel="preload" href="https://js.fontdue.com/fontdue.css" as="style" />
+    <link rel="preload" href="/logo.svg" as="image" />
+    {image && <link rel="preload" as="image" href={new URL(image, Astro.url).href} />}
     <link rel="stylesheet" href="https://js.fontdue.com/fontdue.css" />
     <script type="module">
       import fontdue from "https://js.fontdue.com/fontdue.esm.js";
@@ -46,5 +49,32 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
   <body>
     <fontdue-store-modal></fontdue-store-modal>
     <slot />
+    <script>
+      (function () {
+        const els = document.querySelectorAll('[data-reveal]');
+        if (!els.length) return;
+        const vh = window.innerHeight;
+        const belowFold = [];
+        els.forEach((el) => {
+          const rect = el.getBoundingClientRect();
+          if (rect.top < vh) {
+            el.classList.add('is-revealed', 'reveal-no-animation');
+          } else {
+            belowFold.push(el);
+          }
+        });
+        if (belowFold.length) {
+          const observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((e) => {
+                if (e.isIntersecting) e.target.classList.add('is-revealed');
+              });
+            },
+            { threshold: 0.05, rootMargin: '0px 0px -20px 0px' }
+          );
+          belowFold.forEach((el) => observer.observe(el));
+        }
+      })();
+    </script>
   </body>
 </html>

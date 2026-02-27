@@ -5,4 +5,8 @@ export default defineCliConfig({
     projectId: process.env.PUBLIC_SANITY_PROJECT_ID ?? 'b5rdpzo3',
     dataset: process.env.PUBLIC_SANITY_DATASET ?? 'production',
   },
+  studioHost: 'haustypeweb',
+  deployment: {
+    appId: 'ypm09t17rbypt1a9b5f2l3kr',
+  },
 });

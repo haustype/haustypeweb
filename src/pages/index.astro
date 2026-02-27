@@ -9,28 +9,40 @@ import Footer from '../components/Footer.astro';
 import { safeLoadQuery } from '../sanity/lib/safe-fetch';
 import { urlForImage } from '../sanity/lib/url-for-image';
 
-// Fallback data when Sanity isn't configured
+// Generic fallbacks when Sanity is unavailable (no real copy)
+const noImagePlaceholderSvg =
+  "data:image/svg+xml," +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="560" height="400" viewBox="0 0 560 400"><rect fill="#f5f5f4" width="560" height="400"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#a8a29e" font-family="system-ui,sans-serif" font-size="14">No image</text></svg>'
+  );
 const fallbackHeroItems = [
-  { type: 'image' as const, src: '/hero.png', alt: 'Haus Type font display - Gemini, Grissom, Young' },
+  { type: 'image' as const, src: '/hero.png', alt: 'Hero image' },
 ];
-const fallbackAboutText = 'Haus Type is a type foundry situated in the heart of Valencia, Spain. For more than twenty years we have been creating retail and custom-made typefaces for global businesses.';
+const fallbackAboutText = 'Description';
 const fallbackTypefaces = [
-  { name: 'Metrostile', category: 'Sans', styles: 1, slug: 'metrostile', image: '/typefaces/haus_19.png' },
-  { name: 'Guglielmo Marconi*', category: 'Squoza', styles: 14, slug: 'guglielmo-marconi', image: '/typefaces/haus_07.png' },
-  { name: 'Aerial Quango', category: 'Cimbric', styles: 0, slug: 'aerial-quango', image: '/typefaces/haus_10.png' },
-  { name: 'SALS ICCIA', category: 'Salnicola', slug: 'salsiccia', styles: 1, image: '/typefaces/haus_13.png' },
-  { name: 'Cinema Clubs', category: 'Metroitalic', slug: 'cinema-clubs', styles: 0, image: '/typefaces/haus_19.png' },
-  { name: 'Puerto Vallarta', category: 'Chroniques', slug: 'puerto-vallarta', styles: 1, image: '/typefaces/haus_22.png' },
-  { name: 'PSYCHE DELICA', category: 'Early', slug: 'psyche-delica', styles: 20, image: '/typefaces/haus_25.png' },
+  { name: 'Typeface name', category: 'Category', styles: 0, slug: 'typeface-name', image: noImagePlaceholderSvg },
 ];
 const fallbackFontsInUse = [
-  { image: '/fonts-in-use/illusions.png', alt: 'Bruce Nauman Illusions exhibition on architectural facade' },
-  { image: '/fonts-in-use/super-juicy.png', alt: 'SUPER JUICY packaging' },
-  { image: '/fonts-in-use/mezcal.png', alt: 'Mezcal de Oaxaca brochure' },
+  { image: noImagePlaceholderSvg, alt: 'Font in use' },
 ];
 
-// Fetch from Sanity
-const { data: settings } = await safeLoadQuery<{
+// Fetch homepage content (aboutText, hero, typeface order, fonts in use carousel)
+const { data: homepageSettings } = await safeLoadQuery<{
+  aboutText?: string;
+  heroItems?: Array<{ type?: string; image?: unknown; videoUrl?: string; alt?: string }>;
+  typefaceOrder?: Array<{ _ref: string }>;
+  fontsInUse?: Array<{ image?: unknown; alt?: string }>;
+} | null>({
+  query: `*[_type == "homepageSettings"][0]{
+    aboutText,
+    heroItems,
+    typefaceOrder[]->{ name, slug, category, styles, image { asset } },
+    fontsInUse
+  }`,
+});
+
+// Fallback to legacy siteSettings if homepageSettings is empty (migration)
+const { data: legacySettings } = await safeLoadQuery<{
   aboutText?: string;
   heroItems?: Array<{ type?: string; image?: unknown; videoUrl?: string; alt?: string }>;
   fontsInUse?: Array<{ image?: unknown; alt?: string }>;
@@ -42,29 +54,10 @@ const { data: settings } = await safeLoadQuery<{
   }`,
 });
 
-const { data: typefacesData } = await safeLoadQuery<Array<{
-  name: string;
-  slug?: { current: string };
-  category?: string;
-  styles?: number;
-  image?: unknown;
-  collectionId?: string;
-}>>({
-  query: `*[_type == "typeface"] | order(order asc){
-    name,
-    slug,
-    category,
-    styles,
-    image,
-    collectionId
-  }`,
-});
-
-// Use Sanity data if available, else fallback
-const siteSettings = settings ?? {};
+const settings = homepageSettings ?? legacySettings ?? {};
 const heroItems: Array<{ type: 'image' | 'video'; src: string; alt?: string }> =
-  siteSettings.heroItems?.length
-    ? siteSettings.heroItems.map((item) => {
+  settings.heroItems?.length
+    ? settings.heroItems.map((item) => {
         const src =
           item.type === 'video'
             ? item.videoUrl ?? ''
@@ -79,7 +72,30 @@ const heroItems: Array<{ type: 'image' | 'video'; src: string; alt?: string }> =
       }).filter((i) => i.src)
     : fallbackHeroItems;
 
-const aboutText = siteSettings.aboutText ?? fallbackAboutText;
+const aboutText = settings.aboutText ?? fallbackAboutText;
+
+// Typefaces: use homepage order when set, else fetch all ordered by typeface.order
+const orderedTypefaces = homepageSettings?.typefaceOrder;
+const { data: fallbackTypefacesData } = await safeLoadQuery<Array<{
+  name: string;
+  slug?: { current: string };
+  category?: string;
+  styles?: number;
+  image?: { asset?: { _ref: string } };
+}>>({
+  query: `*[_type == "typeface"] | order(order asc, name asc){
+    name,
+    slug,
+    category,
+    styles,
+    image { asset }
+  }`,
+});
+
+const typefacesData = orderedTypefaces?.length
+  ? orderedTypefaces
+  : fallbackTypefacesData ?? [];
+const typefacesFromSanity = typefacesData.length > 0;
 
 const typefaces =
   typefacesData?.length
@@ -88,15 +104,14 @@ const typefaces =
         category: t.category ?? '',
         styles: t.styles ?? 0,
         slug: t.slug?.current ?? t.name.toLowerCase().replace(/\s+/g, '-'),
-        image: t.image ? urlForImage(t.image).width(560).height(400).url() : '/typefaces/haus_19.png',
-        collectionId: t.collectionId,
+        image: t.image?.asset ? urlForImage(t.image.asset).width(1600).fit('max').url() : noImagePlaceholderSvg,
       }))
     : fallbackTypefaces;
 
 const fontsInUse =
-  siteSettings.fontsInUse?.length
-    ? siteSettings.fontsInUse.map((item) => ({
-        image: item.image ? urlForImage(item.image).width(600).height(400).url() : '',
+  settings.fontsInUse?.length
+    ? settings.fontsInUse.map((item) => ({
+        image: item.image ? urlForImage(item.image?.asset ?? item.image).width(1200).fit('max').url() : '',
         alt: item.alt ?? '',
       })).filter((i) => i.image)
     : fallbackFontsInUse;
@@ -105,15 +120,20 @@ const fontsInUse =
 <BaseLayout
   title="Haus Type | Type Foundry"
   description={aboutText}
-  image="/hero.png"
+  image={heroItems[0]?.type === 'image' ? heroItems[0].src : '/hero.png'}
 >
   <div class="relative">
+    {import.meta.env.DEV && !typefacesFromSanity && (
+      <div class="bg-amber-100 border-b border-amber-300 text-amber-900 px-4 py-2 text-center text-sm">
+        Could not load typefaces from Sanity. Showing generic placeholders. Check project id and dataset, and that content is published.
+      </div>
+    )}
     <Hero items={heroItems} />
     <div class="absolute top-0 left-0 right-0 z-10">
-      <Header />
+      <Header variant="dark" />
     </div>
   </div>
-  <main>
+  <main class="flex-1" data-reveal>
     <About text={aboutText} />
     <TypefacesGrid typefaces={typefaces} />
     <FontsInUseCarousel items={fontsInUse} />

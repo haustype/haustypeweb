@@ -10,6 +10,7 @@ export async function loadQuery<QueryResponse>({
 }) {
   const { result } = await sanityClient.fetch<QueryResponse>(query, params ?? {}, {
     filterResponse: false,
+    useCdn: false,
   });
 
   return { data: result };

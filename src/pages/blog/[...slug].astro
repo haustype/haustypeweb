@@ -32,6 +32,7 @@ const { source, post: astroPost } = Astro.props;
 let title = '';
 let description = '';
 let pubDate: Date = new Date();
+let author = '';
 let body: unknown = null;
 let image: string | undefined;
 
@@ -40,6 +41,7 @@ if (source === 'sanity') {
     title: string;
     description?: string;
     publishedAt?: string;
+    author?: string;
     mainImage?: unknown;
     body?: unknown;
   }>({
@@ -47,6 +49,7 @@ if (source === 'sanity') {
       title,
       description,
       publishedAt,
+      author,
       mainImage,
       body
     }`,
@@ -56,6 +59,7 @@ if (source === 'sanity') {
     title = post.title;
     description = post.description ?? '';
     pubDate = post.publishedAt ? new Date(post.publishedAt) : new Date();
+    author = post.author ?? '';
     body = post.body;
     image = post.mainImage ? (await import('../../sanity/lib/url-for-image')).urlForImage(post.mainImage).url() : undefined;
   }
@@ -63,6 +67,7 @@ if (source === 'sanity') {
   title = astroPost.data.title;
   description = astroPost.data.description ?? '';
   pubDate = astroPost.data.pubDate;
+  author = astroPost.data.author ?? '';
   image = astroPost.data.image;
 }
 
@@ -75,20 +80,27 @@ const astroContent = astroPost ? await astroPost.render() : null;
   image={image}
 >
   <Header />
-  <main class="bg-haus-grey min-h-screen">
-    <article class="grid grid-cols-6 gap-4 w-full max-w-content mx-auto px-8 py-16">
-      <header class="col-span-6 md:col-span-4 md:col-start-2">
-        <h1 class="text-3xl md:text-4xl font-normal text-black mb-4">{title}</h1>
-        <time datetime={pubDate.toISOString()} class="text-stone-500 text-sm">
-          {pubDate.toLocaleDateString('en-GB', { dateStyle: 'long' })}
-        </time>
-      </header>
-      <div class="col-span-6 md:col-span-4 md:col-start-2 prose prose-lg max-w-none">
-        {source === 'sanity' && body ? (
-          <PortableText value={body} />
-        ) : astroContent ? (
-          <astroContent.Content />
-        ) : null}
+  <main class="bg-haus-grey flex-1" data-reveal>
+    <article class="w-full px-8 py-20">
+      <div class="w-full max-w-content mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
+        <header class="flex flex-col gap-4">
+          <h1 class="font-normal text-black">{title}</h1>
+          <div class="flex flex-col gap-1">
+            {author && (
+              <span class="text-sm text-[#999999]">By {author}</span>
+            )}
+            <time datetime={pubDate.toISOString()} class="text-[#999999] text-sm">
+              {pubDate.toLocaleDateString('en-GB', { dateStyle: 'long' })}
+            </time>
+          </div>
+        </header>
+        <div class="prose max-w-none">
+          {source === 'sanity' && body ? (
+            <PortableText value={body} />
+          ) : astroContent ? (
+            <astroContent.Content />
+          ) : null}
+        </div>
       </div>
     </article>
   </main>

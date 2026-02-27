@@ -1,5 +1,5 @@
 ---
-title: "Fonts"
+title: "Typefaces"
 description: "Browse our typeface collection."
 order: 1
 ---

@@ -24,6 +24,13 @@ export const pageType = defineType({
       type: 'blockContent',
       title: 'Body',
     }),
+    defineField({
+      name: 'pageSections',
+      type: 'array',
+      title: 'Fontdue sections',
+      description: 'Add type testers, character viewers, buy buttons, or custom content. Drag to reorder. Sections appear below the title and body.',
+      of: [{ type: 'pagePageSection' }],
+    }),
   ],
   preview: {
     select: { title: 'title' },

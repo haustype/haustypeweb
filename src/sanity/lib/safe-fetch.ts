@@ -1,7 +1,7 @@
 import { loadQuery } from './load-query';
 
 const isConfigured = () => {
-  const id = import.meta.env.PUBLIC_SANITY_PROJECT_ID;
+  const id = import.meta.env.PUBLIC_SANITY_PROJECT_ID ?? 'b5rdpzo3';
   return id && id !== 'placeholder';
 };
 

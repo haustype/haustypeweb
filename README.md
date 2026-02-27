@@ -72,6 +72,19 @@ Output in `dist/`
 
 **Localhost**: Run `npm run dev` (not `npm run preview`). The dev server fetches from Sanity on each request, so changes appear after a refresh. Use **Publish** in Sanity, not just Save—drafts don’t appear on the site.
 
+## Pausing automatic deploys
+
+To work locally and deploy manually (e.g. once a day):
+
+1. **Disable the Sanity webhook** – stops Sanity publishes from triggering builds:
+   ```bash
+   SANITY_API_TOKEN="your-token" node scripts/pause-auto-deploys.mjs
+   ```
+
+2. **Stop Netlify builds** – [Netlify docs](https://docs.netlify.com/build/configure-builds/stop-or-activate-builds): Site configuration → Build & deploy → Continuous deployment → **Stop builds**. Git pushes and build hooks will no longer trigger deploys. You can still deploy manually with `npm run deploy` or via the Netlify UI.
+
+To re-enable: Run `setup-sanity-webhook.mjs` again (delete the disabled webhook in Sanity first if needed), and turn builds back on in Netlify.
+
 ## Netlify Deployment
 
 1. Push to GitHub and connect the repo to Netlify
@@ -82,7 +95,9 @@ Output in `dist/`
 
 ## CMS
 
-Edit content at [sanity.io/manage](https://sanity.io/manage) or run `npx sanity dev` locally. Content types: **Blog posts**, **Pages**, **Typefaces**, **Site Settings** (hero, about text, fonts in use). Until you run `npx sanity init --env` and add content, the site uses fallback data from the codebase.
+Edit content at [sanity.io/manage](https://sanity.io/manage) or run `npm run studio` (or `npx sanity dev`) locally. Content types: **Blog posts**, **Pages**, **Typefaces**, **Site Settings** (hero, about text, fonts in use). Typefaces include **Detail page layout** (order of type tester, character viewer, buy button, custom content) and **Detail page title** (optional heading override). **After changing schema files**, restart the Studio so new fields appear: stop it (Ctrl+C) and run `npm run studio` again; if you use the deployed Studio, run `npx sanity deploy` to publish the updated schema.
+
+If the homepage typefaces don’t match what you see in Sanity Studio, the site is likely using fallback data: set `PUBLIC_SANITY_PROJECT_ID` and `PUBLIC_SANITY_DATASET` in `.env` (local) and in Netlify env vars (production), then rebuild. In Studio, set **Display Order** on each typeface so the grid order matches; add a **Card Image** per typeface so the correct specimen shows (otherwise a neutral “No image” placeholder is used).
 
 ## Project Structure
 

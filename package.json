@@ -7,8 +7,9 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "deploy": "npm run build && npx netlify deploy --prod --dir=dist",
     "astro": "astro",
-    "studio": "sanity dev"
+    "studio": "sanity dev --port=3334"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",

@@ -7,7 +7,6 @@ interface Typeface {
   styles: number;
   slug: string;
   image: string;
-  collectionId?: string;
 }
 
 interface Props {
@@ -18,14 +17,16 @@ const { typefaces } = Astro.props;
 ---
 
 <section class="bg-haus-grey py-10 md:py-12">
-  <div class="grid grid-cols-6 gap-4 w-full max-w-content mx-auto px-8">
-    <h2 class="col-span-6 text-[20px] font-normal text-black mb-4">
+  <div class="w-full max-w-content mx-auto px-8">
+    <h2 class="text-[1.3rem] font-normal text-black mb-6">
       Our Typefaces
     </h2>
-    {typefaces.map((tf) => (
-      <div class="col-span-6 sm:col-span-3 lg:col-span-2">
-        <TypefaceCard {...tf} />
-      </div>
-    ))}
+    <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-4 list-none m-0 p-0">
+      {typefaces.map((tf) => (
+        <li class="flex">
+          <TypefaceCard {...tf} />
+        </li>
+      ))}
+    </ul>
   </div>
 </section>

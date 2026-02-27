@@ -1,0 +1,131 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import PortableText from '../../components/PortableText.astro';
+import { safeLoadQuery } from '../../sanity/lib/safe-fetch';
+
+type PageSection = {
+  _key?: string;
+  sectionType: 'typeTester' | 'characterViewer' | 'buyButton' | 'content';
+  content?: unknown;
+};
+
+const defaultPageSections: PageSection[] = [
+  { _key: 'a', sectionType: 'typeTester' },
+  { _key: 'b', sectionType: 'buyButton' },
+  { _key: 'c', sectionType: 'characterViewer' },
+];
+
+export async function getStaticPaths() {
+  const { data: typefaces } = await safeLoadQuery<Array<{ slug?: { current: string } }>>({
+    query: `*[_type == "typeface"]{ slug }`,
+  });
+
+  if (typefaces?.length) {
+    return typefaces.map((t) => ({
+      params: { slug: t.slug?.current ?? '' },
+    }));
+  }
+
+  return [{ params: { slug: 'typeface-name' } }];
+}
+
+const fallbackFonts: Record<string, { name: string; collectionId?: string }> = {
+  'typeface-name': { name: 'Typeface name' },
+};
+
+const { slug } = Astro.params;
+
+const { data: typefacesData } = await safeLoadQuery<Array<{
+  name: string;
+  slug?: { current: string };
+  collectionId?: string;
+  body?: unknown;
+  pageSections?: PageSection[] | null;
+  detailPageTitle?: string | null;
+}>>({
+  query: `*[_type == "typeface"]{ name, slug, collectionId, body, pageSections, detailPageTitle }`,
+});
+
+const matched = typefacesData?.find((t) => t.slug?.current === slug);
+const font = matched
+  ? {
+      name: matched.name,
+      collectionId: matched.collectionId,
+      body: matched.body,
+      pageSections: matched.pageSections,
+      detailPageTitle: matched.detailPageTitle,
+    }
+  : {
+      name: fallbackFonts[slug ?? '']?.name ?? (slug ?? 'Name'),
+      collectionId: undefined as string | undefined,
+      body: null as unknown,
+      pageSections: defaultPageSections,
+      detailPageTitle: null as string | null,
+    };
+
+const pageTitle = font.detailPageTitle?.trim() || font.name;
+
+const sections: PageSection[] =
+  font.pageSections?.length ? font.pageSections : defaultPageSections;
+---
+
+<BaseLayout
+  title={`${pageTitle} | Haus Type`}
+  description={`${pageTitle} - Explore and purchase from Haus Type foundry.`}
+>
+  <Header />
+  <main class="bg-haus-grey flex-1" data-reveal>
+    <article class="w-full px-8 py-20">
+      <div class="w-full max-w-content mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 mb-16">
+        <header>
+          <h1 class="font-normal text-black">{pageTitle}</h1>
+        </header>
+        {font.body && (
+          <div class="prose max-w-none">
+            <PortableText value={font.body} />
+          </div>
+        )}
+      </div>
+
+      <div class="w-full flex flex-col gap-16">
+        {sections.map((section) => {
+          if (section.sectionType === 'typeTester') {
+            return (
+              <div class="w-full">
+                <fontdue-type-testers collection-slug={slug} />
+              </div>
+            );
+          }
+          if (section.sectionType === 'characterViewer') {
+            return (
+              <div class="w-full">
+                <fontdue-character-viewer collection-slug={slug} />
+              </div>
+            );
+          }
+          if (section.sectionType === 'buyButton' && font.collectionId) {
+            return (
+              <div class="w-full">
+                <fontdue-buy-button
+                  collection-id={font.collectionId}
+                  collection-name={font.name}
+                />
+              </div>
+            );
+          }
+          if (section.sectionType === 'content' && section.content) {
+            return (
+              <div class="w-full max-w-content mx-auto prose max-w-none">
+                <PortableText value={section.content} />
+              </div>
+            );
+          }
+          return null;
+        })}
+      </div>
+    </article>
+  </main>
+  <Footer />
+</BaseLayout>

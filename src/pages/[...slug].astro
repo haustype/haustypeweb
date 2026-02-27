@@ -32,19 +32,40 @@ let title = '';
 let description = '';
 let body: unknown = null;
 
+type PageSection = {
+  _key?: string;
+  sectionType: 'typeTester' | 'characterViewer' | 'buyButton' | 'content';
+  typeface?: { slug?: { current: string }; name?: string; collectionId?: string };
+  content?: unknown;
+};
+
+let pageSections: PageSection[] = [];
+
 if (source === 'sanity') {
   const { data: page } = await safeLoadQuery<{
     title: string;
     description?: string;
     body?: unknown;
+    pageSections?: PageSection[] | null;
   }>({
-    query: `*[_type == "page" && slug.current == $slug][0]{ title, description, body }`,
+    query: `*[_type == "page" && slug.current == $slug][0]{
+      title,
+      description,
+      body,
+      pageSections[]{
+        _key,
+        sectionType,
+        content,
+        typeface->{ slug, name, collectionId }
+      }
+    }`,
     params: { slug },
   });
   if (page) {
     title = page.title;
     description = page.description ?? '';
     body = page.body;
+    pageSections = page.pageSections ?? [];
   }
 } else if (astroPage) {
   title = astroPage.data.title;
@@ -59,18 +80,61 @@ const astroContent = astroPage ? await astroPage.render() : null;
   description={description}
 >
   <Header />
-  <main class="bg-haus-grey min-h-screen">
-    <article class="grid grid-cols-6 gap-4 w-full max-w-content mx-auto px-8 py-16">
-      <header class="col-span-6">
-        <h1 class="text-3xl md:text-4xl font-normal text-black">{title}</h1>
-      </header>
-      <div class="col-span-6 md:col-span-4 prose prose-lg max-w-none">
-        {source === 'sanity' && body ? (
-          <PortableText value={body} />
-        ) : astroContent ? (
-          <astroContent.Content />
-        ) : null}
+  <main class="bg-haus-grey flex-1" data-reveal>
+    <article class="w-full px-8 py-20">
+      <div class="w-full max-w-content mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 mb-16">
+        <header>
+          <h1 class="font-normal text-black">{title}</h1>
+        </header>
+        <div class="prose max-w-none">
+          {source === 'sanity' && body ? (
+            <PortableText value={body} />
+          ) : astroContent ? (
+            <astroContent.Content />
+          ) : null}
+        </div>
       </div>
+      {source === 'sanity' && pageSections.length > 0 && (
+        <div class="w-full flex flex-col gap-16">
+          {pageSections.map((section) => {
+            const collectionSlug = section.typeface?.slug?.current;
+            const typefaceName = section.typeface?.name;
+            const collectionId = section.typeface?.collectionId;
+            if (section.sectionType === 'typeTester' && collectionSlug) {
+              return (
+                <div class="w-full">
+                  <fontdue-type-testers collection-slug={collectionSlug} />
+                </div>
+              );
+            }
+            if (section.sectionType === 'characterViewer' && collectionSlug) {
+              return (
+                <div class="w-full">
+                  <fontdue-character-viewer collection-slug={collectionSlug} />
+                </div>
+              );
+            }
+            if (section.sectionType === 'buyButton' && collectionId && typefaceName) {
+              return (
+                <div class="w-full">
+                  <fontdue-buy-button
+                    collection-id={collectionId}
+                    collection-name={typefaceName}
+                  />
+                </div>
+              );
+            }
+            if (section.sectionType === 'content' && section.content) {
+              return (
+                <div class="w-full prose max-w-none">
+                  <PortableText value={section.content} />
+                </div>
+              );
+            }
+            return null;
+          })}
+        </div>
+      )}
     </article>
   </main>
   <Footer />

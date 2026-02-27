@@ -27,6 +27,16 @@ export default {
       DEFAULT: {
         css: {
           'h1, h2, h3, h4, h5, h6': { fontWeight: '400' },
+          color: '#0a0a0a',
+          a: { color: '#0a0a0a' },
+          strong: { color: '#0a0a0a' },
+          'ul > li::marker': { color: '#0a0a0a' },
+          'ol > li::marker': { color: '#0a0a0a' },
+          blockquote: { color: '#0a0a0a' },
+          'blockquote p:first-of-type::before': { color: '#0a0a0a' },
+          'blockquote p:last-of-type::after': { color: '#0a0a0a' },
+          code: { color: '#0a0a0a' },
+          'h1, h2, h3, h4, h5, h6': { color: '#0a0a0a' },
         },
       },
     }),
