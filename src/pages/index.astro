@@ -35,29 +35,55 @@ const { data: homepageSettings } = await safeLoadQuery<{
 } | null>({
   query: `*[_type == "homepageSettings"][0]{
     aboutText,
-    heroItems,
+    "heroItems": heroItems[]{
+      _type,
+      type,
+      type == "image" => { image },
+      type == "video" => { "videoUrl": coalesce(video.asset->url, videoUrl) },
+      alt
+    },
     typefaceOrder[]->{ name, slug, category, styles, image { asset } },
     fontsInUse
   }`,
 });
 
-// Fallback to legacy siteSettings if homepageSettings is empty (migration)
+// Legacy homepage fields may still live on siteSettings until migration script is run
 const { data: legacySettings } = await safeLoadQuery<{
   aboutText?: string;
   heroItems?: Array<{ type?: string; image?: unknown; videoUrl?: string; alt?: string }>;
   fontsInUse?: Array<{ image?: unknown; alt?: string }>;
+  typefaceOrder?: Array<{ name: string; slug?: { current: string }; category?: string; styles?: number; image?: { asset?: { _ref: string } } }>;
 } | null>({
   query: `*[_type == "siteSettings"][0]{
     aboutText,
-    heroItems,
-    fontsInUse
+    "heroItems": heroItems[]{
+      _type,
+      type,
+      type == "image" => { image },
+      type == "video" => { "videoUrl": coalesce(video.asset->url, videoUrl) },
+      alt
+    },
+    fontsInUse,
+    typefaceOrder[]->{ name, slug, category, styles, image { asset } }
   }`,
 });
 
-const settings = homepageSettings ?? legacySettings ?? {};
+function pickHeroItems() {
+  const fromHome = homepageSettings?.heroItems;
+  if (fromHome?.length) return fromHome;
+  return legacySettings?.heroItems;
+}
+
+function pickFontsInUse() {
+  const fromHome = homepageSettings?.fontsInUse;
+  if (fromHome?.length) return fromHome;
+  return legacySettings?.fontsInUse;
+}
+
+const heroSource = pickHeroItems();
 const heroItems: Array<{ type: 'image' | 'video'; src: string; alt?: string }> =
-  settings.heroItems?.length
-    ? settings.heroItems.map((item) => {
+  heroSource?.length
+    ? heroSource.map((item) => {
         const src =
           item.type === 'video'
             ? item.videoUrl ?? ''
@@ -72,10 +98,18 @@ const heroItems: Array<{ type: 'image' | 'video'; src: string; alt?: string }> =
       }).filter((i) => i.src)
     : fallbackHeroItems;
 
-const aboutText = settings.aboutText ?? fallbackAboutText;
+const aboutText =
+  (homepageSettings?.aboutText?.trim() ? homepageSettings.aboutText : null) ??
+  (legacySettings?.aboutText?.trim() ? legacySettings.aboutText : null) ??
+  fallbackAboutText;
 
-// Typefaces: use homepage order when set, else fetch all ordered by typeface.order
-const orderedTypefaces = homepageSettings?.typefaceOrder;
+// Typefaces: homepage order first, then legacy siteSettings, then fallback fetch
+const orderedTypefaces =
+  homepageSettings?.typefaceOrder?.length
+    ? homepageSettings.typefaceOrder
+    : legacySettings?.typefaceOrder?.length
+      ? legacySettings.typefaceOrder
+      : undefined;
 const { data: fallbackTypefacesData } = await safeLoadQuery<Array<{
   name: string;
   slug?: { current: string };
@@ -108,9 +142,10 @@ const typefaces =
       }))
     : fallbackTypefaces;
 
+const fontsInUseRaw = pickFontsInUse();
 const fontsInUse =
-  settings.fontsInUse?.length
-    ? settings.fontsInUse.map((item) => ({
+  fontsInUseRaw?.length
+    ? fontsInUseRaw.map((item) => ({
         image: item.image ? urlForImage(item.image?.asset ?? item.image).width(1200).fit('max').url() : '',
         alt: item.alt ?? '',
       })).filter((i) => i.image)

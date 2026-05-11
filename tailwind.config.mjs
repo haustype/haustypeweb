@@ -12,7 +12,7 @@ export default {
         'haus-grey': '#f0f0f0',
       },
       fontFamily: {
-        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        sans: ['Selandia', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
       },
       gridTemplateColumns: {
         '6': 'repeat(6, minmax(0, 1fr))',

@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Selandia';
+  src: url('/fonts/Selandia-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Disable smooth scrolling globally */
 html {
   scroll-behavior: auto;
@@ -10,6 +18,7 @@ html {
 
 body {
   @apply antialiased bg-haus-grey text-base text-black;
+  font-family: 'Selandia', system-ui, sans-serif;
   display: flex;
   flex-direction: column;
   min-height: 100vh;

@@ -9,7 +9,8 @@
     "preview": "astro preview",
     "deploy": "npm run build && npx netlify deploy --prod --dir=dist",
     "astro": "astro",
-    "studio": "sanity dev --port=3334"
+    "studio": "sanity dev --port=3334",
+    "migrate:homepage": "node scripts/migrate-homepage-from-siteSettings.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",

@@ -82,5 +82,72 @@ export const siteSettingsType = defineType({
         },
       ],
     }),
+    defineField({
+      name: 'footerNavigation',
+      type: 'array',
+      title: 'Footer navigation',
+      description: 'Links shown in the footer. Same options as header navigation. Drag to reorder.',
+      of: [
+        {
+          type: 'object',
+          name: 'internalLink',
+          title: 'Page',
+          fields: [
+            {
+              name: 'page',
+              type: 'reference',
+              to: [{ type: 'page' }],
+              title: 'Page',
+              description: 'Select an existing page',
+              validation: (Rule) => Rule.required(),
+            },
+          ],
+          preview: {
+            select: { title: 'page.title' },
+            prepare: ({ title }) => ({ title: title || 'Select page' }),
+          },
+        },
+        {
+          type: 'object',
+          name: 'builtInPage',
+          title: 'Built-in page',
+          fields: [
+            {
+              name: 'route',
+              type: 'string',
+              title: 'Page',
+              options: {
+                list: [
+                  { title: 'Blog', value: 'blog' },
+                  { title: 'Typefaces', value: 'typefaces' },
+                  { title: 'In Use', value: 'in-use' },
+                ],
+                layout: 'dropdown',
+              },
+              validation: (Rule) => Rule.required(),
+            },
+          ],
+          preview: {
+            select: { route: 'route' },
+            prepare: ({ route }) => ({
+              title: route === 'blog' ? 'Blog' : route === 'typefaces' ? 'Typefaces' : route === 'in-use' ? 'In Use' : route || 'Select',
+            }),
+          },
+        },
+        {
+          type: 'object',
+          name: 'externalLink',
+          title: 'External link',
+          fields: [
+            { name: 'label', type: 'string', title: 'Label', validation: (Rule) => Rule.required() },
+            { name: 'url', type: 'url', title: 'URL', validation: (Rule) => Rule.required() },
+          ],
+          preview: {
+            select: { label: 'label' },
+            prepare: ({ label }) => ({ title: label || 'External link' }),
+          },
+        },
+      ],
+    }),
   ],
 });

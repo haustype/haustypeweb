@@ -1,14 +1,52 @@
 ---
-const footerLinks = [
-  { href: '/typefaces', label: 'Trial Fonts' },
-  { href: '/information', label: 'Licensing' },
-  { href: 'https://instagram.com/haus_type', label: 'Instagram', external: true },
-];
+import { safeLoadQuery } from '../sanity/lib/safe-fetch';
+
+const { data: settings } = await safeLoadQuery<{
+  footerNavigation?: Array<{ _type?: string; label?: string; href?: string }>;
+} | null>({
+  query: `*[_type == "siteSettings"][0]{
+    "footerNavigation": footerNavigation[]{
+      _type,
+      _type == "internalLink" => {
+        "href": "/" + page->slug.current,
+        "label": page->title
+      },
+      _type == "builtInPage" => {
+        "href": "/" + route,
+        "label": select(
+          route == "blog" => "Blog",
+          route == "typefaces" => "Typefaces",
+          route == "in-use" => "In Use",
+          route
+        )
+      },
+      _type == "externalLink" => {
+        "href": url,
+        "label": label
+      }
+    }
+  }`,
+});
+
+const footerLinks =
+  settings?.footerNavigation?.length
+    ? settings.footerNavigation
+        .filter((item) => item.label && item.href)
+        .map((item) => ({
+          label: item.label!,
+          href: item.href!,
+          external: item._type === 'externalLink',
+        }))
+    : [
+        { href: '/typefaces', label: 'Trial Fonts' },
+        { href: '/information', label: 'Licensing' },
+        { href: 'https://instagram.com/haus_type', label: 'Instagram', external: true },
+      ];
 ---
 
 <footer class="text-white" style="background-color: #0a0a0a;">
-  <div class="grid grid-cols-6 gap-4 w-full max-w-content mx-auto px-8 pt-8 pb-[60px] md:pb-[72px] items-start">
-    <div class="col-span-6 md:col-span-3 flex flex-col gap-8">
+  <div class="w-full max-w-content mx-auto px-8 pt-8 pb-[60px] md:pb-[72px]">
+    <div class="flex flex-col gap-8">
       <a href="/" class="flex items-center gap-2 font-normal text-base tracking-tight hover:opacity-80 transition-opacity w-fit">
         <img src="/logo.svg" alt="" class="h-[13px] w-auto" aria-hidden="true" />
         Haus Type
@@ -24,13 +62,6 @@ const footerLinks = [
           </a>
         ))}
       </nav>
-    </div>
-    <div class="col-span-6 md:col-span-3 md:justify-self-end">
-      <fontdue-newsletter-signup
-        button-label="Subscribe"
-        opt-in-label="I agree to receive newsletters almost never"
-        opt-in-checkbox-checked
-      />
     </div>
   </div>
 </footer>

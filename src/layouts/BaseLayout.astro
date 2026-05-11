@@ -28,6 +28,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+    <link rel="preload" href="/fonts/Selandia-Regular.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="https://js.fontdue.com/fontdue.css" as="style" />
     <link rel="preload" href="/logo.svg" as="image" />
     {image && <link rel="preload" as="image" href={new URL(image, Astro.url).href} />}

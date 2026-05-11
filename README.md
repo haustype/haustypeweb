@@ -41,6 +41,20 @@ Output in `dist/`
 
 2. **Edit content** at [sanity.io/manage](https://sanity.io/manage) → select your project. Or run `npm run studio` to open the studio locally.
 
+   **Homepage** (hero, about text, typefaces grid order, fonts in use) lives under **Homepage Settings**. **Site Settings** is header/footer navigation only.
+
+   If Studio shows **Unknown fields** on Site Settings (leftover `aboutText` / `heroItems` / etc.), run once:
+
+   ```bash
+   SANITY_API_TOKEN="your-token" npm run migrate:homepage
+   ```
+
+   Or: `npx sanity exec scripts/migrate-homepage-from-siteSettings.mjs --with-user-token`
+
+   Then redeploy the Studio (`npx sanity deploy`) so the cloud editor matches this repo.
+
+   **If Studio shows “Unknown fields” for things like Blog page title or Footer navigation**, the hosted Studio is outdated — run `npx sanity deploy` from this repo (Studio URL is typically `https://haustypeweb.sanity.studio/`).
+
 3. **Add CORS origins** in [sanity.io/manage](https://sanity.io/manage) → your project → API → CORS origins:
    - `http://localhost:4321` (development)
    - `https://haustypeweb.netlify.app` (production)

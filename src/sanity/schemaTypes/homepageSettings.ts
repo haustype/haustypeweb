@@ -25,13 +25,27 @@ export const homepageSettingsType = defineType({
           fields: [
             { name: 'type', type: 'string', options: { list: ['image', 'video'] }, initialValue: 'image' },
             { name: 'image', type: 'image', title: 'Image', options: { hotspot: true }, hidden: ({ parent }) => parent?.type === 'video' },
-            { name: 'videoUrl', type: 'url', title: 'Video URL', hidden: ({ parent }) => parent?.type !== 'video' },
+            {
+              name: 'video',
+              type: 'file',
+              title: 'Video (upload)',
+              description: 'Upload MP4, WebM, or MOV. Keep under 5MB for fast loading.',
+              options: { accept: 'video/mp4,video/webm,video/quicktime' },
+              hidden: ({ parent }) => parent?.type !== 'video',
+            },
+            {
+              name: 'videoUrl',
+              type: 'url',
+              title: 'Video URL (alternative)',
+              description: 'Or paste a URL to a hosted video (e.g. from Vimeo, or your CDN).',
+              hidden: ({ parent }) => parent?.type !== 'video',
+            },
             { name: 'alt', type: 'string', title: 'Alt Text' },
           ],
           preview: {
-            select: { alt: 'alt', media: 'image', type: 'type' },
-            prepare: ({ alt, media, type }) => ({
-              title: alt || (type === 'video' ? 'Video' : 'Hero item'),
+            select: { alt: 'alt', media: 'image', type: 'type', videoFilename: 'video.asset.originalFilename' },
+            prepare: ({ alt, media, type, videoFilename }) => ({
+              title: alt || (type === 'video' ? (videoFilename || 'Video') : 'Hero item'),
               media,
             }),
           },
