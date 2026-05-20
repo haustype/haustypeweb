@@ -5,9 +5,15 @@ interface Props {
   title: string;
   description?: string;
   image?: string;
+  preloadImages?: string[];
 }
 
-const { title, description = 'Haus Type is a type foundry in Valencia, Spain. Retail and custom typefaces for global businesses.', image } = Astro.props;
+const {
+  title,
+  description = 'Haus Type is a type foundry in Valencia, Spain. Retail and custom typefaces for global businesses.',
+  image,
+  preloadImages = [],
+} = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 ---
 
@@ -32,6 +38,9 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <link rel="preload" href="https://js.fontdue.com/fontdue.css" as="style" />
     <link rel="preload" href="/logo.svg" as="image" />
     {image && <link rel="preload" as="image" href={new URL(image, Astro.url).href} />}
+    {preloadImages.map((src) => (
+      <link rel="preload" as="image" href={new URL(src, Astro.url).href} />
+    ))}
     <link rel="stylesheet" href="https://js.fontdue.com/fontdue.css" />
     <script type="module">
       import fontdue from "https://js.fontdue.com/fontdue.esm.js";
@@ -50,6 +59,11 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
   <body>
     <fontdue-store-modal></fontdue-store-modal>
     <slot />
+    <script>
+      import { initAllSlideshows } from '../lib/slideshow';
+      initAllSlideshows();
+      document.addEventListener('astro:page-load', () => initAllSlideshows());
+    </script>
     <script>
       (function () {
         const els = document.querySelectorAll('[data-reveal]');

@@ -14,15 +14,15 @@ const carouselId = `carousel-${Math.random().toString(36).slice(2)}`;
 ---
 
 <section class="bg-haus-grey pt-10 md:pt-12 pb-[120px]">
-  <div class="w-full max-w-content mx-auto px-8">
-    <h2 class="text-[1.3rem] font-normal text-black mb-8">
+  <div class="w-full max-w-content mx-auto px-16">
+    <h2 class="font-normal text-black mb-8">
       Fonts In Use
     </h2>
     <div class="relative">
       <div class="carousel-viewport w-full overflow-hidden" id={`${carouselId}-viewport`}>
-        <div class="carousel-track flex gap-4 transition-transform duration-300 ease-out" id={`${carouselId}-track`}>
+        <div class="carousel-track flex gap-6 transition-transform duration-300 ease-out" id={`${carouselId}-track`}>
           {[...items, ...items].map((item, i) => (
-            <div class="carousel-slide flex-shrink-0 flex-[0_0_100%] md:flex-[0_0_calc(50%-8px)] lg:flex-[0_0_calc(33.333%-11px)]">
+            <div class="carousel-slide flex-shrink-0 flex-[0_0_100%] md:flex-[0_0_calc(50%-12px)] lg:flex-[0_0_calc(33.333%-16px)]">
               <img
                 src={item.image}
                 alt={item.alt}
@@ -78,7 +78,7 @@ const carouselId = `carousel-${Math.random().toString(36).slice(2)}`;
     }
 
     let index = 0;
-    const gap = 16;
+    const gap = 24;
 
     function getSlideWidth() {
       const slide = slides[0];

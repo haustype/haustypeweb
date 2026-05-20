@@ -1,31 +1,33 @@
 ---
+import ImageSlideshow from './ImageSlideshow.astro';
+
+interface CardImage {
+  src: string;
+  alt?: string;
+}
+
 interface Props {
   name: string;
   category: string;
   styles: number;
   slug: string;
-  image: string;
+  images: CardImage[];
 }
 
-const { name, slug, image, styles } = Astro.props;
+const { name, slug, images, styles } = Astro.props;
 ---
 
 <article class="bg-white rounded-lg h-full flex flex-col w-full">
   <a href={`/typefaces/${slug}`} class="block flex-1 flex flex-col min-h-0">
-    <!-- Image area: rounded top, reserves space before load -->
     <div class="rounded-t-lg px-16 md:px-[72px] pt-10 md:pt-[56px] pb-8 md:pb-[40px] bg-white shrink-0">
-      <div class="aspect-[4/3] flex items-center justify-center w-full min-w-0">
-        <img
-          src={image}
-          alt={name}
-          width={400}
-          height={300}
-          class="max-w-full max-h-full object-contain w-full"
-          loading="lazy"
+      <div class="aspect-[4/3] w-full min-w-0 relative">
+        <ImageSlideshow
+          items={images.map((img) => ({ src: img.src, alt: img.alt ?? name }))}
+          stageClass="absolute inset-0"
+          mediaClass="slideshow__media max-w-full max-h-full object-contain w-full"
         />
       </div>
     </div>
-    <!-- Text row -->
     <div class="px-6 pb-6 flex justify-between items-baseline gap-4 shrink-0 rounded-b-lg">
       <h3 class="text-base font-normal text-black hover:text-haus-red transition-colors truncate">
         {name}

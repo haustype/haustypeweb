@@ -1,0 +1,76 @@
+---
+export interface SlideshowItem {
+  type?: 'image' | 'video';
+  src: string;
+  alt?: string;
+}
+
+interface Props {
+  items: SlideshowItem[];
+  mediaClass?: string;
+  stageClass?: string;
+}
+
+const { items, mediaClass = 'slideshow__media max-w-full max-h-full w-auto object-contain', stageClass = '' } = Astro.props;
+const slides = items.length ? items : [{ type: 'image' as const, src: '/hero-placeholder.jpg', alt: 'Image' }];
+const isSlideshow = slides.length > 1;
+---
+
+<style>
+  [data-slideshow] .slideshow__slide {
+    pointer-events: none;
+  }
+
+  [data-slideshow] .slideshow__slide.is-active {
+    pointer-events: auto;
+  }
+
+  [data-slideshow] .slideshow__media {
+    will-change: opacity;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+</style>
+
+<div
+  class:list={['relative', stageClass]}
+  data-slideshow={isSlideshow ? '' : undefined}
+>
+  <div class="slideshow__stage relative w-full h-full">
+    {slides.map((item, i) => (
+      <div
+        class:list={[
+          'slideshow__slide absolute inset-0 flex items-center justify-center',
+          isSlideshow && i === 0 && 'is-active',
+        ]}
+        style={isSlideshow ? `z-index: ${i === 0 ? 1 : 0};` : undefined}
+        data-slide
+        data-index={i}
+      >
+        {item.type === 'video' ? (
+          <video
+            src={item.src}
+            autoplay
+            muted
+            loop
+            playsinline
+            class={mediaClass}
+            style={isSlideshow ? `opacity: ${i === 0 ? 1 : 0};` : undefined}
+          />
+        ) : (
+          <img
+            src={item.src}
+            alt={item.alt ?? ''}
+            width={1200}
+            height={800}
+            class={mediaClass}
+            style={isSlideshow ? `opacity: ${i === 0 ? 1 : 0};` : undefined}
+            loading={isSlideshow ? 'eager' : 'lazy'}
+            decoding={isSlideshow ? 'sync' : 'async'}
+            fetchpriority={i === 0 ? 'high' : undefined}
+          />
+        )}
+      </div>
+    ))}
+  </div>
+</div>

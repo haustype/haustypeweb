@@ -45,9 +45,24 @@ export const typefaceType = defineType({
     defineField({ name: 'category', type: 'string', title: 'Category' }),
     defineField({ name: 'styles', type: 'number', title: 'Styles', initialValue: 0 }),
     defineField({
+      name: 'cardImages',
+      type: 'array',
+      title: 'Card images',
+      description:
+        'Homepage “Our Typefaces” slideshow. Add multiple images for hover scrub on desktop and autoplay on mobile. If empty, the single Card image below is used.',
+      of: [
+        {
+          type: 'image',
+          options: { hotspot: true },
+          fields: [{ name: 'alt', type: 'string', title: 'Alternative text' }],
+        },
+      ],
+    }),
+    defineField({
       name: 'image',
       type: 'image',
-      title: 'Card Image',
+      title: 'Card image (fallback)',
+      description: 'Used when Card images is empty.',
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alternative Text' }],
     }),
@@ -60,6 +75,7 @@ export const typefaceType = defineType({
     }),
   ],
   preview: {
-    select: { title: 'name', media: 'image' },
+    select: { title: 'name', media: 'cardImages.0', fallback: 'image' },
+    prepare: ({ title, media, fallback }) => ({ title, media: media ?? fallback }),
   },
 });

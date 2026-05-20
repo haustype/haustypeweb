@@ -20,8 +20,42 @@ const fallbackHeroItems = [
 ];
 const fallbackAboutText = 'Description';
 const fallbackTypefaces = [
-  { name: 'Typeface name', category: 'Category', styles: 0, slug: 'typeface-name', image: noImagePlaceholderSvg },
+  {
+    name: 'Typeface name',
+    category: 'Category',
+    styles: 0,
+    slug: 'typeface-name',
+    images: [{ src: noImagePlaceholderSvg, alt: 'Typeface name' }],
+  },
 ];
+
+type TypefaceFromSanity = {
+  name: string;
+  slug?: { current: string };
+  category?: string;
+  styles?: number;
+  image?: { asset?: { _ref: string }; alt?: string };
+  cardImages?: Array<{ asset?: { _ref: string }; alt?: string }>;
+};
+
+function mapTypefaceCardImages(t: TypefaceFromSanity) {
+  const fromArray = t.cardImages
+    ?.filter((img) => img?.asset)
+    .map((img) => ({
+      src: urlForImage(img.asset!).width(1600).fit('max').url(),
+      alt: img.alt || t.name,
+    }));
+  if (fromArray?.length) return fromArray;
+  if (t.image?.asset) {
+    return [
+      {
+        src: urlForImage(t.image.asset).width(1600).fit('max').url(),
+        alt: t.image.alt || t.name,
+      },
+    ];
+  }
+  return [{ src: noImagePlaceholderSvg, alt: t.name }];
+}
 const fallbackFontsInUse = [
   { image: noImagePlaceholderSvg, alt: 'Font in use' },
 ];
@@ -30,7 +64,7 @@ const fallbackFontsInUse = [
 const { data: homepageSettings } = await safeLoadQuery<{
   aboutText?: string;
   heroItems?: Array<{ type?: string; image?: unknown; videoUrl?: string; alt?: string }>;
-  typefaceOrder?: Array<{ _ref: string }>;
+  typefaceOrder?: TypefaceFromSanity[];
   fontsInUse?: Array<{ image?: unknown; alt?: string }>;
 } | null>({
   query: `*[_type == "homepageSettings"][0]{
@@ -42,7 +76,14 @@ const { data: homepageSettings } = await safeLoadQuery<{
       type == "video" => { "videoUrl": coalesce(video.asset->url, videoUrl) },
       alt
     },
-    typefaceOrder[]->{ name, slug, category, styles, image { asset } },
+    typefaceOrder[]->{
+      name,
+      slug,
+      category,
+      styles,
+      cardImages[] { asset, alt },
+      image { asset, alt }
+    },
     fontsInUse
   }`,
 });
@@ -52,7 +93,7 @@ const { data: legacySettings } = await safeLoadQuery<{
   aboutText?: string;
   heroItems?: Array<{ type?: string; image?: unknown; videoUrl?: string; alt?: string }>;
   fontsInUse?: Array<{ image?: unknown; alt?: string }>;
-  typefaceOrder?: Array<{ name: string; slug?: { current: string }; category?: string; styles?: number; image?: { asset?: { _ref: string } } }>;
+  typefaceOrder?: TypefaceFromSanity[];
 } | null>({
   query: `*[_type == "siteSettings"][0]{
     aboutText,
@@ -64,7 +105,14 @@ const { data: legacySettings } = await safeLoadQuery<{
       alt
     },
     fontsInUse,
-    typefaceOrder[]->{ name, slug, category, styles, image { asset } }
+    typefaceOrder[]->{
+      name,
+      slug,
+      category,
+      styles,
+      cardImages[] { asset, alt },
+      image { asset, alt }
+    }
   }`,
 });
 
@@ -110,19 +158,14 @@ const orderedTypefaces =
     : legacySettings?.typefaceOrder?.length
       ? legacySettings.typefaceOrder
       : undefined;
-const { data: fallbackTypefacesData } = await safeLoadQuery<Array<{
-  name: string;
-  slug?: { current: string };
-  category?: string;
-  styles?: number;
-  image?: { asset?: { _ref: string } };
-}>>({
+const { data: fallbackTypefacesData } = await safeLoadQuery<TypefaceFromSanity[]>({
   query: `*[_type == "typeface"] | order(order asc, name asc){
     name,
     slug,
     category,
     styles,
-    image { asset }
+    cardImages[] { asset, alt },
+    image { asset, alt }
   }`,
 });
 
@@ -138,7 +181,7 @@ const typefaces =
         category: t.category ?? '',
         styles: t.styles ?? 0,
         slug: t.slug?.current ?? t.name.toLowerCase().replace(/\s+/g, '-'),
-        image: t.image?.asset ? urlForImage(t.image.asset).width(1600).fit('max').url() : noImagePlaceholderSvg,
+        images: mapTypefaceCardImages(t),
       }))
     : fallbackTypefaces;
 
@@ -150,12 +193,15 @@ const fontsInUse =
         alt: item.alt ?? '',
       })).filter((i) => i.image)
     : fallbackFontsInUse;
+
+const heroImageUrls = heroItems.filter((item) => item.type === 'image').map((item) => item.src);
 ---
 
 <BaseLayout
   title="Haus Type | Type Foundry"
   description={aboutText}
-  image={heroItems[0]?.type === 'image' ? heroItems[0].src : '/hero.png'}
+  image={heroImageUrls[0] ?? '/hero.png'}
+  preloadImages={heroImageUrls.slice(1)}
 >
   <div class="relative">
     {import.meta.env.DEV && !typefacesFromSanity && (
@@ -165,7 +211,7 @@ const fontsInUse =
     )}
     <Hero items={heroItems} />
     <div class="absolute top-0 left-0 right-0 z-10">
-      <Header variant="dark" />
+      <Header variant="light" />
     </div>
   </div>
   <main class="flex-1" data-reveal>
