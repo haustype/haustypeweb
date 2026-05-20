@@ -5,6 +5,10 @@ export function initSlideshow(container: Element) {
   const slideEls = container.querySelectorAll('[data-slide]');
   if (slideEls.length <= 1) return;
 
+  const hoverOnly = container.hasAttribute('data-slideshow-hover-only');
+  const cardMedia = hoverOnly ? container.closest('[data-typeface-card-media]') : null;
+  const hoverLayer = hoverOnly ? container.closest('[data-typeface-hover-layer]') : null;
+
   const FADE_MS_MOBILE = 500;
   const HOLD_MS = 4000;
   const DESKTOP_BREAKPOINT = 1024;
@@ -14,6 +18,7 @@ export function initSlideshow(container: Element) {
   let autoplayTimer: ReturnType<typeof setTimeout> | null = null;
   let fadeTimer: ReturnType<typeof setTimeout> | null = null;
   let ready = false;
+  let isHovering = false;
 
   function getMedia(el: Element) {
     return el.querySelector('.slideshow__media, video');
@@ -125,12 +130,31 @@ export function initSlideshow(container: Element) {
 
   function handleMouseMove(e: MouseEvent) {
     if (window.innerWidth < DESKTOP_BREAKPOINT) return;
-    const rect = container.getBoundingClientRect();
+    if (hoverOnly && !isHovering) return;
+    const rect = (cardMedia ?? container).getBoundingClientRect();
     const x = e.clientX - rect.left;
     const pct = Math.max(0, Math.min(1, x / rect.width));
     const index = Math.floor(pct * slideEls.length);
     const target = index >= slideEls.length ? slideEls.length - 1 : index;
     showSlide(target);
+  }
+
+  function activateHover() {
+    if (!hoverOnly || !hoverLayer || !ready) return;
+    isHovering = true;
+    hoverLayer.classList.add('is-active');
+    setSlideInstant(0);
+  }
+
+  function deactivateHover() {
+    if (!hoverOnly || !hoverLayer) return;
+    isHovering = false;
+    hoverLayer.classList.remove('is-active');
+    if (fadeTimer) {
+      clearTimeout(fadeTimer);
+      fadeTimer = null;
+    }
+    setSlideInstant(0);
   }
 
   function decodeImage(img: HTMLImageElement) {
@@ -164,13 +188,27 @@ export function initSlideshow(container: Element) {
     setSlideInstant(0);
   }
 
-  container.addEventListener('mousemove', handleMouseMove);
+  if (hoverOnly && cardMedia) {
+    cardMedia.addEventListener('mouseenter', () => {
+      if (window.innerWidth < DESKTOP_BREAKPOINT) return;
+      activateHover();
+    });
+    cardMedia.addEventListener('mousemove', handleMouseMove);
+    cardMedia.addEventListener('mouseleave', deactivateHover);
+  } else {
+    container.addEventListener('mousemove', handleMouseMove);
+  }
 
   prepareSlides().then(() => {
+    if (hoverOnly) return;
     if (window.innerWidth < DESKTOP_BREAKPOINT) startAutoplay();
   });
 
   window.addEventListener('resize', () => {
+    if (hoverOnly) {
+      deactivateHover();
+      return;
+    }
     if (window.innerWidth < DESKTOP_BREAKPOINT) {
       if (!autoplayTimer) startAutoplay();
     } else {

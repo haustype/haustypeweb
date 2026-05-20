@@ -9,11 +9,24 @@ interface Props {
   items: SlideshowItem[];
   mediaClass?: string;
   stageClass?: string;
+  /** cover = fill frame edge-to-edge; contain = fit inside (hero, etc.) */
+  objectFit?: 'contain' | 'cover';
+  /** Desktop hover only; hidden until parent card is hovered (typeface cards) */
+  hoverOnly?: boolean;
 }
 
-const { items, mediaClass = 'slideshow__media max-w-full max-h-full w-auto object-contain', stageClass = '' } = Astro.props;
+const { items, stageClass = '', objectFit = 'contain', hoverOnly = false } = Astro.props;
 const slides = items.length ? items : [{ type: 'image' as const, src: '/hero-placeholder.jpg', alt: 'Image' }];
 const isSlideshow = slides.length > 1;
+const slideClass =
+  objectFit === 'cover'
+    ? 'slideshow__slide absolute inset-0 overflow-hidden'
+    : 'slideshow__slide absolute inset-0 flex items-center justify-center';
+const defaultMediaClass =
+  objectFit === 'cover'
+    ? 'slideshow__media absolute inset-0 w-full h-full object-cover'
+    : 'slideshow__media max-w-full max-h-full w-auto object-contain';
+const mediaClass = Astro.props.mediaClass ?? defaultMediaClass;
 ---
 
 <style>
@@ -33,16 +46,14 @@ const isSlideshow = slides.length > 1;
 </style>
 
 <div
-  class:list={['relative', stageClass]}
+  class:list={['relative block min-h-0', stageClass]}
   data-slideshow={isSlideshow ? '' : undefined}
+  data-slideshow-hover-only={hoverOnly && isSlideshow ? '' : undefined}
 >
   <div class="slideshow__stage relative w-full h-full">
     {slides.map((item, i) => (
       <div
-        class:list={[
-          'slideshow__slide absolute inset-0 flex items-center justify-center',
-          isSlideshow && i === 0 && 'is-active',
-        ]}
+        class:list={[slideClass, isSlideshow && i === 0 && 'is-active']}
         style={isSlideshow ? `z-index: ${i === 0 ? 1 : 0};` : undefined}
         data-slide
         data-index={i}

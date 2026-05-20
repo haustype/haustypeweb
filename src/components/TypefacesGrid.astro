@@ -6,7 +6,8 @@ interface Typeface {
   category: string;
   styles: number;
   slug: string;
-  images: Array<{ src: string; alt?: string }>;
+  defaultImage: { src: string; alt?: string };
+  hoverImages: Array<{ src: string; alt?: string }>;
 }
 
 interface Props {

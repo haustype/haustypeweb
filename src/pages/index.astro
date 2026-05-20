@@ -25,7 +25,8 @@ const fallbackTypefaces = [
     category: 'Category',
     styles: 0,
     slug: 'typeface-name',
-    images: [{ src: noImagePlaceholderSvg, alt: 'Typeface name' }],
+    defaultImage: { src: noImagePlaceholderSvg, alt: 'Typeface name' },
+    hoverImages: [] as Array<{ src: string; alt: string }>,
   },
 ];
 
@@ -35,26 +36,40 @@ type TypefaceFromSanity = {
   category?: string;
   styles?: number;
   image?: { asset?: { _ref: string }; alt?: string };
-  cardImages?: Array<{ asset?: { _ref: string }; alt?: string }>;
+  cardImages?: Array<{
+    image?: { asset?: { _ref: string }; alt?: string };
+    asset?: { _ref: string };
+    alt?: string;
+  }>;
 };
 
-function mapTypefaceCardImages(t: TypefaceFromSanity) {
-  const fromArray = t.cardImages
-    ?.filter((img) => img?.asset)
-    .map((img) => ({
-      src: urlForImage(img.asset!).width(1600).fit('max').url(),
-      alt: img.alt || t.name,
-    }));
-  if (fromArray?.length) return fromArray;
-  if (t.image?.asset) {
-    return [
-      {
-        src: urlForImage(t.image.asset).width(1600).fit('max').url(),
+function cardImageSource(item: NonNullable<TypefaceFromSanity['cardImages']>[number]) {
+  if (item.image?.asset) return item.image;
+  if (item.asset) return item;
+  return null;
+}
+
+function mapTypefaceCard(t: TypefaceFromSanity) {
+  const hoverImages =
+    t.cardImages
+      ?.map((item) => {
+        const source = cardImageSource(item);
+        if (!source) return null;
+        return {
+          src: urlForImage(source).width(1600).fit('max').url(),
+          alt: item.alt || source.alt || t.name,
+        };
+      })
+      .filter((item): item is { src: string; alt: string } => item !== null) ?? [];
+
+  const defaultImage = t.image?.asset
+    ? {
+        src: urlForImage(t.image).width(1600).fit('max').url(),
         alt: t.image.alt || t.name,
-      },
-    ];
-  }
-  return [{ src: noImagePlaceholderSvg, alt: t.name }];
+      }
+    : hoverImages[0] ?? { src: noImagePlaceholderSvg, alt: t.name };
+
+  return { defaultImage, hoverImages };
 }
 const fallbackFontsInUse = [
   { image: noImagePlaceholderSvg, alt: 'Font in use' },
@@ -81,7 +96,7 @@ const { data: homepageSettings } = await safeLoadQuery<{
       slug,
       category,
       styles,
-      cardImages[] { asset, alt },
+      cardImages[] { _key, alt, image { asset, alt }, asset },
       image { asset, alt }
     },
     fontsInUse
@@ -110,7 +125,7 @@ const { data: legacySettings } = await safeLoadQuery<{
       slug,
       category,
       styles,
-      cardImages[] { asset, alt },
+      cardImages[] { _key, alt, image { asset, alt }, asset },
       image { asset, alt }
     }
   }`,
@@ -181,7 +196,7 @@ const typefaces =
         category: t.category ?? '',
         styles: t.styles ?? 0,
         slug: t.slug?.current ?? t.name.toLowerCase().replace(/\s+/g, '-'),
-        images: mapTypefaceCardImages(t),
+        ...mapTypefaceCard(t),
       }))
     : fallbackTypefaces;
 

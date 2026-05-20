@@ -1,4 +1,4 @@
-import { defineField, defineType } from 'sanity';
+import { defineArrayMember, defineField, defineType } from 'sanity';
 
 export const typefaceType = defineType({
   name: 'typeface',
@@ -49,20 +49,43 @@ export const typefaceType = defineType({
       type: 'array',
       title: 'Card images',
       description:
-        'Homepage “Our Typefaces” slideshow. Add multiple images for hover scrub on desktop and autoplay on mobile. If empty, the single Card image below is used.',
+        'Extra images for the homepage card hover slideshow (desktop only). Shown when visitors hover the card — scrub left/right to change image. Needs 2+ images. The Card image (fallback) below is always shown when not hovering.',
+      options: { layout: 'grid' },
       of: [
-        {
-          type: 'image',
-          options: { hotspot: true },
-          fields: [{ name: 'alt', type: 'string', title: 'Alternative text' }],
-        },
+        defineArrayMember({
+          type: 'object',
+          name: 'cardImageItem',
+          title: 'Card image',
+          fields: [
+            defineField({
+              name: 'image',
+              type: 'image',
+              title: 'Image',
+              validation: (rule) => rule.required(),
+              options: { hotspot: true },
+            }),
+            defineField({
+              name: 'alt',
+              type: 'string',
+              title: 'Label',
+              description: 'Optional label for Studio (and alt text on the site).',
+            }),
+          ],
+          preview: {
+            select: { title: 'alt', media: 'image' },
+            prepare: ({ title, media }) => ({
+              title: title || 'Card image',
+              media,
+            }),
+          },
+        }),
       ],
     }),
     defineField({
       name: 'image',
       type: 'image',
       title: 'Card image (fallback)',
-      description: 'Used when Card images is empty.',
+      description: 'Default homepage card image (always visible). Hover slideshow uses Card images when you add 2 or more there.',
       options: { hotspot: true },
       fields: [{ name: 'alt', type: 'string', title: 'Alternative Text' }],
     }),
