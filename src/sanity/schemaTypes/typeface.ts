@@ -50,7 +50,6 @@ export const typefaceType = defineType({
       title: 'Card images',
       description:
         'Extra images for the homepage card hover slideshow (desktop only). Shown when visitors hover the card — scrub left/right to change image. Needs 2+ images. The Card image (fallback) below is always shown when not hovering.',
-      options: { layout: 'grid' },
       of: [
         defineArrayMember({
           type: 'object',

@@ -9,6 +9,10 @@ const dataset = process.env.PUBLIC_SANITY_DATASET ?? 'production';
 export default defineConfig({
   projectId,
   dataset,
+  /** Avoid Content Releases UI locking documents in read-only published-only mode by default */
+  releases: {
+    enabled: false,
+  },
   plugins: [
     structureTool({
       structure: (S) =>

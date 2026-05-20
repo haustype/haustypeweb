@@ -11,7 +11,8 @@
     "astro": "astro",
     "studio": "sanity dev --port=3334",
     "migrate:homepage": "node scripts/migrate-homepage-from-siteSettings.mjs",
-    "migrate:card-images": "sanity exec scripts/migrate-card-images.mjs --with-user-token"
+    "migrate:card-images": "sanity exec scripts/migrate-card-images.mjs --with-user-token",
+    "ensure:typeface-drafts": "sanity exec scripts/ensure-typeface-drafts.mjs --with-user-token"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
