@@ -1,0 +1,17 @@
+---
+import HausBuyButton from './HausBuyButton.astro';
+import SiteBgToggle from './SiteBgToggle.astro';
+
+interface Props {
+  buyCollectionId?: string;
+}
+
+const { buyCollectionId } = Astro.props;
+---
+
+<div class="site-floating-controls">
+  {buyCollectionId && (
+    <HausBuyButton collectionId={buyCollectionId} variant="floating" />
+  )}
+  <SiteBgToggle />
+</div>

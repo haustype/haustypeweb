@@ -1,14 +1,18 @@
 ---
 interface Props {
   collectionId: string;
+  variant?: 'inline' | 'floating';
 }
 
-const { collectionId } = Astro.props;
+const { collectionId, variant = 'inline' } = Astro.props;
 ---
 
 <button
   type="button"
-  class="haus-buy-button"
+  class:list={[
+    'haus-buy-button',
+    { 'haus-buy-button--floating': variant === 'floating' },
+  ]}
   fontdue-click="open-store-modal"
   fontdue-store-route={`product/${collectionId}`}
 >

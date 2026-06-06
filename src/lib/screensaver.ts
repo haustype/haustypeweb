@@ -112,7 +112,7 @@ export function initScreensaver(root: HTMLElement) {
     root.setAttribute('aria-hidden', 'false');
     document.documentElement.classList.add('is-screensaver-active');
     document.documentElement.classList.remove('is-tab-hidden');
-    showSlide(0);
+    showSlide(Math.floor(Math.random() * slides.length));
     startSlideshow();
   }
 

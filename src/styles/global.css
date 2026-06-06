@@ -80,11 +80,17 @@ body {
     border-color: var(--site-border);
   }
 
-  .site-bg-toggle {
+  .site-floating-controls {
     position: fixed;
     right: 2rem;
     bottom: 2rem;
     z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .site-bg-toggle {
     width: 40px;
     height: 40px;
     padding: 0;
@@ -96,6 +102,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
   }
 
   .site-bg-toggle__swatch {
@@ -219,6 +226,22 @@ html.reveal-once-done [data-reveal-once] {
 
 .haus-buy-button:hover {
   opacity: 0.8;
+}
+
+.haus-buy-button--floating {
+  height: 40px;
+  padding: 0 1rem;
+  color: #ffffff;
+  background: #000000;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.haus-buy-button--floating:hover {
+  opacity: 0.85;
 }
 
 /* Fontdue type testers — match Haus Type UI */

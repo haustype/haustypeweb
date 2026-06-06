@@ -29,9 +29,9 @@ if (!slides.length) return null;
   data-fade-ms={fadeSeconds * 1000}
   aria-hidden="true"
 >
-  {slides.map((slide, index) => (
+  {slides.map((slide) => (
     <div
-      class:list={['screensaver__slide', { 'is-active': index === 0 }]}
+      class="screensaver__slide"
       data-screensaver-slide
     >
       <img
