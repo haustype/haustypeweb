@@ -1,28 +1,27 @@
-import { defineArrayMember, defineField, defineType } from 'sanity';
+import { orderRankField, orderRankOrdering } from '@sanity/orderable-document-list';
+import { defineField, defineType } from 'sanity';
 
 export const typefaceType = defineType({
   name: 'typeface',
   title: 'Typeface',
   type: 'document',
+  orderings: [orderRankOrdering],
   fields: [
+    orderRankField({ type: 'typeface' }),
     defineField({ name: 'name', type: 'string', title: 'Name' }),
     defineField({
-      name: 'detailPageTitle',
-      type: 'string',
-      title: 'Detail page title',
-      description: 'Optional. Overrides the typeface name as the main heading on the typeface\'s page. Leave empty to use the typeface name.',
-    }),
-    defineField({
-      name: 'body',
-      type: 'blockContent',
-      title: 'Body',
-      description: 'Rich text shown below the title, before Fontdue components.',
+      name: 'contentSegments',
+      type: 'array',
+      title: 'Content',
+      description:
+        'Heading + body pairs in the two-column layout. Add as many segments as you need — each is separated by a line, like the homepage typeface list.',
+      of: [{ type: 'contentSegment' }],
     }),
     defineField({
       name: 'pageSections',
       type: 'array',
-      title: 'Detail page layout',
-      description: 'Order of sections on this typeface\'s page. Add, remove, or reorder: type tester, character viewer, buy button, custom content.',
+      title: 'Fontdue sections',
+      description: 'Order of sections below the content segments. Add, remove, or reorder: type tester, character viewer, buy button, custom content.',
       of: [{ type: 'typefacePageSection' }],
       initialValue: [
         { sectionType: 'typeTester' },
@@ -45,59 +44,16 @@ export const typefaceType = defineType({
     defineField({ name: 'category', type: 'string', title: 'Category' }),
     defineField({ name: 'styles', type: 'number', title: 'Styles', initialValue: 0 }),
     defineField({
-      name: 'cardImages',
-      type: 'array',
-      title: 'Card images',
-      description:
-        'Extra images for the homepage card hover slideshow (desktop only). Shown when visitors hover the card — scrub left/right to change image. Needs 2+ images. The Card image (fallback) below is always shown when not hovering.',
-      of: [
-        defineArrayMember({
-          type: 'object',
-          name: 'cardImageItem',
-          title: 'Card image',
-          fields: [
-            defineField({
-              name: 'image',
-              type: 'image',
-              title: 'Image',
-              validation: (rule) => rule.required(),
-              options: { hotspot: true },
-            }),
-            defineField({
-              name: 'alt',
-              type: 'string',
-              title: 'Label',
-              description: 'Optional label for Studio (and alt text on the site).',
-            }),
-          ],
-          preview: {
-            select: { title: 'alt', media: 'image' },
-            prepare: ({ title, media }) => ({
-              title: title || 'Card image',
-              media,
-            }),
-          },
-        }),
-      ],
-    }),
-    defineField({
-      name: 'image',
+      name: 'specimen',
       type: 'image',
-      title: 'Card image (fallback)',
-      description: 'Default homepage card image (always visible). Hover slideshow uses Card images when you add 2 or more there.',
-      options: { hotspot: true },
+      title: 'Homepage specimen',
+      description: 'SVG shown in the homepage typeface list. More specimens can be added via Fontdue on the detail page.',
+      options: { accept: '.svg' },
       fields: [{ name: 'alt', type: 'string', title: 'Alternative Text' }],
-    }),
-    defineField({
-      name: 'order',
-      type: 'number',
-      title: 'Display Order',
-      description: 'Fallback order when "Our Typefaces" in Homepage Settings is empty.',
-      initialValue: 0,
     }),
   ],
   preview: {
-    select: { title: 'name', media: 'cardImages.0', fallback: 'image' },
-    prepare: ({ title, media, fallback }) => ({ title, media: media ?? fallback }),
+    select: { title: 'name', media: 'specimen' },
+    prepare: ({ title, media }) => ({ title, media }),
   },
 });

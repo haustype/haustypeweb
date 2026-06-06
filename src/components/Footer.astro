@@ -1,15 +1,30 @@
 ---
 import { safeLoadQuery } from '../sanity/lib/safe-fetch';
 
-const { data: settings } = await safeLoadQuery<{
-  footerNavigation?: Array<{ _type?: string; label?: string; href?: string }>;
+const { data: typefacesData } = await safeLoadQuery<
+  Array<{ name: string; slug?: { current: string } }>
+>({
+  query: `*[_type == "typeface"] | order(orderRank){ orderRank, name, slug }`,
+});
+
+const { data: siteSettings } = await safeLoadQuery<{
+  instagramUrl?: string | null;
+  contactEmail?: string | null;
+  footerNavigation?: Array<{
+    label?: string;
+    href?: string;
+    external?: boolean;
+  }>;
 } | null>({
   query: `*[_type == "siteSettings"][0]{
+    instagramUrl,
+    contactEmail,
     "footerNavigation": footerNavigation[]{
       _type,
       _type == "internalLink" => {
+        "label": page->title,
         "href": "/" + page->slug.current,
-        "label": page->title
+        "external": false
       },
       _type == "builtInPage" => {
         "href": "/" + route,
@@ -18,50 +33,116 @@ const { data: settings } = await safeLoadQuery<{
           route == "typefaces" => "Typefaces",
           route == "in-use" => "In Use",
           route
-        )
+        ),
+        "external": false
       },
       _type == "externalLink" => {
-        "href": url,
-        "label": label
+        "label": label,
+        "href": select(
+          linkType == "email" => "mailto:" + email,
+          url
+        ),
+        "external": linkType != "email"
       }
     }
   }`,
 });
 
+const typefaces = (typefacesData ?? []).map((t) => ({
+  name: t.name,
+  slug: t.slug?.current ?? t.name.toLowerCase().replace(/\s+/g, '-'),
+}));
+
+const mid = Math.ceil(typefaces.length / 2);
+const typefacesLeft = typefaces.slice(0, mid);
+const typefacesRight = typefaces.slice(mid);
+
+const instagramUrl = siteSettings?.instagramUrl?.trim() || 'https://www.instagram.com/haustype/';
+const contactEmail = siteSettings?.contactEmail?.trim() || 'hello@haustype.com';
+
 const footerLinks =
-  settings?.footerNavigation?.length
-    ? settings.footerNavigation
-        .filter((item) => item.label && item.href)
-        .map((item) => ({
-          label: item.label!,
-          href: item.href!,
-          external: item._type === 'externalLink',
-        }))
-    : [
-        { href: '/typefaces', label: 'Trial Fonts' },
-        { href: '/information', label: 'Licensing' },
-        { href: 'https://instagram.com/haus_type', label: 'Instagram', external: true },
-      ];
+  siteSettings?.footerNavigation
+    ?.filter((item) => item.label && item.href)
+    .map((item) => ({
+      label: item.label!,
+      href: item.href!,
+      external: item.external ?? false,
+    })) ?? [
+    { label: 'Instagram', href: instagramUrl, external: true },
+    { label: contactEmail, href: `mailto:${contactEmail}`, external: false },
+  ];
 ---
 
-<footer class="text-white" style="background-color: #0a0a0a;">
-  <div class="w-full max-w-content mx-auto px-16 pt-8 pb-[60px] md:pb-[72px]">
-    <div class="flex flex-col gap-8">
-      <a href="/" class="flex items-center gap-2 font-normal text-base tracking-tight hover:opacity-80 transition-opacity w-fit">
-        <img src="/logo.svg" alt="" class="h-[13px] w-auto" aria-hidden="true" />
-        Haus Type
-      </a>
-      <nav class="flex flex-col gap-[0.45rem]" aria-label="Footer links">
-        {footerLinks.map((item) => (
-          <a
-            href={item.href}
-            class="text-base hover:opacity-80 transition-opacity w-fit"
-            {...(item.external && { target: '_blank', rel: 'noopener noreferrer' })}
-          >
-            {item.label}
-          </a>
+<footer class="site-footer text-white">
+  <div class="site-grid py-16 md:py-20">
+    <div class="col-span-6 md:col-span-2 md:col-start-1">
+      <p class="site-footer__heading m-0 mb-6">Typefaces</p>
+      <div class="grid grid-cols-2 gap-x-6 gap-y-1">
+        <ul class="list-none m-0 p-0 flex flex-col gap-1">
+          {typefacesLeft.map((typeface) => (
+            <li>
+              <a
+                href={`/typefaces/${typeface.slug}`}
+                class="site-footer__link text-base"
+              >
+                {typeface.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+        <ul class="list-none m-0 p-0 flex flex-col gap-1">
+          {typefacesRight.map((typeface) => (
+            <li>
+              <a
+                href={`/typefaces/${typeface.slug}`}
+                class="site-footer__link text-base"
+              >
+                {typeface.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-span-6 md:col-span-1 md:col-start-3 mt-12 md:mt-0">
+      <p class="site-footer__heading m-0 mb-6">Contact</p>
+      <ul class="list-none m-0 p-0 flex flex-col gap-1">
+        {footerLinks.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              class="site-footer__link text-base"
+              {...(link.external
+                ? { target: '_blank', rel: 'noopener noreferrer' }
+                : {})}
+            >
+              {link.label}
+            </a>
+          </li>
         ))}
-      </nav>
+      </ul>
     </div>
   </div>
 </footer>
+
+<style>
+  .site-footer {
+    background-color: #000000;
+  }
+
+  .site-footer__heading {
+    font-weight: 400;
+    color: #ffffff;
+  }
+
+  .site-footer__link {
+    color: #fff;
+    opacity: 0.45;
+    transition: opacity 0.25s ease;
+  }
+
+  .site-footer__link:hover {
+    opacity: 0.8;
+  }
+</style>

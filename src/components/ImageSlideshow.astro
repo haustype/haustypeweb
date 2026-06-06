@@ -3,6 +3,8 @@ export interface SlideshowItem {
   type?: 'image' | 'video';
   src: string;
   alt?: string;
+  width?: number;
+  height?: number;
 }
 
 interface Props {
@@ -36,6 +38,11 @@ const mediaClass = Astro.props.mediaClass ?? defaultMediaClass;
 
   [data-slideshow] .slideshow__slide.is-active {
     pointer-events: auto;
+  }
+
+  /* Transparent SVGs must not stack — only the active slide paints */
+  [data-slideshow] .slideshow__slide:not(.is-active) {
+    visibility: hidden;
   }
 
   [data-slideshow] .slideshow__media {
@@ -72,8 +79,8 @@ const mediaClass = Astro.props.mediaClass ?? defaultMediaClass;
           <img
             src={item.src}
             alt={item.alt ?? ''}
-            width={1200}
-            height={800}
+            width={item.width}
+            height={item.height}
             class={mediaClass}
             style={isSlideshow ? `opacity: ${i === 0 ? 1 : 0};` : undefined}
             loading={isSlideshow ? 'eager' : 'lazy'}

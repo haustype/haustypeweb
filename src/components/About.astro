@@ -6,13 +6,10 @@ interface Props {
 const { text } = Astro.props;
 ---
 
-<section class="bg-haus-grey pt-8 md:pt-8 pb-14 md:pb-16">
-  <div class="grid grid-cols-6 gap-6 items-baseline w-full max-w-content mx-auto px-16">
-    <div class="col-span-6 md:col-span-3 md:col-start-1">
-      <h2 class="text-[#0a0a0a]">Welcome</h2>
-    </div>
-    <div class="col-span-6 md:col-span-3 md:col-start-4">
-      <h1 class="text-[#0a0a0a]">{text}</h1>
-    </div>
+<section class="bg-site pt-20 pb-[104px]">
+  <div class="site-grid">
+    <h1 class="col-span-6 md:col-span-2 md:col-start-2 text-base text-black font-normal mx-0 mb-0 mt-[4px]" data-reveal>
+      {text}
+    </h1>
   </div>
 </section>

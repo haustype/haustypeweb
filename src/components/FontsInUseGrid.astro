@@ -1,0 +1,200 @@
+---
+interface FontsInUseItem {
+  url: string;
+  alt: string;
+}
+
+interface Props {
+  items?: FontsInUseItem[];
+}
+
+const PLACEHOLDER_COUNT = 4;
+
+const { items: cmsItems = [] } = Astro.props;
+const items =
+  cmsItems.length > 0
+    ? cmsItems
+    : Array.from({ length: PLACEHOLDER_COUNT }, () => null);
+const gridId = `fonts-in-use-${Math.random().toString(36).slice(2)}`;
+const loopItems = [...items, ...items, ...items];
+---
+
+<section class="fonts-in-use bg-site pt-20 md:pt-24 pb-[240px]" id={gridId}>
+  <div class="site-grid items-baseline mb-8 fonts-in-use__header" data-reveal>
+    <h2 class="fonts-in-use__title col-span-6 md:col-span-1 md:col-start-2 font-normal text-black m-0">
+      Fonts in use
+    </h2>
+    <div class="col-span-6 md:col-span-1 md:col-start-6 md:justify-self-end flex items-center gap-6">
+      <button
+        type="button"
+        class="fonts-in-use__prev text-base text-black hover:opacity-80 transition-opacity bg-transparent border-none cursor-pointer p-0"
+        aria-label="Previous"
+        data-grid-id={gridId}
+      >
+        ←
+      </button>
+      <button
+        type="button"
+        class="fonts-in-use__next text-base text-black hover:opacity-80 transition-opacity bg-transparent border-none cursor-pointer p-0"
+        aria-label="Next"
+        data-grid-id={gridId}
+      >
+        →
+      </button>
+    </div>
+  </div>
+
+  <div class="fonts-in-use__viewport" id={`${gridId}-viewport`} data-reveal>
+    <div class="fonts-in-use__track flex gap-6" id={`${gridId}-track`}>
+      {loopItems.map((item, loopIndex) => (
+        <div class="fonts-in-use__slide shrink-0" data-slide-index={loopIndex}>
+          {item ? (
+            <img
+              src={item.url}
+              alt={item.alt}
+              width={900}
+              height={1125}
+              class="fonts-in-use__image aspect-[4/5] w-full rounded-lg object-cover"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <div class="aspect-[4/5] w-full rounded-lg bg-white" aria-hidden="true" />
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .fonts-in-use__viewport {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: var(--fonts-in-use-offset, 2rem);
+    scroll-behavior: auto;
+  }
+
+  .fonts-in-use__viewport::-webkit-scrollbar {
+    display: none;
+  }
+
+  .fonts-in-use__slide {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .fonts-in-use__image {
+    display: block;
+    height: auto;
+  }
+</style>
+
+<script define:vars={{ gridId, itemCount: items.length }}>
+  function initFontsInUseGrid() {
+    const section = document.getElementById(gridId);
+    const viewport = document.getElementById(`${gridId}-viewport`);
+    const track = document.getElementById(`${gridId}-track`);
+    const prevBtn = document.querySelector(`.fonts-in-use__prev[data-grid-id="${gridId}"]`);
+    const nextBtn = document.querySelector(`.fonts-in-use__next[data-grid-id="${gridId}"]`);
+
+    if (!section || !viewport || !track || !prevBtn || !nextBtn || itemCount <= 0) return;
+
+    const gap = 24;
+    let slideWidth = 0;
+    let setWidth = 0;
+    let lastWidth = 0;
+
+    function gridCol2Offset() {
+      const grid = section.querySelector('.site-grid');
+      if (!grid) return 32;
+
+      const rect = grid.getBoundingClientRect();
+      const padding = 32;
+      const colWidth = (rect.width - padding * 2 - gap * 5) / 6;
+
+      return rect.left + padding + colWidth + gap;
+    }
+
+    function layout() {
+      const offset = gridCol2Offset();
+      // Fixed card width (keeps 4:5 ratio); cards bleed off the right edge
+      // instead of being squeezed to fit exactly. Shrinks only on small screens.
+      slideWidth = Math.min(300, window.innerWidth - offset - gap);
+
+      section.style.setProperty('--fonts-in-use-offset', `${offset}px`);
+      track.style.paddingLeft = `${offset}px`;
+      track.style.gap = `${gap}px`;
+
+      track.querySelectorAll('.fonts-in-use__slide').forEach((slide) => {
+        slide.style.width = `${slideWidth}px`;
+        slide.style.flex = `0 0 ${slideWidth}px`;
+      });
+
+      setWidth = itemCount * (slideWidth + gap);
+      // Start centered on the middle copy so we can scroll both directions.
+      viewport.scrollLeft = setWidth;
+    }
+
+    // Keep the scroll position within the middle copy so the loop is seamless.
+    function recenter() {
+      if (setWidth <= 0) return;
+      const sl = viewport.scrollLeft;
+      if (sl < setWidth * 0.5) {
+        viewport.scrollLeft = sl + setWidth;
+      } else if (sl > setWidth * 1.5) {
+        viewport.scrollLeft = sl - setWidth;
+      }
+    }
+
+    const step = () => slideWidth + gap;
+
+    let scrollEndTimer = 0;
+
+    // Only recenter after scrolling stops — never during a swipe (that caused visible jumps).
+    // Snapping is handled by CSS scroll-snap; JS smooth-scroll corrections fought it and glitched.
+    function onScrollEnd() {
+      clearTimeout(scrollEndTimer);
+      scrollEndTimer = 0;
+      recenter();
+    }
+
+    viewport.addEventListener(
+      'scroll',
+      () => {
+        clearTimeout(scrollEndTimer);
+        scrollEndTimer = window.setTimeout(onScrollEnd, 120);
+      },
+      { passive: true }
+    );
+
+    viewport.addEventListener('scrollend', onScrollEnd, { passive: true });
+
+    function stepBy(direction) {
+      viewport.scrollBy({ left: direction * step(), behavior: 'smooth' });
+    }
+
+    prevBtn.addEventListener('click', () => stepBy(-1));
+    nextBtn.addEventListener('click', () => stepBy(1));
+
+    function onResize() {
+      if (window.innerWidth === lastWidth) return;
+      lastWidth = window.innerWidth;
+      layout();
+    }
+
+    lastWidth = window.innerWidth;
+    layout();
+    window.addEventListener('resize', onResize, { passive: true });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFontsInUseGrid);
+  } else {
+    initFontsInUseGrid();
+  }
+</script>

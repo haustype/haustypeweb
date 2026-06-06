@@ -1,0 +1,16 @@
+---
+interface Props {
+  collectionId: string;
+}
+
+const { collectionId } = Astro.props;
+---
+
+<button
+  type="button"
+  class="haus-buy-button"
+  fontdue-click="open-store-modal"
+  fontdue-store-route={`product/${collectionId}`}
+>
+  Buy →
+</button>

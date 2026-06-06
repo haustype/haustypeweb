@@ -13,8 +13,8 @@ const { items } = Astro.props;
 const slides = items.length ? items : [{ type: 'image' as const, src: '/hero-placeholder.jpg', alt: 'Haus Type font display' }];
 ---
 
-<section class="hero-slideshow h-screen flex items-center justify-center relative overflow-hidden bg-haus-grey">
-  <div class="hero-slideshow__stage w-full max-w-content px-16 flex justify-center items-center h-full relative">
+<section class="hero-slideshow h-screen flex items-center justify-center relative overflow-hidden bg-site">
+  <div class="hero-slideshow__stage w-full max-w-content px-8 flex justify-center items-center h-full relative">
     <ImageSlideshow
       items={slides}
       mediaClass="slideshow__media max-w-full max-h-[65vh] w-auto object-contain"

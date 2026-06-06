@@ -26,10 +26,53 @@ export const blockContentType = defineType({
         ],
         annotations: [
           {
-            title: 'URL',
+            title: 'Link',
             name: 'link',
             type: 'object',
-            fields: [{ title: 'URL', name: 'href', type: 'url' }],
+            fields: [
+              {
+                title: 'Link type',
+                name: 'linkType',
+                type: 'string',
+                options: {
+                  list: [
+                    { title: 'URL', value: 'url' },
+                    { title: 'Email', value: 'email' },
+                  ],
+                  layout: 'radio',
+                },
+                initialValue: 'url',
+              },
+              {
+                title: 'URL',
+                name: 'href',
+                type: 'url',
+                hidden: ({ parent }) => parent?.linkType === 'email',
+                validation: (Rule) =>
+                  Rule.custom((href, context) => {
+                    const linkType = (context.parent as { linkType?: string })?.linkType ?? 'url';
+                    if (linkType === 'email') return true;
+                    if (!href) return 'URL is required';
+                    return true;
+                  }),
+              },
+              {
+                title: 'Email address',
+                name: 'email',
+                type: 'string',
+                hidden: ({ parent }) => parent?.linkType !== 'email',
+                validation: (Rule) =>
+                  Rule.custom((email, context) => {
+                    const linkType = (context.parent as { linkType?: string })?.linkType;
+                    if (linkType !== 'email') return true;
+                    if (!email?.trim()) return 'Email address is required';
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+                      return 'Enter a valid email address';
+                    }
+                    return true;
+                  }),
+              },
+            ],
           },
         ],
       },

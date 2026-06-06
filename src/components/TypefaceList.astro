@@ -1,0 +1,141 @@
+---
+interface Specimen {
+  url: string;
+  alt?: string;
+}
+
+/** Parse dimensions from Sanity asset URLs like `…-750x87.svg`. */
+function specimenDimensions(url: string): { width: number; height: number } | null {
+  const match = url.match(/-(\d+)x(\d+)\.\w+(?:\?|$)/);
+  if (!match) return null;
+  return { width: Number(match[1]), height: Number(match[2]) };
+}
+
+interface Typeface {
+  name: string;
+  slug: string;
+  specimen?: Specimen;
+}
+
+interface Props {
+  typefaces: Typeface[];
+}
+
+const { typefaces } = Astro.props;
+---
+
+<section class="bg-site">
+  <ul class="list-none m-0 p-0">
+    {typefaces.map((typeface, i) => {
+      const specimen = typeface.specimen;
+      const dims = specimen?.url ? specimenDimensions(specimen.url) : null;
+
+      return (
+        <li data-reveal>
+          <div class="typeface-list__row group relative">
+            <div class="typeface-list__hover-bg" aria-hidden="true"></div>
+            <div class="relative z-[1] w-full max-w-content mx-auto px-8">
+              <div
+                class:list={[
+                  'grid grid-cols-6 gap-6 items-start py-10 border-b border-site',
+                  i === 0 && 'border-t border-site',
+                ]}
+              >
+                <div class="col-span-6 md:col-span-1 md:col-start-1">
+                  <a
+                    href={`/typefaces/${typeface.slug}`}
+                    class="typeface-list__link flex items-center gap-3 text-base leading-none text-black"
+                  >
+                    <span
+                      class="typeface-list__dot relative -top-px shrink-0 w-[10px] h-[10px] rounded-full bg-black"
+                      aria-hidden="true"
+                    ></span>
+                    {typeface.name}
+                  </a>
+                </div>
+
+                <div class="col-span-6 md:col-span-4 md:col-start-2 min-w-0">
+                  <a
+                    href={`/typefaces/${typeface.slug}`}
+                    class="typeface-list__link block"
+                    aria-label={`View ${typeface.name}`}
+                  >
+                    {specimen ? (
+                      <div class="typeface-list__media relative w-full">
+                        <img
+                          src={specimen.url}
+                          alt={specimen.alt ?? typeface.name}
+                          width={dims?.width}
+                          height={dims?.height}
+                          class="typeface-list__specimen-img block w-full h-auto"
+                          loading={i < 2 ? 'eager' : 'lazy'}
+                          decoding="async"
+                        />
+                      </div>
+                    ) : (
+                      <span class="typeface-list__specimen block text-left text-black">
+                        {typeface.name}
+                      </span>
+                    )}
+                  </a>
+                </div>
+
+                <div class="col-span-6 md:col-span-1 md:col-start-6 md:justify-self-end">
+                  <a
+                    href={`/typefaces/${typeface.slug}`}
+                    class="typeface-list__link text-base text-black whitespace-nowrap"
+                  >
+                    Buy →
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
+      );
+    })}
+  </ul>
+</section>
+
+<style>
+  .typeface-list__row {
+    isolation: isolate;
+  }
+
+  .typeface-list__hover-bg {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 100vw;
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 0;
+    background: var(--site-yellow);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .typeface-list__row:hover .typeface-list__hover-bg,
+  .typeface-list__row:focus-within .typeface-list__hover-bg {
+    opacity: 1;
+  }
+
+  html.site-bg-alt .typeface-list__hover-bg {
+    background: var(--site-yellow-hover);
+  }
+
+  .typeface-list__specimen {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-weight: 900;
+    font-size: clamp(2.5rem, 9vw, 6rem);
+    line-height: 0.95;
+  }
+
+  .typeface-list__specimen-img {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+</style>

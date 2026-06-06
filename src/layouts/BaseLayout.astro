@@ -1,5 +1,10 @@
 ---
 import '../styles/global.css';
+import Footer from '../components/Footer.astro';
+import Screensaver from '../components/Screensaver.astro';
+import SiteBgToggle from '../components/SiteBgToggle.astro';
+import { loadScreensaverOptions } from '../lib/screensaver-config';
+import { safeLoadQuery } from '../sanity/lib/safe-fetch';
 
 interface Props {
   title: string;
@@ -15,6 +20,19 @@ const {
   preloadImages = [],
 } = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+
+const { data: siteSettings } = await safeLoadQuery<{
+  customCode?: { headEnd?: string | null; bodyEnd?: string | null };
+} | null>({
+  query: `*[_type == "siteSettings"][0]{ customCode { headEnd, bodyEnd } }`,
+});
+
+const customHeadEnd = siteSettings?.customCode?.headEnd?.trim() ?? '';
+const customBodyEnd = siteSettings?.customCode?.bodyEnd?.trim() ?? '';
+
+const isBlog =
+  Astro.url.pathname === '/blog' || Astro.url.pathname.startsWith('/blog/');
+const screensaver = !isBlog ? await loadScreensaverOptions() : null;
 ---
 
 <!doctype html>
@@ -36,7 +54,6 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <meta name="twitter:description" content={description} />
     <link rel="preload" href="/fonts/Selandia-Regular.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="https://js.fontdue.com/fontdue.css" as="style" />
-    <link rel="preload" href="/logo.svg" as="image" />
     {image && <link rel="preload" as="image" href={new URL(image, Astro.url).href} />}
     {preloadImages.map((src) => (
       <link rel="preload" as="image" href={new URL(src, Astro.url).href} />
@@ -47,49 +64,197 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
       fontdue.initialize({
         url: "https://store.haustype.com",
         config: {
+          storeModal: {
+            indexLayout: "styled-font-names",
+          },
+          form: {
+            checkboxStyle: "cross",
+          },
           typeTester: {
+            selectable: true,
+            textInput: true,
+            groupEdit: false,
+            initialMode: "local",
+            shy: true,
+            autofitOnChange: true,
             selectButton: true,
-            selectButtonLabel: "Buy",
-            selectButtonStyle: "outlined",
+            selectButtonLabel: "Buy →",
+            selectButtonStyle: "inline",
+            priceText: false,
+            alignmentButtons: false,
+            initialAlignment: "left",
+            bulletStyle: "round",
+            variableAxesPosition: "features-panel",
+            openTypeFeatures: {
+              interactionStyle: "panel",
+            },
+            columns: false,
+            size: {
+              min: 12,
+              max: 512,
+              label: false,
+            },
           },
         },
       });
     </script>
+    <script is:inline>
+      try {
+        if (localStorage.getItem('site-bg') === 'alt') {
+          document.documentElement.classList.add('site-bg-alt');
+        }
+      } catch (_) {}
+      try {
+        if (sessionStorage.getItem('reveal-once-done') === '1') {
+          document.documentElement.classList.add('reveal-once-done');
+        }
+      } catch (_) {}
+    </script>
+    {customHeadEnd && <Fragment set:html={customHeadEnd} />}
   </head>
   <body>
     <fontdue-store-modal></fontdue-store-modal>
-    <slot />
+    {screensaver && (
+      <Screensaver
+        slides={screensaver.slides}
+        idleSeconds={screensaver.idleSeconds}
+        slideSeconds={screensaver.slideSeconds}
+        fadeSeconds={screensaver.fadeSeconds}
+      />
+    )}
+    <div class="site-shell flex flex-1 flex-col w-full">
+      <slot />
+    </div>
+    <Footer />
+    <SiteBgToggle />
+    <script is:inline>
+      (function () {
+        const root = document.documentElement;
+
+        function syncBgToggle(toggle) {
+          const isAlt = root.classList.contains('site-bg-alt');
+          toggle.setAttribute(
+            'aria-label',
+            isAlt ? 'Switch to grey background' : 'Switch to yellow background'
+          );
+        }
+
+        function initSiteBgToggle() {
+          const toggle = document.querySelector('[data-bg-toggle]');
+          if (!toggle || toggle.dataset.bound === 'true') return;
+          toggle.dataset.bound = 'true';
+
+          toggle.addEventListener('click', () => {
+            root.classList.toggle('site-bg-alt');
+            try {
+              localStorage.setItem(
+                'site-bg',
+                root.classList.contains('site-bg-alt') ? 'alt' : 'default'
+              );
+            } catch (_) {}
+            syncBgToggle(toggle);
+          });
+
+          syncBgToggle(toggle);
+        }
+
+        initSiteBgToggle();
+        document.addEventListener('astro:page-load', initSiteBgToggle);
+      })();
+    </script>
     <script>
       import { initAllSlideshows } from '../lib/slideshow';
+      import { initCharacterViewerStyles } from '../lib/fontdue-character-viewer';
+      import { initTypeTesterStyles } from '../lib/fontdue-type-testers';
       initAllSlideshows();
-      document.addEventListener('astro:page-load', () => initAllSlideshows());
+      initCharacterViewerStyles();
+      initTypeTesterStyles();
+      document.addEventListener('astro:page-load', () => {
+        initAllSlideshows();
+        initCharacterViewerStyles();
+        initTypeTesterStyles();
+      });
     </script>
     <script>
       (function () {
-        const els = document.querySelectorAll('[data-reveal]');
+        const els = Array.from(document.querySelectorAll('[data-reveal]'));
         if (!els.length) return;
+
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce) {
+          els.forEach((el) => el.classList.add('is-revealed'));
+          return;
+        }
+
+        // Elements marked [data-reveal-once] (e.g. the header) animate only on
+        // the first load of a session; on later page navigations they appear
+        // instantly so the chrome doesn't re-animate every click.
+        const ONCE_KEY = 'reveal-once-done';
+        let onceDone = false;
+        try {
+          onceDone = sessionStorage.getItem(ONCE_KEY) === '1';
+        } catch (e) {}
+
         const vh = window.innerHeight;
+        const inView = [];
         const belowFold = [];
         els.forEach((el) => {
-          const rect = el.getBoundingClientRect();
-          if (rect.top < vh) {
-            el.classList.add('is-revealed', 'reveal-no-animation');
+          if (el.getBoundingClientRect().top < vh * 0.95) {
+            inView.push(el);
           } else {
             belowFold.push(el);
           }
         });
+
+        // Staggered fade-up for everything already in view on load.
+        let staggerIndex = 0;
+        let animatedOnce = false;
+        const toAnimate = [];
+        inView.forEach((el) => {
+          if (el.hasAttribute('data-reveal-once') && onceDone) {
+            el.classList.add('reveal-no-animation', 'is-revealed');
+            return;
+          }
+          if (el.hasAttribute('data-reveal-once')) animatedOnce = true;
+          el.style.transitionDelay = Math.min(staggerIndex * 70, 560) + 'ms';
+          staggerIndex += 1;
+          el.addEventListener(
+            'transitionend',
+            () => {
+              el.style.transitionDelay = '';
+            },
+            { once: true }
+          );
+          toAnimate.push(el);
+        });
+        if (animatedOnce) {
+          try {
+            sessionStorage.setItem(ONCE_KEY, '1');
+          } catch (e) {}
+        }
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            toAnimate.forEach((el) => el.classList.add('is-revealed'));
+          })
+        );
+
+        // Reveal below-the-fold elements as they scroll into view.
         if (belowFold.length) {
           const observer = new IntersectionObserver(
             (entries) => {
               entries.forEach((e) => {
-                if (e.isIntersecting) e.target.classList.add('is-revealed');
+                if (e.isIntersecting) {
+                  e.target.classList.add('is-revealed');
+                  observer.unobserve(e.target);
+                }
               });
             },
-            { threshold: 0.05, rootMargin: '0px 0px -20px 0px' }
+            { threshold: 0.05, rootMargin: '0px 0px -40px 0px' }
           );
           belowFold.forEach((el) => observer.observe(el));
         }
       })();
     </script>
+    {customBodyEnd && <Fragment set:html={customBodyEnd} />}
   </body>
 </html>

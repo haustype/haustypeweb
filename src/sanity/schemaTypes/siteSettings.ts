@@ -83,10 +83,22 @@ export const siteSettingsType = defineType({
       ],
     }),
     defineField({
+      name: 'instagramUrl',
+      type: 'url',
+      title: 'Instagram URL',
+      description: 'Shown in the site footer under Contact.',
+    }),
+    defineField({
+      name: 'contactEmail',
+      type: 'string',
+      title: 'Contact email',
+      description: 'Shown in the site footer under Contact.',
+    }),
+    defineField({
       name: 'footerNavigation',
       type: 'array',
       title: 'Footer navigation',
-      description: 'Links shown in the footer. Same options as header navigation. Drag to reorder.',
+      description: 'Links shown in the footer Contact column. Pick pages, built-in routes, or add URL / email links. Drag to reorder.',
       of: [
         {
           type: 'object',
@@ -137,16 +149,82 @@ export const siteSettingsType = defineType({
         {
           type: 'object',
           name: 'externalLink',
-          title: 'External link',
+          title: 'Link',
           fields: [
             { name: 'label', type: 'string', title: 'Label', validation: (Rule) => Rule.required() },
-            { name: 'url', type: 'url', title: 'URL', validation: (Rule) => Rule.required() },
+            {
+              name: 'linkType',
+              type: 'string',
+              title: 'Link type',
+              options: {
+                list: [
+                  { title: 'URL', value: 'url' },
+                  { title: 'Email', value: 'email' },
+                ],
+                layout: 'radio',
+              },
+              initialValue: 'url',
+            },
+            {
+              name: 'url',
+              type: 'url',
+              title: 'URL',
+              hidden: ({ parent }) => parent?.linkType === 'email',
+              validation: (Rule) =>
+                Rule.custom((url, context) => {
+                  const linkType = (context.parent as { linkType?: string })?.linkType ?? 'url';
+                  if (linkType === 'email') return true;
+                  if (!url) return 'URL is required';
+                  return true;
+                }),
+            },
+            {
+              name: 'email',
+              type: 'string',
+              title: 'Email address',
+              hidden: ({ parent }) => parent?.linkType !== 'email',
+              validation: (Rule) =>
+                Rule.custom((email, context) => {
+                  const linkType = (context.parent as { linkType?: string })?.linkType;
+                  if (linkType !== 'email') return true;
+                  if (!email?.trim()) return 'Email address is required';
+                  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+                    return 'Enter a valid email address';
+                  }
+                  return true;
+                }),
+            },
           ],
           preview: {
-            select: { label: 'label' },
-            prepare: ({ label }) => ({ title: label || 'External link' }),
+            select: { label: 'label', linkType: 'linkType', email: 'email' },
+            prepare: ({ label, linkType, email }) => ({
+              title: label || (linkType === 'email' ? email : 'Link'),
+            }),
           },
         },
+      ],
+    }),
+    defineField({
+      name: 'customCode',
+      type: 'object',
+      title: 'Custom Code',
+      description: 'Inject custom HTML on every page — useful for overriding Fontdue plugin styles.',
+      options: { collapsible: true, collapsed: true },
+      fields: [
+        defineField({
+          name: 'headEnd',
+          type: 'text',
+          title: 'End of <head>',
+          rows: 14,
+          description: 'Paste HTML such as <style> or <link> tags. Rendered at the end of <head>, after Fontdue assets.',
+        }),
+        defineField({
+          name: 'bodyEnd',
+          type: 'text',
+          title: 'End of <body>',
+          rows: 14,
+          description: 'Paste HTML such as <style> or <script> tags. Rendered at the end of <body> on every page.',
+        }),
       ],
     }),
   ],

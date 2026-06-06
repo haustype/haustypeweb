@@ -1,7 +1,9 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
+import ContentSegments from '../components/ContentSegments.astro';
+import FontdueSection from '../components/FontdueSection.astro';
+import HausBuyButton from '../components/HausBuyButton.astro';
 import PortableText from '../components/PortableText.astro';
 import { getCollection } from 'astro:content';
 import { safeLoadQuery } from '../sanity/lib/safe-fetch';
@@ -12,10 +14,17 @@ export async function getStaticPaths() {
   });
 
   if (sanityPages?.length) {
-    return sanityPages.map((p) => ({
-      params: { slug: p.slug?.current ?? '' },
-      props: { source: 'sanity' as const },
-    }));
+    const paths = sanityPages
+      .map((p) => p.slug?.current)
+      .filter((slug): slug is string => Boolean(slug))
+      .map((slug) => ({
+        params: { slug },
+        props: { source: 'sanity' as const },
+      }));
+
+    if (paths.length) {
+      return paths;
+    }
   }
 
   const pages = await getCollection('pages');
@@ -30,7 +39,11 @@ const { source, page: astroPage } = Astro.props;
 
 let title = '';
 let description = '';
-let body: unknown = null;
+
+type ContentSegment = {
+  heading?: string;
+  body?: unknown;
+};
 
 type PageSection = {
   _key?: string;
@@ -39,6 +52,7 @@ type PageSection = {
   content?: unknown;
 };
 
+let contentSegments: ContentSegment[] = [];
 let pageSections: PageSection[] = [];
 
 if (source === 'sanity') {
@@ -46,12 +60,14 @@ if (source === 'sanity') {
     title: string;
     description?: string;
     body?: unknown;
+    contentSegments?: ContentSegment[] | null;
     pageSections?: PageSection[] | null;
   }>({
     query: `*[_type == "page" && slug.current == $slug][0]{
       title,
       description,
       body,
+      contentSegments[]{ heading, body },
       pageSections[]{
         _key,
         sectionType,
@@ -64,7 +80,12 @@ if (source === 'sanity') {
   if (page) {
     title = page.title;
     description = page.description ?? '';
-    body = page.body;
+    contentSegments =
+      page.contentSegments?.length
+        ? page.contentSegments
+        : page.body
+          ? [{ heading: page.title, body: page.body }]
+          : [];
     pageSections = page.pageSections ?? [];
   }
 } else if (astroPage) {
@@ -80,20 +101,20 @@ const astroContent = astroPage ? await astroPage.render() : null;
   description={description}
 >
   <Header />
-  <main class="bg-haus-grey flex-1" data-reveal>
-    <article class="w-full px-16 py-20">
-      <div class="heading-row w-full max-w-content mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 mb-16">
-        <header>
-          <h1 class="font-normal text-black">{title}</h1>
-        </header>
-        <div class="prose max-w-none">
-          {source === 'sanity' && body ? (
-            <PortableText value={body} />
-          ) : astroContent ? (
+  <main class="bg-site flex-1" data-reveal>
+    <article class="w-full pt-24 pb-20">
+      {source === 'sanity' ? (
+        <ContentSegments segments={contentSegments} />
+      ) : astroContent ? (
+        <div class="site-grid heading-row mb-16 w-full max-w-content mx-auto px-8">
+          <header class="site-grid__left">
+            <h1 class="font-normal text-black">{title}</h1>
+          </header>
+          <div class="site-grid__right prose max-w-none">
             <astroContent.Content />
-          ) : null}
+          </div>
         </div>
-      </div>
+      ) : null}
       {source === 'sanity' && pageSections.length > 0 && (
         <div class="w-full flex flex-col gap-16">
           {pageSections.map((section) => {
@@ -102,33 +123,32 @@ const astroContent = astroPage ? await astroPage.render() : null;
             const collectionId = section.typeface?.collectionId;
             if (section.sectionType === 'typeTester' && collectionSlug) {
               return (
-                <div class="w-full">
+                <FontdueSection>
                   <fontdue-type-testers collection-slug={collectionSlug} />
-                </div>
+                </FontdueSection>
               );
             }
             if (section.sectionType === 'characterViewer' && collectionSlug) {
               return (
-                <div class="w-full">
+                <FontdueSection>
                   <fontdue-character-viewer collection-slug={collectionSlug} />
-                </div>
+                </FontdueSection>
               );
             }
             if (section.sectionType === 'buyButton' && collectionId && typefaceName) {
               return (
-                <div class="w-full">
-                  <fontdue-buy-button
-                    collection-id={collectionId}
-                    collection-name={typefaceName}
-                  />
-                </div>
+                <FontdueSection align="content">
+                  <HausBuyButton collectionId={collectionId} />
+                </FontdueSection>
               );
             }
             if (section.sectionType === 'content' && section.content) {
               return (
-                <div class="w-full prose max-w-none">
-                  <PortableText value={section.content} />
-                </div>
+                <FontdueSection align="content">
+                  <div class="prose max-w-none">
+                    <PortableText value={section.content} />
+                  </div>
+                </FontdueSection>
               );
             }
             return null;
@@ -137,5 +157,4 @@ const astroContent = astroPage ? await astroPage.render() : null;
       )}
     </article>
   </main>
-  <Footer />
 </BaseLayout>

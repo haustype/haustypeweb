@@ -1,5 +1,6 @@
 import type { SchemaTypeDefinition } from 'sanity';
 import { blockContentType } from './blockContent';
+import { contentSegmentType } from './contentSegment';
 import { homepageSettingsType } from './homepageSettings';
 import { pagePageSectionType } from './pagePageSection';
 import { pageType } from './page';
@@ -9,5 +10,5 @@ import { typefacePageSectionType } from './typefacePageSection';
 import { typefaceType } from './typeface';
 
 export const schema: { types: SchemaTypeDefinition[] } = {
-  types: [blockContentType, homepageSettingsType, pagePageSectionType, postType, pageType, typefacePageSectionType, typefaceType, siteSettingsType],
+  types: [blockContentType, contentSegmentType, homepageSettingsType, pagePageSectionType, postType, pageType, typefacePageSectionType, typefaceType, siteSettingsType],
 };

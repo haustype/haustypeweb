@@ -111,7 +111,7 @@ To re-enable: Run `setup-sanity-webhook.mjs` again (delete the disabled webhook 
 
 Edit content at [sanity.io/manage](https://sanity.io/manage) or run `npm run studio` (or `npx sanity dev`) locally. Content types: **Blog posts**, **Pages**, **Typefaces**, **Site Settings** (hero, about text, fonts in use). Typefaces include **Detail page layout** (order of type tester, character viewer, buy button, custom content) and **Detail page title** (optional heading override). **After changing schema files**, restart the Studio so new fields appear: stop it (Ctrl+C) and run `npm run studio` again; if you use the deployed Studio, run `npx sanity deploy` to publish the updated schema.
 
-If the homepage typefaces don’t match what you see in Sanity Studio, the site is likely using fallback data: set `PUBLIC_SANITY_PROJECT_ID` and `PUBLIC_SANITY_DATASET` in `.env` (local) and in Netlify env vars (production), then rebuild. In Studio, set **Display Order** on each typeface so the grid order matches; add a **Card Image** per typeface so the correct specimen shows (otherwise a neutral “No image” placeholder is used).
+If the homepage typefaces don’t match what you see in Sanity Studio, the site is likely using fallback data: set `PUBLIC_SANITY_PROJECT_ID` and `PUBLIC_SANITY_DATASET` in `.env` (local) and in Netlify env vars (production), then rebuild. Order the homepage list in **Homepage Settings → Our Typefaces**; add a **Homepage specimen** SVG on each typeface (otherwise the typeface name is shown as fallback text).
 
 ## Project Structure
 

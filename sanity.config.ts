@@ -1,3 +1,4 @@
+import { orderableDocumentListDeskItem } from '@sanity/orderable-document-list';
 import { defineConfig } from 'sanity';
 import { structureTool } from 'sanity/structure';
 import { schema } from './src/sanity/schemaTypes';
@@ -15,7 +16,7 @@ export default defineConfig({
   },
   plugins: [
     structureTool({
-      structure: (S) =>
+      structure: (S, context) =>
         S.list()
           .title('Content')
           .items([
@@ -27,8 +28,8 @@ export default defineConfig({
               .child(S.document().schemaType('homepageSettings').documentId('homepageSettings')),
             S.divider(),
             S.listItem().title('Blog Posts').child(S.documentTypeList('post').title('Blog Posts')),
-            S.listItem().title('Pages').child(S.documentTypeList('page').title('Pages')),
-            S.listItem().title('Typefaces').child(S.documentTypeList('typeface').title('Typefaces')),
+            orderableDocumentListDeskItem({ type: 'page', title: 'Pages', S, context }),
+            orderableDocumentListDeskItem({ type: 'typeface', title: 'Typefaces', S, context }),
           ]),
       defaultDocumentNode: (S, { schemaType }) => {
         const formOnlyTypes = ['siteSettings', 'homepageSettings'];

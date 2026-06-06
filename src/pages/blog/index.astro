@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
 import { safeLoadQuery } from '../../sanity/lib/safe-fetch';
 import { getCollection } from 'astro:content';
 
@@ -40,20 +39,20 @@ const posts = sanityPosts?.length
   description="News and articles from Haus Type foundry."
 >
   <Header />
-  <main class="bg-haus-grey flex-1" data-reveal>
-    <article class="w-full px-16 py-20">
-      <div class="w-full max-w-content mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 mb-16">
-        <header>
+  <main class="bg-site flex-1" data-reveal>
+    <article class="w-full pt-24 pb-20">
+      <div class="site-grid mb-16 pt-10">
+        <header class="site-grid__left">
           <h1 class="font-normal text-black">{blogTitle}</h1>
         </header>
-        <div class="flex flex-col gap-8">
+        <div class="site-grid__right flex flex-col gap-8">
       {posts.map((post) => (
         <article>
           <a href={`/blog/${post.slug}`} class="block group">
-            <h2 class="text-xl font-normal text-black group-hover:text-haus-red transition-colors">
+            <h2 class="text-xl font-normal text-black group-hover:opacity-80 transition-opacity">
               {post.data.title}
             </h2>
-            <time datetime={post.data.pubDate.toISOString()} class="text-[#999999] text-sm block mt-1">
+            <time datetime={post.data.pubDate.toISOString()} class="text-muted text-sm block mt-1">
               {post.data.pubDate.toLocaleDateString('en-GB', { dateStyle: 'medium' })}
             </time>
           </a>
@@ -63,5 +62,4 @@ const posts = sanityPosts?.length
       </div>
     </article>
   </main>
-  <Footer />
 </BaseLayout>

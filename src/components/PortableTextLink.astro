@@ -1,0 +1,27 @@
+---
+import type { Mark, Props as MarkProps } from 'astro-portabletext/lib/types';
+
+export type Props = MarkProps<Mark>;
+
+type LinkMarkDef = {
+  href?: string;
+  linkType?: 'url' | 'email';
+  email?: string;
+};
+
+const { node, ...attrs } = Astro.props;
+const markDef = (node as Mark<LinkMarkDef>).markDef;
+
+const href =
+  markDef.linkType === 'email' && markDef.email
+    ? `mailto:${markDef.email.trim()}`
+    : markDef.href ?? '';
+---
+
+{href ? (
+  <a href={href} {...attrs}>
+    <slot />
+  </a>
+) : (
+  <slot />
+)}

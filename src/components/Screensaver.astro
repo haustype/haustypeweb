@@ -1,0 +1,53 @@
+---
+interface Slide {
+  url: string;
+  alt: string;
+}
+
+interface Props {
+  slides: Slide[];
+  idleSeconds?: number;
+  slideSeconds?: number;
+  fadeSeconds?: number;
+}
+
+const {
+  slides,
+  idleSeconds = 10,
+  slideSeconds = 5,
+  fadeSeconds = 1,
+} = Astro.props;
+
+if (!slides.length) return null;
+---
+
+<div
+  class="screensaver"
+  data-screensaver
+  data-idle-ms={idleSeconds * 1000}
+  data-slide-ms={slideSeconds * 1000}
+  data-fade-ms={fadeSeconds * 1000}
+  aria-hidden="true"
+>
+  {slides.map((slide, index) => (
+    <div
+      class:list={['screensaver__slide', { 'is-active': index === 0 }]}
+      data-screensaver-slide
+    >
+      <img
+        src={slide.url}
+        alt={slide.alt}
+        class="screensaver__image"
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+  ))}
+</div>
+
+<script>
+  import { initSiteScreensaver } from '../lib/screensaver';
+
+  initSiteScreensaver();
+  document.addEventListener('astro:page-load', initSiteScreensaver);
+</script>

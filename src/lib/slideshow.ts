@@ -30,34 +30,37 @@ export function initSlideshow(container: Element) {
 
   function hideMedia(media: Element | null) {
     if (!media) return;
-    (media as HTMLElement).style.transition = 'none';
-    (media as HTMLElement).style.opacity = '0';
+    const m = media as HTMLElement;
+    m.style.transition = 'none';
+    m.style.opacity = '0';
+    m.style.visibility = 'hidden';
   }
 
   function showMedia(media: Element | null) {
     if (!media) return;
-    (media as HTMLElement).style.transition = 'none';
-    (media as HTMLElement).style.opacity = '1';
+    const m = media as HTMLElement;
+    m.style.transition = 'none';
+    m.style.opacity = '1';
+    m.style.visibility = 'visible';
+  }
+
+  function setSlideVisibility(el: Element, active: boolean) {
+    const html = el as HTMLElement;
+    html.style.transition = 'none';
+    html.style.visibility = active ? 'visible' : 'hidden';
+    html.style.zIndex = active ? '1' : '0';
+    el.classList.toggle('is-active', active);
+    const media = getMedia(el);
+    if (media) {
+      const m = media as HTMLElement;
+      m.style.transition = 'none';
+      m.style.opacity = active ? '1' : '0';
+      m.style.visibility = active ? 'visible' : 'hidden';
+    }
   }
 
   function setSlideInstant(target: number) {
-    const targetEl = slideEls[target];
-    const targetMedia = getMedia(targetEl);
-
-    (targetEl as HTMLElement).style.transition = 'none';
-    (targetEl as HTMLElement).style.zIndex = '2';
-    targetEl.classList.add('is-active');
-    showMedia(targetMedia);
-
-    slideEls.forEach((el, i) => {
-      if (i === target) return;
-      (el as HTMLElement).style.transition = 'none';
-      (el as HTMLElement).style.zIndex = '0';
-      el.classList.remove('is-active');
-      hideMedia(getMedia(el));
-    });
-
-    (targetEl as HTMLElement).style.zIndex = '1';
+    slideEls.forEach((el, i) => setSlideVisibility(el, i === target));
     current = target;
   }
 
@@ -102,9 +105,7 @@ export function initSlideshow(container: Element) {
     fadeTimer = setTimeout(() => {
       slideEls.forEach((el, i) => {
         if (i === current) return;
-        (el as HTMLElement).style.zIndex = '0';
-        el.classList.remove('is-active');
-        hideMedia(getMedia(el));
+        setSlideVisibility(el, false);
       });
       fadeTimer = null;
     }, FADE_MS_MOBILE);
@@ -140,10 +141,10 @@ export function initSlideshow(container: Element) {
   }
 
   function activateHover() {
-    if (!hoverOnly || !hoverLayer || !ready) return;
+    if (!hoverOnly || !hoverLayer) return;
     isHovering = true;
     hoverLayer.classList.add('is-active');
-    setSlideInstant(0);
+    if (ready) setSlideInstant(0);
   }
 
   function deactivateHover() {

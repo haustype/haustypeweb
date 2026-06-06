@@ -1,7 +1,9 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
+import ContentSegments from '../../components/ContentSegments.astro';
+import FontdueSection from '../../components/FontdueSection.astro';
+import HausBuyButton from '../../components/HausBuyButton.astro';
 import PortableText from '../../components/PortableText.astro';
 import { safeLoadQuery } from '../../sanity/lib/safe-fetch';
 
@@ -22,10 +24,13 @@ export async function getStaticPaths() {
     query: `*[_type == "typeface"]{ slug }`,
   });
 
-  if (typefaces?.length) {
-    return typefaces.map((t) => ({
-      params: { slug: t.slug?.current ?? '' },
-    }));
+  const paths = (typefaces ?? [])
+    .map((t) => t.slug?.current)
+    .filter((slug): slug is string => Boolean(slug))
+    .map((slug) => ({ params: { slug } }));
+
+  if (paths.length) {
+    return paths;
   }
 
   return [{ params: { slug: 'typeface-name' } }];
@@ -42,10 +47,19 @@ const { data: typefacesData } = await safeLoadQuery<Array<{
   slug?: { current: string };
   collectionId?: string;
   body?: unknown;
-  pageSections?: PageSection[] | null;
   detailPageTitle?: string | null;
+  contentSegments?: Array<{ heading?: string; body?: unknown }> | null;
+  pageSections?: PageSection[] | null;
 }>>({
-  query: `*[_type == "typeface"]{ name, slug, collectionId, body, pageSections, detailPageTitle }`,
+  query: `*[_type == "typeface"]{
+    name,
+    slug,
+    collectionId,
+    body,
+    detailPageTitle,
+    contentSegments[]{ heading, body },
+    pageSections
+  }`,
 });
 
 const matched = typefacesData?.find((t) => t.slug?.current === slug);
@@ -53,19 +67,23 @@ const font = matched
   ? {
       name: matched.name,
       collectionId: matched.collectionId,
-      body: matched.body,
       pageSections: matched.pageSections,
-      detailPageTitle: matched.detailPageTitle,
+      contentSegments:
+        matched.contentSegments?.length
+          ? matched.contentSegments
+          : matched.body || matched.detailPageTitle
+            ? [{ heading: matched.detailPageTitle?.trim() || matched.name, body: matched.body }]
+            : [],
     }
   : {
       name: fallbackFonts[slug ?? '']?.name ?? (slug ?? 'Name'),
       collectionId: undefined as string | undefined,
-      body: null as unknown,
       pageSections: defaultPageSections,
-      detailPageTitle: null as string | null,
+      contentSegments: [] as Array<{ heading?: string; body?: unknown }>,
     };
 
-const pageTitle = font.detailPageTitle?.trim() || font.name;
+const pageTitle =
+  font.contentSegments[0]?.heading?.trim() || font.name;
 
 const sections: PageSection[] =
   font.pageSections?.length ? font.pageSections : defaultPageSections;
@@ -76,50 +94,40 @@ const sections: PageSection[] =
   description={`${pageTitle} - Explore and purchase from Haus Type foundry.`}
 >
   <Header />
-  <main class="bg-haus-grey flex-1" data-reveal>
-    <article class="w-full px-16 py-20">
-      <div class="heading-row w-full max-w-content mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 mb-16">
-        <header>
-          <h1 class="font-normal text-black">{pageTitle}</h1>
-        </header>
-        {font.body && (
-          <div class="prose max-w-none">
-            <PortableText value={font.body} />
-          </div>
-        )}
-      </div>
+  <main class="bg-site flex-1" data-reveal>
+    <article class="w-full pt-24 pb-20">
+      <ContentSegments segments={font.contentSegments} />
 
       <div class="w-full flex flex-col gap-16">
         {sections.map((section) => {
           if (section.sectionType === 'typeTester') {
             return (
-              <div class="w-full">
+              <FontdueSection>
                 <fontdue-type-testers collection-slug={slug} />
-              </div>
+              </FontdueSection>
             );
           }
           if (section.sectionType === 'characterViewer') {
             return (
-              <div class="w-full">
+              <FontdueSection>
                 <fontdue-character-viewer collection-slug={slug} />
-              </div>
+              </FontdueSection>
             );
           }
           if (section.sectionType === 'buyButton' && font.collectionId) {
             return (
-              <div class="w-full">
-                <fontdue-buy-button
-                  collection-id={font.collectionId}
-                  collection-name={font.name}
-                />
-              </div>
+              <FontdueSection align="content">
+                <HausBuyButton collectionId={font.collectionId} />
+              </FontdueSection>
             );
           }
           if (section.sectionType === 'content' && section.content) {
             return (
-              <div class="w-full max-w-content mx-auto prose max-w-none">
-                <PortableText value={section.content} />
-              </div>
+              <FontdueSection align="content">
+                <div class="prose max-w-none">
+                  <PortableText value={section.content} />
+                </div>
+              </FontdueSection>
             );
           }
           return null;
@@ -127,5 +135,4 @@ const sections: PageSection[] =
       </div>
     </article>
   </main>
-  <Footer />
 </BaseLayout>
