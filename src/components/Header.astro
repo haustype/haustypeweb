@@ -1,13 +1,6 @@
 ---
+import HausMark from './HausMark.astro';
 import { safeLoadQuery } from '../sanity/lib/safe-fetch';
-
-interface Props {
-  variant?: 'dark' | 'light';
-  /** Homepage hero: header overlays content with no layout spacer */
-  overlay?: boolean;
-}
-
-const { variant = 'light', overlay = false } = Astro.props;
 
 const { data: settings } = await safeLoadQuery<{
   navigation?: Array<{ _type?: string; label?: string; href?: string }>;
@@ -47,77 +40,70 @@ const navItems =
         { href: '/projects', label: 'Projects' },
         { href: '/information', label: 'Information' },
       ];
-
-const isDark = variant === 'dark';
 ---
 
-<header
-  class:list={[
-    'site-header fixed top-0 left-0 right-0 z-50 bg-transparent',
-    isDark ? 'text-white' : 'text-black',
-  ]}
-  data-site-header
->
-  <div class="site-grid relative z-[51] pt-6 pb-6 items-end" data-reveal data-reveal-once="true">
-    <a
-      href="/"
-      class="site-header__brand contents"
-      aria-label="Haus Type home"
-    >
-      <svg
-        class="site-header__logo col-start-1 self-end h-[30px] w-[30px] justify-self-start shrink-0"
-        viewBox="0 0 30 30"
-        width="30"
-        height="30"
-        aria-hidden="true"
-        xmlns="http://www.w3.org/2000/svg"
+<header class="site-header sticky top-0 z-50 p-4" data-site-header>
+  <div class="site-header__shell h-[64px] w-full overflow-hidden rounded-[10px] bg-white px-4 text-black">
+    <div class="site-header__bar grid h-full w-full grid-cols-6 items-center gap-6">
+      <a
+        href="/"
+        class="site-header__logo-link col-start-1 flex items-center justify-self-start hover:opacity-80 transition-opacity"
+        aria-label="Haus Type home"
       >
-        <polygon points="0 10 0 30 30 30 30 10 15 0 0 10" fill="currentColor" />
-      </svg>
-      <span class="site-header__name col-start-2 self-end justify-self-start min-w-0 font-normal text-base leading-none" data-site-header-name>Haus Type®</span>
-    </a>
+        <HausMark class="site-header__mark -translate-y-px" />
+      </a>
 
-    <button
-      type="button"
-      id="nav-toggle"
-      class="site-header__menu-toggle xl:hidden col-start-6 self-end justify-self-end mr-14 xl:mr-0 p-2 -m-2 rounded-none hover:opacity-80 transition-opacity bg-transparent border-none cursor-pointer text-inherit shrink-0"
-      aria-label="Toggle menu"
-      aria-expanded="false"
-    >
-      <svg class="nav-icon-open w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path stroke-linecap="butt" stroke-linejoin="miter" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" />
-      </svg>
-      <svg class="nav-icon-close w-6 h-6 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path stroke-linecap="butt" stroke-linejoin="miter" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    </button>
+      <a
+        href="/"
+        class="site-header__name col-start-2 flex min-w-0 items-center justify-self-start text-base leading-none hover:opacity-80 transition-opacity"
+      >
+        Haus Type®
+      </a>
 
-    <nav
-      class="site-header__nav hidden xl:flex col-span-3 col-start-4 self-end items-end justify-start gap-[36px] flex-nowrap min-w-0 pr-16"
-      aria-label="Main navigation"
-    >
-      {navItems.map((item) => (
-        <a href={item.href} class="text-base leading-none hover:opacity-80 transition-opacity whitespace-nowrap">
-          {item.label}
-        </a>
-      ))}
-    </nav>
+      <nav
+        class="site-header__nav col-span-2 col-start-4 flex min-w-0 items-center gap-7"
+        aria-label="Main navigation"
+      >
+        {navItems.map((item) => (
+          <a href={item.href} class="text-base leading-none hover:opacity-80 transition-opacity whitespace-nowrap">
+            {item.label}
+          </a>
+        ))}
+      </nav>
+
+      <div class="site-header__actions col-start-6 flex items-center justify-self-end gap-6">
+        <button
+          type="button"
+          id="nav-toggle"
+          class="site-header__menu-toggle site-header__action-btn text-base leading-none rounded-none hover:opacity-80 transition-opacity bg-transparent border-none cursor-pointer text-inherit shrink-0"
+          aria-label="Toggle menu"
+          aria-expanded="false"
+        >
+          <span class="site-header__menu-toggle-inner" aria-hidden="true">
+            <svg class="nav-icon-open" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 12" stroke="currentColor">
+              <path stroke-linecap="butt" stroke-linejoin="miter" stroke-width="1.5" d="M0 1h16M0 6h16M0 11h16" />
+            </svg>
+            <svg class="nav-icon-close hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 16" stroke="currentColor">
+              <path stroke-linecap="butt" stroke-linejoin="miter" stroke-width="1.5" d="M1 1 15 15M15 1 1 15" />
+            </svg>
+          </span>
+        </button>
+
+        <button
+          type="button"
+          fontdue-click="open-store-modal"
+          fontdue-store-route="cart"
+          class="site-header__cart site-header__action-btn text-base leading-none hover:opacity-80 transition-opacity bg-transparent border-none cursor-pointer font-inherit whitespace-nowrap"
+        >
+          Cart
+        </button>
+      </div>
+    </div>
   </div>
-  <button
-    type="button"
-    fontdue-click="open-store-modal"
-    fontdue-store-route="cart"
-    class:list={[
-      'site-header__cart fixed top-6 right-8 z-[52] h-[30px] flex items-end text-base leading-none hover:opacity-80 transition-opacity bg-transparent border-none cursor-pointer font-inherit whitespace-nowrap p-0',
-      isDark ? 'text-white' : 'text-black',
-    ]}
-  >
-    <span class="translate-y-[2px]">Cart</span>
-  </button>
+
   <div
     id="nav-menu"
-    class="xl:hidden hidden fixed inset-0 z-50 flex flex-col items-center justify-center px-8 pt-16 pb-16"
-    class:list={[isDark ? 'bg-black text-white' : 'bg-site text-black']}
+    class="site-header__menu-panel hidden fixed inset-0 z-[60] flex flex-col items-center justify-center bg-site px-8 pt-16 pb-16 text-black"
     aria-hidden="true"
   >
     <nav class="flex flex-col gap-[1.5rem] items-center" aria-label="Mobile navigation">
@@ -129,55 +115,91 @@ const isDark = variant === 'dark';
     </nav>
   </div>
 </header>
-{!overlay && <div class="site-header-spacer h-[5.5rem]" aria-hidden="true" />}
 
 <style>
   .site-header {
-    background-color: transparent;
+    transition: opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .site-header__logo,
-  .site-header__name,
-  .site-header__nav,
-  .site-header__menu-toggle {
-    transition: opacity 0.25s ease;
+  .site-header.is-hidden {
+    opacity: 0;
+    pointer-events: none;
   }
 
-  .site-header__brand:hover .site-header__logo,
-  .site-header__brand:hover .site-header__name {
-    opacity: 0.8;
-  }
-
-  /* Single-line UI: tight line-height so items-end aligns with 30px logo; 2px optical nudge */
-  .site-header__name,
-  .site-header__nav a,
-  .site-header__cart {
-    line-height: 1;
-  }
-
-  .site-header__name,
-  .site-header__nav {
-    transform: translateY(2px);
+  .site-header__shell {
+    container-type: inline-size;
+    container-name: site-header;
   }
 
   .site-header__name {
     overflow: hidden;
     white-space: nowrap;
-    opacity: 1;
     max-width: 11rem;
     transition: opacity 0.25s ease, max-width 0s ease 0s;
   }
 
-  .site-header.is-compact .site-header__name,
-  .site-header.is-compact .site-header__nav,
-  .site-header.is-compact .site-header__menu-toggle {
-    opacity: 0;
-    pointer-events: none;
+  .site-header__nav {
+    display: none;
   }
 
-  .site-header.is-compact .site-header__name {
-    max-width: 0;
-    transition: opacity 0.25s ease, max-width 0s ease 0.25s;
+  .site-header__menu-toggle {
+    display: flex;
+  }
+
+  .site-header__action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    height: 100%;
+    padding: 0 8px;
+    margin: 0;
+    min-width: 44px;
+  }
+
+  .site-header__menu-toggle-inner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1em;
+    height: 1em;
+    line-height: 0;
+  }
+
+  .site-header__menu-toggle-inner svg.hidden {
+    display: none;
+  }
+
+  .site-header__menu-toggle-inner .nav-icon-open:not(.hidden) {
+    display: block;
+    width: 1em;
+    height: 0.75em;
+  }
+
+  .site-header__menu-toggle-inner .nav-icon-close:not(.hidden) {
+    display: block;
+    width: 0.9375em;
+    height: 0.9375em;
+  }
+
+  @media (min-width: 1024px) {
+    @container site-header (min-width: 44rem) {
+      .site-header__nav {
+        display: flex;
+      }
+
+      .site-header__menu-toggle {
+        display: none;
+      }
+    }
+
+    @container site-header (min-width: 44rem) and (max-width: 54rem) {
+      .site-header__name {
+        opacity: 0;
+        max-width: 0;
+        pointer-events: none;
+      }
+    }
   }
 </style>
 
@@ -189,7 +211,6 @@ const isDark = variant === 'dark';
   const header = document.querySelector('[data-site-header]');
   const scrollThreshold = 24;
   let lastScrollY = window.scrollY;
-  let compact = window.scrollY > scrollThreshold;
 
   toggle?.addEventListener('click', () => {
     const isOpen = menu?.classList.toggle('hidden');
@@ -201,31 +222,29 @@ const isDark = variant === 'dark';
     document.body.style.overflow = isOpen ? '' : 'hidden';
   });
 
+  function closeMenu() {
+    if (!menu || menu.classList.contains('hidden')) return;
+    menu.classList.add('hidden');
+    toggle?.setAttribute('aria-expanded', 'false');
+    toggle?.setAttribute('aria-label', 'Toggle menu');
+    menu.setAttribute('aria-hidden', 'true');
+    iconOpen?.classList.remove('hidden');
+    iconClose?.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
   function updateHeaderScroll() {
     if (!header) return;
 
     const scrollY = window.scrollY;
 
     if (scrollY <= scrollThreshold) {
-      compact = false;
+      header.classList.remove('is-hidden');
     } else if (scrollY > lastScrollY) {
-      compact = true;
+      header.classList.add('is-hidden');
+      closeMenu();
     } else if (scrollY < lastScrollY) {
-      compact = false;
-    }
-
-    const atTop = scrollY <= scrollThreshold;
-
-    header.classList.toggle('is-compact', compact && !atTop);
-
-    if (compact && menu && !menu.classList.contains('hidden')) {
-      menu.classList.add('hidden');
-      toggle?.setAttribute('aria-expanded', 'false');
-      toggle?.setAttribute('aria-label', 'Toggle menu');
-      menu.setAttribute('aria-hidden', 'true');
-      iconOpen?.classList.remove('hidden');
-      iconClose?.classList.add('hidden');
-      document.body.style.overflow = '';
+      header.classList.remove('is-hidden');
     }
 
     lastScrollY = scrollY;

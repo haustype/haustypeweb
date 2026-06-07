@@ -13,11 +13,11 @@
 @property --site-bg {
   syntax: '<color>';
   inherits: true;
-  initial-value: #f5f5f5;
+  initial-value: #f2f2f2;
 }
 
 :root {
-  --site-bg: #f5f5f5;
+  --site-bg: #f2f2f2;
   --site-yellow: #ffcc01;
   --site-yellow-hover: #f2ba00;
   --site-bg-alt: var(--site-yellow);
@@ -345,7 +345,10 @@ fontdue-type-testers .fontdue-collection-description {
 
 html.is-screensaver-active .site-header {
   z-index: 55;
-  color: #fff;
+}
+
+html.is-screensaver-active .site-header__shell {
+  background: transparent !important;
 }
 
 html.is-screensaver-active .site-header__name,
@@ -358,7 +361,8 @@ html.is-screensaver-active #nav-menu {
   pointer-events: none !important;
 }
 
-html.is-screensaver-active .site-header__logo {
+html.is-screensaver-active .site-header__mark {
+  color: #ffffff !important;
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: auto !important;

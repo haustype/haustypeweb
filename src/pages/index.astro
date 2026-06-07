@@ -22,6 +22,7 @@ type TypefaceFromSanity = {
   slug?: { current: string };
   collectionId?: string;
   specimen?: { url?: string | null; alt?: string | null } | null;
+  specimenMobile?: { url?: string | null; alt?: string | null } | null;
 };
 
 const typefaceProjection = `{
@@ -38,7 +39,11 @@ const typefaceProjection = `{
       "url": asset->url,
       "alt": alt
     }
-  )
+  ),
+  "specimenMobile": specimenMobile{
+    "url": asset->url,
+    "alt": alt
+  }
 }`;
 
 const { data: homepageSettings } = await safeLoadQuery<{
@@ -80,6 +85,9 @@ const typefaces =
         collectionId: t.collectionId,
         specimen: t.specimen?.url
           ? { url: t.specimen.url, alt: t.specimen.alt ?? undefined }
+          : undefined,
+        specimenMobile: t.specimenMobile?.url
+          ? { url: t.specimenMobile.url, alt: t.specimenMobile.alt ?? undefined }
           : undefined,
       }))
     : fallbackTypefaces;

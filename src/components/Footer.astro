@@ -1,4 +1,5 @@
 ---
+import HausMark from './HausMark.astro';
 import { safeLoadQuery } from '../sanity/lib/safe-fetch';
 
 const { data: typefacesData } = await safeLoadQuery<
@@ -74,11 +75,33 @@ const footerLinks =
 ---
 
 <footer class="site-footer text-white">
-  <div class="site-grid py-16 md:py-20">
-    <div class="col-span-6 md:col-span-2 md:col-start-1">
-      <p class="site-footer__heading m-0 mb-6">Typefaces</p>
-      <div class="grid grid-cols-2 gap-x-6 gap-y-1">
-        <ul class="list-none m-0 p-0 flex flex-col gap-1">
+  <div class="site-grid site-footer__grid py-16 md:py-20">
+    <a
+      href="/"
+      class="site-footer__brand-mark col-span-6 md:col-span-1 md:col-start-1 md:row-start-1 self-end text-white"
+      aria-label="Haus Type home"
+    >
+      <HausMark />
+    </a>
+
+    <a
+      href="/"
+      class="site-footer__brand-name col-span-6 md:col-span-1 md:col-start-2 md:row-start-1 self-end text-base leading-none text-white hover:opacity-80 transition-opacity"
+    >
+      Haus Type®
+    </a>
+
+    <p class="site-footer__heading col-span-6 md:col-span-1 md:col-start-3 md:row-start-1 self-end m-0">
+      Typefaces
+    </p>
+
+    <p class="site-footer__heading col-span-6 md:col-span-1 md:col-start-5 md:row-start-1 self-end m-0">
+      Contact
+    </p>
+
+    <div class="col-span-6 md:col-span-2 md:col-start-3 md:row-start-2 md:self-start mt-6">
+      <div class="grid grid-cols-2 gap-x-6">
+        <ul class="site-footer__list list-none m-0 p-0 flex flex-col">
           {typefacesLeft.map((typeface) => (
             <li>
               <a
@@ -90,7 +113,7 @@ const footerLinks =
             </li>
           ))}
         </ul>
-        <ul class="list-none m-0 p-0 flex flex-col gap-1">
+        <ul class="site-footer__list list-none m-0 p-0 flex flex-col">
           {typefacesRight.map((typeface) => (
             <li>
               <a
@@ -105,24 +128,21 @@ const footerLinks =
       </div>
     </div>
 
-    <div class="col-span-6 md:col-span-1 md:col-start-3 mt-12 md:mt-0">
-      <p class="site-footer__heading m-0 mb-6">Contact</p>
-      <ul class="list-none m-0 p-0 flex flex-col gap-1">
-        {footerLinks.map((link) => (
-          <li>
-            <a
-              href={link.href}
-              class="site-footer__link text-base"
-              {...(link.external
-                ? { target: '_blank', rel: 'noopener noreferrer' }
-                : {})}
-            >
-              {link.label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ul class="site-footer__list col-span-6 md:col-span-1 md:col-start-5 md:row-start-2 md:self-start mt-6 list-none m-0 p-0 flex flex-col">
+      {footerLinks.map((link) => (
+        <li>
+          <a
+            href={link.href}
+            class="site-footer__link text-base"
+            {...(link.external
+              ? { target: '_blank', rel: 'noopener noreferrer' }
+              : {})}
+          >
+            {link.label}
+          </a>
+        </li>
+      ))}
+    </ul>
   </div>
 </footer>
 
@@ -131,8 +151,25 @@ const footerLinks =
     background-color: #000000;
   }
 
+  @media (min-width: 768px) {
+    .site-footer__grid {
+      grid-template-rows: auto auto;
+    }
+  }
+
+  .site-footer__brand-mark {
+    display: block;
+    line-height: 0;
+  }
+
+  .site-footer__brand-name,
+  .site-footer__heading {
+    transform: translateY(2px);
+  }
+
   .site-footer__heading {
     font-weight: 400;
+    line-height: 1;
     color: #ffffff;
   }
 

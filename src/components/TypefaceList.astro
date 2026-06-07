@@ -15,6 +15,7 @@ interface Typeface {
   name: string;
   slug: string;
   specimen?: Specimen;
+  specimenMobile?: Specimen;
 }
 
 interface Props {
@@ -28,7 +29,9 @@ const { typefaces } = Astro.props;
   <ul class="list-none m-0 p-0">
     {typefaces.map((typeface, i) => {
       const specimen = typeface.specimen;
+      const specimenMobile = typeface.specimenMobile;
       const dims = specimen?.url ? specimenDimensions(specimen.url) : null;
+      const mobileDims = specimenMobile?.url ? specimenDimensions(specimenMobile.url) : null;
 
       return (
         <li data-reveal>
@@ -37,7 +40,7 @@ const { typefaces } = Astro.props;
             <div class="relative z-[1] w-full max-w-content mx-auto px-8">
               <div
                 class:list={[
-                  'grid grid-cols-6 gap-6 items-start py-10 border-b border-site',
+                  'typeface-list__grid grid grid-cols-6 gap-6 items-start py-10 border-b border-site transition-[border-color] duration-200 ease-out',
                   i === 0 && 'border-t border-site',
                 ]}
               >
@@ -62,15 +65,38 @@ const { typefaces } = Astro.props;
                   >
                     {specimen ? (
                       <div class="typeface-list__media relative w-full">
-                        <img
-                          src={specimen.url}
-                          alt={specimen.alt ?? typeface.name}
-                          width={dims?.width}
-                          height={dims?.height}
-                          class="typeface-list__specimen-img block w-full h-auto"
-                          loading={i < 2 ? 'eager' : 'lazy'}
-                          decoding="async"
-                        />
+                        {specimenMobile ? (
+                          <>
+                            <img
+                              src={specimen.url}
+                              alt={specimen.alt ?? typeface.name}
+                              width={dims?.width}
+                              height={dims?.height}
+                              class="typeface-list__specimen-img hidden md:block w-full h-auto"
+                              loading={i < 2 ? 'eager' : 'lazy'}
+                              decoding="async"
+                            />
+                            <img
+                              src={specimenMobile.url}
+                              alt={specimenMobile.alt ?? typeface.name}
+                              width={mobileDims?.width}
+                              height={mobileDims?.height}
+                              class="typeface-list__specimen-img block md:hidden w-full h-auto"
+                              loading={i < 2 ? 'eager' : 'lazy'}
+                              decoding="async"
+                            />
+                          </>
+                        ) : (
+                          <img
+                            src={specimen.url}
+                            alt={specimen.alt ?? typeface.name}
+                            width={dims?.width}
+                            height={dims?.height}
+                            class="typeface-list__specimen-img block w-full h-auto"
+                            loading={i < 2 ? 'eager' : 'lazy'}
+                            decoding="async"
+                          />
+                        )}
                       </div>
                     ) : (
                       <span class="typeface-list__specimen block text-left text-black">
@@ -123,6 +149,18 @@ const { typefaces } = Astro.props;
 
   html.site-bg-alt .typeface-list__hover-bg {
     background: var(--site-yellow-hover);
+  }
+
+  /* Hide divider lines on hover so yellow fill reads as one clean block */
+  .typeface-list__row:hover .typeface-list__grid,
+  .typeface-list__row:focus-within .typeface-list__grid {
+    border-top-color: transparent;
+    border-bottom-color: transparent;
+  }
+
+  li:has(+ li .typeface-list__row:hover) .typeface-list__grid,
+  li:has(+ li .typeface-list__row:focus-within) .typeface-list__grid {
+    border-bottom-color: transparent;
   }
 
   .typeface-list__specimen {

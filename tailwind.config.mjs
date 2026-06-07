@@ -9,7 +9,7 @@ export default {
         black: '#000000',
         'haus-black': '#000000',
         'haus-red': '#E31E24',
-        'haus-grey': '#f5f5f5',
+        'haus-grey': '#f2f2f2',
         'haus-yellow': '#ffcc01',
       },
       fontFamily: {
