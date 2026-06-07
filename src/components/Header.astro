@@ -47,10 +47,10 @@ const navItems =
     <div class="site-header__bar grid h-full w-full grid-cols-6 items-center gap-6">
       <a
         href="/"
-        class="site-header__logo-link col-start-1 flex items-center justify-self-start hover:opacity-80 transition-opacity"
+        class="site-header__logo-link group col-start-1 flex items-center justify-self-start"
         aria-label="Haus Type home"
       >
-        <HausMark class="site-header__mark -translate-y-px" />
+        <HausMark class="site-header__mark -translate-y-px transition-colors duration-500 ease-out group-hover:text-haus-yellow" />
       </a>
 
       <a
@@ -142,19 +142,24 @@ const navItems =
     display: none;
   }
 
-  .site-header__menu-toggle {
-    display: flex;
-  }
-
   .site-header__action-btn {
     display: flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
     height: 100%;
-    padding: 0 8px;
     margin: 0;
+  }
+
+  .site-header__menu-toggle {
+    display: flex;
+    padding: 0 8px;
     min-width: 44px;
+  }
+
+  .site-header__cart {
+    padding: 0;
+    min-width: 0;
   }
 
   .site-header__menu-toggle-inner {
