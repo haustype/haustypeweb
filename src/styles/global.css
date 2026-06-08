@@ -13,11 +13,11 @@
 @property --site-bg {
   syntax: '<color>';
   inherits: true;
-  initial-value: #f2f2f2;
+  initial-value: #eeeeee;
 }
 
 :root {
-  --site-bg: #f2f2f2;
+  --site-bg: #eeeeee;
   --site-yellow: #ffcc01;
   --site-yellow-hover: #f2ba00;
   --site-bg-alt: var(--site-yellow);
@@ -96,8 +96,9 @@ body {
     padding: 0;
     line-height: 0;
     border: none;
-    border-radius: 50%;
-    background: #000000;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #000000;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -107,10 +108,11 @@ body {
 
   .site-bg-toggle__swatch {
     display: block;
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
-    border: 1px solid #fff;
+    box-sizing: border-box;
+    border: 1px solid #000000;
     background: linear-gradient(to right, #000000 50%, #ffffff 50%);
     transform: rotate(0deg);
     transition: transform 0.25s ease;
@@ -231,9 +233,9 @@ html.reveal-once-done [data-reveal-once] {
 .haus-buy-button--floating {
   height: 40px;
   padding: 0 1rem;
-  color: #ffffff;
-  background: #000000;
-  border-radius: 9999px;
+  color: #000000;
+  background: #ffffff;
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -241,7 +243,7 @@ html.reveal-once-done [data-reveal-once] {
 }
 
 .haus-buy-button--floating:hover {
-  opacity: 0.85;
+  opacity: 1;
 }
 
 /* Fontdue type testers — match Haus Type UI */

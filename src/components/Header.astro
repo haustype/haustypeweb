@@ -55,7 +55,7 @@ const navItems =
 
       <a
         href="/"
-        class="site-header__name col-start-2 flex min-w-0 items-center justify-self-start text-base leading-none hover:opacity-80 transition-opacity"
+        class="site-header__name col-start-2 flex min-w-0 items-center justify-self-start text-base leading-none"
       >
         Haus Type®
       </a>
@@ -65,7 +65,7 @@ const navItems =
         aria-label="Main navigation"
       >
         {navItems.map((item) => (
-          <a href={item.href} class="text-base leading-none hover:opacity-80 transition-opacity whitespace-nowrap">
+          <a href={item.href} class="text-base leading-none whitespace-nowrap">
             {item.label}
           </a>
         ))}
@@ -75,7 +75,7 @@ const navItems =
         <button
           type="button"
           id="nav-toggle"
-          class="site-header__menu-toggle site-header__action-btn text-base leading-none rounded-none hover:opacity-80 transition-opacity bg-transparent border-none cursor-pointer text-inherit shrink-0"
+          class="site-header__menu-toggle site-header__action-btn text-base leading-none rounded-none bg-transparent border-none cursor-pointer text-inherit shrink-0"
           aria-label="Toggle menu"
           aria-expanded="false"
         >
@@ -93,7 +93,7 @@ const navItems =
           type="button"
           fontdue-click="open-store-modal"
           fontdue-store-route="cart"
-          class="site-header__cart site-header__action-btn text-base leading-none hover:opacity-80 transition-opacity bg-transparent border-none cursor-pointer font-inherit whitespace-nowrap"
+          class="site-header__cart site-header__action-btn text-base leading-none bg-transparent border-none cursor-pointer font-inherit whitespace-nowrap"
         >
           Cart
         </button>

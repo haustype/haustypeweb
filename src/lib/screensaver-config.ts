@@ -11,30 +11,45 @@ export type ScreensaverOptions = {
   fadeSeconds: number;
 };
 
+type ScreensaverConfig =
+  | {
+      enabled?: boolean;
+      idleSeconds?: number;
+      slideSeconds?: number;
+      fadeSeconds?: number;
+      slides?: Array<{ image?: SanityImageSource; alt?: string }>;
+    }
+  | Array<{ image?: SanityImageSource; alt?: string }>;
+
 export async function loadScreensaverOptions(): Promise<ScreensaverOptions | null> {
-  const { data: homepageSettings } = await safeLoadQuery<{
-    screensaver?:
-      | {
-          enabled?: boolean;
-          idleSeconds?: number;
-          slideSeconds?: number;
-          fadeSeconds?: number;
-          slides?: Array<{ image?: SanityImageSource; alt?: string }>;
-        }
-      | Array<{ image?: SanityImageSource; alt?: string }>;
+  const { data } = await safeLoadQuery<{
+    siteSettings?: { screensaver?: ScreensaverConfig } | null;
+    homepageSettings?: { screensaver?: ScreensaverConfig } | null;
   } | null>({
-    query: `*[_type == "homepageSettings"][0]{
-      screensaver{
-        enabled,
-        idleSeconds,
-        slideSeconds,
-        fadeSeconds,
-        slides
+    query: `{
+      "siteSettings": *[_type == "siteSettings"][0]{
+        screensaver{
+          enabled,
+          idleSeconds,
+          slideSeconds,
+          fadeSeconds,
+          slides
+        }
+      },
+      "homepageSettings": *[_type == "homepageSettings"][0]{
+        screensaver{
+          enabled,
+          idleSeconds,
+          slideSeconds,
+          fadeSeconds,
+          slides
+        }
       }
     }`,
   });
 
-  const rawScreensaver = homepageSettings?.screensaver;
+  const rawScreensaver =
+    data?.siteSettings?.screensaver ?? data?.homepageSettings?.screensaver;
   const screensaverIsLegacyArray = Array.isArray(rawScreensaver);
   const screensaverConfig = screensaverIsLegacyArray
     ? { enabled: true, idleSeconds: 10, slideSeconds: 5, fadeSeconds: 1, slides: rawScreensaver }

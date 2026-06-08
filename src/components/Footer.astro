@@ -75,10 +75,10 @@ const footerLinks =
 ---
 
 <footer class="site-footer text-white">
-  <div class="site-grid site-footer__grid py-16 md:py-20">
+  <div class="site-grid site-footer__grid pt-[64px] pb-[128px]">
     <a
       href="/"
-      class="site-footer__brand-mark group col-span-6 md:col-span-1 md:col-start-1 md:row-start-1 self-end text-white"
+      class="site-footer__brand-mark group col-span-6 md:col-span-1 md:col-start-1 md:row-start-1 self-end justify-self-start text-white"
       aria-label="Haus Type home"
     >
       <HausMark class="transition-colors duration-500 ease-out group-hover:text-haus-yellow" />
@@ -99,7 +99,7 @@ const footerLinks =
       Contact
     </p>
 
-    <div class="col-span-6 md:col-span-2 md:col-start-3 md:row-start-2 md:self-start mt-6">
+    <div class="col-span-6 md:col-span-2 md:col-start-3 md:row-start-2 md:self-start mt-4">
       <div class="grid grid-cols-2 gap-x-6">
         <ul class="site-footer__list list-none m-0 p-0 flex flex-col">
           {typefacesLeft.map((typeface) => (
@@ -128,7 +128,7 @@ const footerLinks =
       </div>
     </div>
 
-    <ul class="site-footer__list col-span-6 md:col-span-1 md:col-start-5 md:row-start-2 md:self-start mt-6 list-none m-0 p-0 flex flex-col">
+    <ul class="site-footer__list col-span-6 md:col-span-1 md:col-start-5 md:row-start-2 md:self-start mt-4 list-none m-0 p-0 flex flex-col">
       {footerLinks.map((link) => (
         <li>
           <a
@@ -159,6 +159,7 @@ const footerLinks =
 
   .site-footer__brand-mark {
     display: block;
+    width: fit-content;
     line-height: 0;
   }
 
