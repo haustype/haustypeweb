@@ -4,14 +4,45 @@ import SiteBgToggle from './SiteBgToggle.astro';
 
 interface Props {
   buyCollectionId?: string;
+  trialFontsHref?: string;
 }
 
-const { buyCollectionId } = Astro.props;
+const { buyCollectionId, trialFontsHref } = Astro.props;
+const hideUntilScroll = Boolean(trialFontsHref);
 ---
 
-<div class="site-floating-controls">
+<div
+  class:list={[
+    'site-floating-controls',
+    hideUntilScroll && 'site-floating-controls--scroll-reveal',
+  ]}
+  data-floating-controls={hideUntilScroll ? '' : undefined}
+>
+  {trialFontsHref && (
+    <a href={trialFontsHref} class="haus-buy-button haus-buy-button--floating">
+      Trial Fonts ↓
+    </a>
+  )}
   {buyCollectionId && (
     <HausBuyButton collectionId={buyCollectionId} variant="floating" />
   )}
   <SiteBgToggle />
 </div>
+
+{hideUntilScroll && (
+  <script>
+    function initFloatingControlsScrollReveal() {
+      const controls = document.querySelector('[data-floating-controls]');
+      if (!controls || controls.dataset.scrollBound === 'true') return;
+      controls.dataset.scrollBound = 'true';
+
+      const update = () => {
+        controls.classList.toggle('is-visible', window.scrollY > 32);
+      };
+      update();
+      window.addEventListener('scroll', update, { passive: true });
+    }
+
+    initFloatingControlsScrollReveal();
+  </script>
+)}

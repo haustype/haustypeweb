@@ -1,0 +1,67 @@
+---
+import { urlForImage } from '../sanity/lib/url-for-image';
+import {
+  aspectClass,
+  hotspotObjectPosition,
+  parseAspectRatio,
+  type SanityImageValue,
+} from '../lib/sanity-image';
+
+interface Props {
+  image?: SanityImageValue | null;
+  width?: number;
+  class?: string;
+  eager?: boolean;
+}
+
+const { image, width = 1200, class: className, eager = false } = Astro.props;
+
+const hasImage = Boolean(image?.asset);
+const alt = image?.alt ?? '';
+const aspectRatio = image?.aspectRatio ?? 'auto';
+const fit = image?.fit === 'cover' ? 'cover' : 'contain';
+const aspect = aspectClass(aspectRatio);
+const constrained = Boolean(aspect);
+const ratio = parseAspectRatio(aspectRatio);
+
+let url = '';
+let objectPosition: string | undefined;
+
+if (hasImage && image) {
+  let builder = urlForImage(image).auto('format');
+  if (fit === 'cover' && ratio) {
+    const height = Math.round(width / ratio);
+    builder = builder.width(width).height(height).fit('crop');
+  } else {
+    builder = builder.width(width);
+  }
+  url = builder.url();
+  objectPosition = fit === 'cover' ? hotspotObjectPosition(image.hotspot) : undefined;
+}
+---
+
+{hasImage && (
+<figure
+  class:list={[
+    'sanity-image m-0 w-full',
+    constrained && aspect,
+    constrained && fit === 'contain' && 'flex items-center justify-center',
+    className,
+  ]}
+>
+  <img
+    src={url}
+    alt={alt}
+    class:list={[
+      constrained && fit === 'contain'
+        ? 'max-w-full max-h-full w-auto h-auto object-contain'
+        : constrained && fit === 'cover'
+          ? 'block w-full h-full object-cover'
+          : 'block max-w-full h-auto',
+    ]}
+    style={objectPosition ? `object-position: ${objectPosition}` : undefined}
+    loading={eager ? 'eager' : 'lazy'}
+    decoding="async"
+  />
+</figure>
+)}

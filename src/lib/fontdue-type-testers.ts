@@ -44,6 +44,8 @@ function walkShadowRoots(node: Element | ShadowRoot) {
   }
 }
 
+let observerStarted = false;
+
 export function initTypeTesterStyles() {
   const patchAll = () => {
     document.querySelectorAll('fontdue-type-testers').forEach((host) => walkShadowRoots(host));
@@ -53,6 +55,9 @@ export function initTypeTesterStyles() {
   for (const delay of [100, 500, 1500, 3000]) {
     setTimeout(patchAll, delay);
   }
+
+  if (observerStarted) return;
+  observerStarted = true;
 
   const observer = new MutationObserver(patchAll);
   observer.observe(document.body, { childList: true, subtree: true });

@@ -1,49 +1,34 @@
 ---
+export const prerender = false;
+
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
-import ContentSegments from '../components/ContentSegments.astro';
+import ContentSegments, { type ContentSegment } from '../components/ContentSegments.astro';
+import { sanityImageProjection } from '../lib/sanity-image';
 import FontdueSection from '../components/FontdueSection.astro';
 import HausBuyButton from '../components/HausBuyButton.astro';
 import PortableText from '../components/PortableText.astro';
-import { getCollection } from 'astro:content';
+import { getCollection, type CollectionEntry } from 'astro:content';
 import { safeLoadQuery } from '../sanity/lib/safe-fetch';
 
-export async function getStaticPaths() {
-  const { data: sanityPages } = await safeLoadQuery<Array<{ slug?: { current: string } }>>({
-    query: `*[_type == "page"]{ slug }`,
-  });
+const slugParam = Astro.params.slug;
+const slug = Array.isArray(slugParam) ? slugParam.join('/') : slugParam;
 
-  if (sanityPages?.length) {
-    const paths = sanityPages
-      .map((p) => p.slug?.current)
-      .filter((slug): slug is string => Boolean(slug))
-      .map((slug) => ({
-        params: { slug },
-        props: { source: 'sanity' as const },
-      }));
-
-    if (paths.length) {
-      return paths;
-    }
-  }
-
-  const pages = await getCollection('pages');
-  return pages.map((page) => ({
-    params: { slug: page.slug },
-    props: { page, source: 'astro' as const },
-  }));
+if (!slug) {
+  return Astro.redirect('/404');
 }
-
-const { slug } = Astro.params;
-const { source, page: astroPage } = Astro.props;
 
 let title = '';
 let description = '';
 
-type ContentSegment = {
-  heading?: string;
-  body?: unknown;
-};
+const contentSegmentProjection = `{
+  layout,
+  preHeader,
+  heading,
+  media ${sanityImageProjection},
+  body,
+  aside
+}`;
 
 type PageSection = {
   _key?: string;
@@ -54,41 +39,48 @@ type PageSection = {
 
 let contentSegments: ContentSegment[] = [];
 let pageSections: PageSection[] = [];
+let source: 'sanity' | 'astro' = 'sanity';
+let astroPage: CollectionEntry<'pages'> | null = null;
 
-if (source === 'sanity') {
-  const { data: page } = await safeLoadQuery<{
-    title: string;
-    description?: string;
-    body?: unknown;
-    contentSegments?: ContentSegment[] | null;
-    pageSections?: PageSection[] | null;
-  }>({
-    query: `*[_type == "page" && slug.current == $slug][0]{
-      title,
-      description,
-      body,
-      contentSegments[]{ heading, body },
-      pageSections[]{
-        _key,
-        sectionType,
-        content,
-        typeface->{ slug, name, collectionId }
-      }
-    }`,
-    params: { slug },
-  });
-  if (page) {
-    title = page.title;
-    description = page.description ?? '';
-    contentSegments =
-      page.contentSegments?.length
-        ? page.contentSegments
-        : page.body
-          ? [{ heading: page.title, body: page.body }]
-          : [];
-    pageSections = page.pageSections ?? [];
+const { data: page } = await safeLoadQuery<{
+  title: string;
+  description?: string;
+  body?: unknown;
+  contentSegments?: ContentSegment[] | null;
+  pageSections?: PageSection[] | null;
+} | null>({
+  query: `*[_type == "page" && slug.current == $slug][0]{
+    title,
+    description,
+    body,
+    contentSegments[]${contentSegmentProjection},
+    pageSections[]{
+      _key,
+      sectionType,
+      content,
+      typeface->{ slug, name, collectionId }
+    }
+  }`,
+  params: { slug },
+});
+
+if (page) {
+  title = page.title;
+  description = page.description ?? '';
+  contentSegments =
+    page.contentSegments?.length
+      ? page.contentSegments
+      : page.body
+        ? [{ heading: page.title, body: page.body }]
+        : [];
+  pageSections = page.pageSections ?? [];
+} else {
+  const pages = await getCollection('pages');
+  astroPage = pages.find((entry) => entry.slug === slug) ?? null;
+  if (!astroPage) {
+    return Astro.redirect('/404');
   }
-} else if (astroPage) {
+  source = 'astro';
   title = astroPage.data.title;
   description = astroPage.data.description ?? '';
 }

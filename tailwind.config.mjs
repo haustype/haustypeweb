@@ -16,10 +16,13 @@ export default {
         sans: ['Selandia', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
       },
       gridTemplateColumns: {
-        '6': 'repeat(6, minmax(0, 1fr))',
+        '12': 'repeat(12, minmax(0, 1fr))',
       },
       maxWidth: {
         'content': '1512px',
+      },
+      borderRadius: {
+        site: '10px',
       },
       fontSize: {
         base: ['1rem', { lineHeight: '1.7' }],

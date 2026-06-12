@@ -21,10 +21,10 @@ const loopItems = [...items, ...items, ...items];
 
 <section class="fonts-in-use bg-site pt-20 md:pt-24 pb-[160px]" id={gridId}>
   <div class="site-grid items-baseline mb-8 fonts-in-use__header" data-reveal>
-    <h2 class="fonts-in-use__title col-span-6 md:col-span-1 md:col-start-2 font-normal text-black m-0">
+    <h2 class="fonts-in-use__title col-span-12 md:col-span-2 md:col-start-3 font-normal text-black m-0">
       Fonts in use
     </h2>
-    <div class="col-span-6 md:col-span-1 md:col-start-6 md:justify-self-end flex items-center gap-6">
+    <div class="col-span-12 md:col-span-2 md:col-start-11 md:justify-self-end flex items-center gap-6">
       <button
         type="button"
         class="fonts-in-use__prev text-base text-black hover:opacity-80 transition-opacity bg-transparent border-none cursor-pointer p-0"
@@ -54,12 +54,12 @@ const loopItems = [...items, ...items, ...items];
               alt={item.alt}
               width={900}
               height={1125}
-              class="fonts-in-use__image aspect-[4/5] w-full rounded-lg object-cover"
+              class="fonts-in-use__image aspect-[4/5] w-full rounded-site object-cover"
               loading="lazy"
               decoding="async"
             />
           ) : (
-            <div class="aspect-[4/5] w-full rounded-lg bg-white" aria-hidden="true" />
+            <div class="aspect-[4/5] w-full rounded-site bg-white" aria-hidden="true" />
           )}
         </div>
       ))}
@@ -74,18 +74,11 @@ const loopItems = [...items, ...items, ...items];
     -ms-overflow-style: none;
     scrollbar-width: none;
     overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory;
-    scroll-padding-left: var(--fonts-in-use-offset, 2rem);
     scroll-behavior: auto;
   }
 
   .fonts-in-use__viewport::-webkit-scrollbar {
     display: none;
-  }
-
-  .fonts-in-use__slide {
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
   }
 
   .fonts-in-use__image {
@@ -115,9 +108,11 @@ const loopItems = [...items, ...items, ...items];
 
       const rect = grid.getBoundingClientRect();
       const padding = 32;
-      const colWidth = (rect.width - padding * 2 - gap * 5) / 6;
+      const gridGap = 16;
+      const colWidth = (rect.width - padding * 2 - gridGap * 11) / 12;
 
-      return rect.left + padding + colWidth + gap;
+      // Align with col-start-3 (same position as the old 6-col column 2)
+      return rect.left + padding + colWidth * 2 + gridGap * 2;
     }
 
     function layout() {
@@ -126,7 +121,6 @@ const loopItems = [...items, ...items, ...items];
       // instead of being squeezed to fit exactly. Shrinks only on small screens.
       slideWidth = Math.min(300, window.innerWidth - offset - gap);
 
-      section.style.setProperty('--fonts-in-use-offset', `${offset}px`);
       track.style.paddingLeft = `${offset}px`;
       track.style.gap = `${gap}px`;
 
@@ -156,7 +150,6 @@ const loopItems = [...items, ...items, ...items];
     let scrollEndTimer = 0;
 
     // Only recenter after scrolling stops — never during a swipe (that caused visible jumps).
-    // Snapping is handled by CSS scroll-snap; JS smooth-scroll corrections fought it and glitched.
     function onScrollEnd() {
       clearTimeout(scrollEndTimer);
       scrollEndTimer = 0;

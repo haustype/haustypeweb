@@ -2,25 +2,84 @@
 import HausMark from './HausMark.astro';
 import { safeLoadQuery } from '../sanity/lib/safe-fetch';
 
+const footerLinkProjection = `{
+  _type,
+  _type == "internalLink" => {
+    "label": page->title,
+    "href": "/" + page->slug.current,
+    "external": false
+  },
+  _type == "builtInPage" => {
+    "href": "/" + route,
+    "label": select(
+      route == "blog" => "Blog",
+      route == "typefaces" => "Typefaces",
+      route == "in-use" => "In Use",
+      route
+    ),
+    "external": false
+  },
+  _type == "externalLink" => {
+    "label": label,
+    "href": select(
+      linkType == "email" => "mailto:" + email,
+      url
+    ),
+    "external": linkType != "email"
+  }
+}`;
+
 const { data: typefacesData } = await safeLoadQuery<
   Array<{ name: string; slug?: { current: string } }>
 >({
   query: `*[_type == "typeface"] | order(orderRank){ orderRank, name, slug }`,
 });
 
-const { data: siteSettings } = await safeLoadQuery<{
+const { data: footerLinksSettings } = await safeLoadQuery<{
+  links?: Array<{ label?: string; href?: string; external?: boolean }>;
+} | null>({
+  query: `*[_type == "footerLinksSettings"][0]{
+    "links": links[]${footerLinkProjection}
+  }`,
+});
+
+const { data: footerContactSettings } = await safeLoadQuery<{
   instagramUrl?: string | null;
   contactEmail?: string | null;
-  footerNavigation?: Array<{
-    label?: string;
-    href?: string;
-    external?: boolean;
-  }>;
+  contactLinks?: Array<{ label?: string; href?: string; external?: boolean }>;
+} | null>({
+  query: `*[_type == "footerContactSettings"][0]{
+    instagramUrl,
+    contactEmail,
+    "contactLinks": contactLinks[]${footerLinkProjection}
+  }`,
+});
+
+/** Legacy combined doc from earlier footer migration. */
+const { data: legacyFooterSettings } = await safeLoadQuery<{
+  links?: Array<{ label?: string; href?: string; external?: boolean }>;
+  instagramUrl?: string | null;
+  contactEmail?: string | null;
+  contactLinks?: Array<{ label?: string; href?: string; external?: boolean }>;
+} | null>({
+  query: `*[_type == "footerSettings"][0]{
+    instagramUrl,
+    contactEmail,
+    "links": links[]${footerLinkProjection},
+    "contactLinks": contactLinks[]${footerLinkProjection}
+  }`,
+});
+
+const { data: siteSettings } = await safeLoadQuery<{
+  navigation?: Array<{ label?: string; href?: string; external?: boolean }>;
+  footerNavigation?: Array<{ label?: string; href?: string; external?: boolean }>;
+  instagramUrl?: string | null;
+  contactEmail?: string | null;
 } | null>({
   query: `*[_type == "siteSettings"][0]{
     instagramUrl,
     contactEmail,
-    "footerNavigation": footerNavigation[]{
+    "navigation": navigation[]{
       _type,
       _type == "internalLink" => {
         "label": page->title,
@@ -39,13 +98,11 @@ const { data: siteSettings } = await safeLoadQuery<{
       },
       _type == "externalLink" => {
         "label": label,
-        "href": select(
-          linkType == "email" => "mailto:" + email,
-          url
-        ),
-        "external": linkType != "email"
+        "href": url,
+        "external": true
       }
-    }
+    },
+    "footerNavigation": footerNavigation[]${footerLinkProjection}
   }`,
 });
 
@@ -58,48 +115,82 @@ const mid = Math.ceil(typefaces.length / 2);
 const typefacesLeft = typefaces.slice(0, mid);
 const typefacesRight = typefaces.slice(mid);
 
-const instagramUrl = siteSettings?.instagramUrl?.trim() || 'https://www.instagram.com/haustype/';
-const contactEmail = siteSettings?.contactEmail?.trim() || 'hello@haustype.com';
-
-const footerLinks =
-  siteSettings?.footerNavigation
+const mapNavItems = (
+  items: Array<{ label?: string; href?: string; external?: boolean }> | undefined,
+) =>
+  items
     ?.filter((item) => item.label && item.href)
     .map((item) => ({
       label: item.label!,
       href: item.href!,
       external: item.external ?? false,
-    })) ?? [
-    { label: 'Instagram', href: instagramUrl, external: true },
-    { label: contactEmail, href: `mailto:${contactEmail}`, external: false },
-  ];
+    })) ?? [];
+
+const legacyFooterLinks = mapNavItems(siteSettings?.footerNavigation);
+const legacyNavLinks = mapNavItems(siteSettings?.navigation);
+
+const footerLinks =
+  mapNavItems(footerLinksSettings?.links).length > 0
+    ? mapNavItems(footerLinksSettings?.links)
+    : mapNavItems(legacyFooterSettings?.links).length > 0
+      ? mapNavItems(legacyFooterSettings?.links)
+      : legacyFooterLinks.length > 0
+        ? legacyFooterLinks
+        : legacyNavLinks.length > 0
+          ? legacyNavLinks
+          : [
+              { label: 'In Use', href: '/in-use', external: false },
+              { label: 'Projects', href: '/projects', external: false },
+              { label: 'Information', href: '/information', external: false },
+              { label: 'Blog', href: '/blog', external: false },
+            ];
+
+const instagramUrl =
+  footerContactSettings?.instagramUrl?.trim() ||
+  legacyFooterSettings?.instagramUrl?.trim() ||
+  siteSettings?.instagramUrl?.trim() ||
+  'https://www.instagram.com/haustype/';
+const contactEmail =
+  footerContactSettings?.contactEmail?.trim() ||
+  legacyFooterSettings?.contactEmail?.trim() ||
+  siteSettings?.contactEmail?.trim() ||
+  'hello@haustype.com';
+
+const extraContactLinks =
+  mapNavItems(footerContactSettings?.contactLinks).length > 0
+    ? mapNavItems(footerContactSettings?.contactLinks)
+    : mapNavItems(legacyFooterSettings?.contactLinks);
+
+const contactLinks = [
+  { label: 'Instagram', href: instagramUrl, external: true },
+  { label: contactEmail, href: `mailto:${contactEmail}`, external: false },
+  ...extraContactLinks,
+];
 ---
 
 <footer class="site-footer text-white">
-  <div class="site-grid site-footer__grid pt-[64px] pb-[128px]">
+  <div class="site-grid site-footer__grid pt-[64px] pb-[160px]">
     <a
       href="/"
-      class="site-footer__brand-mark group col-span-6 md:col-span-1 md:col-start-1 md:row-start-1 self-end justify-self-start text-white"
+      class="site-footer__brand-mark col-span-12 md:col-span-2 md:col-start-1 md:row-start-1 self-end justify-self-start text-white hover:text-haus-yellow"
       aria-label="Haus Type home"
     >
-      <HausMark class="transition-colors duration-500 ease-out group-hover:text-haus-yellow" />
+      <HausMark class="text-inherit" />
     </a>
 
-    <a
-      href="/"
-      class="site-footer__brand-name col-span-6 md:col-span-1 md:col-start-2 md:row-start-1 self-end text-base leading-none text-white hover:opacity-80 transition-opacity"
-    >
-      Haus Type®
-    </a>
-
-    <p class="site-footer__heading col-span-6 md:col-span-1 md:col-start-3 md:row-start-1 self-end m-0">
+    <p class="site-footer__heading col-span-12 md:col-span-2 md:col-start-3 md:row-start-1 self-end m-0">
       Typefaces
     </p>
 
-    <p class="site-footer__heading col-span-6 md:col-span-1 md:col-start-5 md:row-start-1 self-end m-0">
+    <p class="site-footer__heading col-span-12 md:col-span-2 md:col-start-7 md:row-start-1 self-end m-0">
+      Links
+    </p>
+
+    <p class="site-footer__heading col-span-12 md:col-span-2 md:col-start-9 md:row-start-1 self-end m-0">
       Contact
     </p>
 
-    <div class="col-span-6 md:col-span-2 md:col-start-3 md:row-start-2 md:self-start mt-4">
+    <div class="col-span-12 md:col-span-4 md:col-start-3 md:row-start-2 md:self-start mt-4">
       <div class="grid grid-cols-2 gap-x-6">
         <ul class="site-footer__list list-none m-0 p-0 flex flex-col">
           {typefacesLeft.map((typeface) => (
@@ -128,8 +219,24 @@ const footerLinks =
       </div>
     </div>
 
-    <ul class="site-footer__list col-span-6 md:col-span-1 md:col-start-5 md:row-start-2 md:self-start mt-4 list-none m-0 p-0 flex flex-col">
+    <ul class="site-footer__list col-span-12 md:col-span-2 md:col-start-7 md:row-start-2 md:self-start mt-4 list-none m-0 p-0 flex flex-col">
       {footerLinks.map((link) => (
+        <li>
+          <a
+            href={link.href}
+            class="site-footer__link text-base"
+            {...(link.external
+              ? { target: '_blank', rel: 'noopener noreferrer' }
+              : {})}
+          >
+            {link.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <ul class="site-footer__list col-span-12 md:col-span-2 md:col-start-9 md:row-start-2 md:self-start mt-4 list-none m-0 p-0 flex flex-col">
+      {contactLinks.map((link) => (
         <li>
           <a
             href={link.href}
@@ -159,16 +266,11 @@ const footerLinks =
 
   .site-footer__brand-mark {
     display: block;
-    width: fit-content;
     line-height: 0;
   }
 
-  .site-footer__brand-name,
   .site-footer__heading {
     transform: translateY(2px);
-  }
-
-  .site-footer__heading {
     font-weight: 400;
     line-height: 1;
     color: #ffffff;

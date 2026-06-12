@@ -1,10 +1,13 @@
 ---
+export const prerender = false;
+
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import About from '../components/About.astro';
 import TypefaceList from '../components/TypefaceList.astro';
 import FontsInUseGrid from '../components/FontsInUseGrid.astro';
 import { safeLoadQuery } from '../sanity/lib/safe-fetch';
+import { typefaceSlug } from '../lib/typeface';
 import { urlForImage } from '../sanity/lib/url-for-image';
 
 const fallbackAboutText =
@@ -81,7 +84,7 @@ const typefaces =
   typefacesFromSanity
     ? (typefacesData ?? []).map((t) => ({
         name: t.name,
-        slug: t.slug?.current ?? t.name.toLowerCase().replace(/\s+/g, '-'),
+        slug: typefaceSlug(t) ?? '',
         collectionId: t.collectionId,
         specimen: t.specimen?.url
           ? { url: t.specimen.url, alt: t.specimen.alt ?? undefined }

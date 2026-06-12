@@ -1,6 +1,9 @@
 ---
+export const prerender = false;
+
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
+import ContentSegmentRow from '../../components/ContentSegmentRow.astro';
 import { safeLoadQuery } from '../../sanity/lib/safe-fetch';
 import { getCollection } from 'astro:content';
 
@@ -10,7 +13,6 @@ const { data: siteSettings } = await safeLoadQuery<{ blogPageTitle?: string | nu
 
 const blogTitle = siteSettings?.blogPageTitle?.trim() || 'Blog';
 
-// Try Sanity first, fallback to Astro content
 const { data: sanityPosts } = await safeLoadQuery<Array<{
   title: string;
   slug?: { current: string };
@@ -41,24 +43,23 @@ const posts = sanityPosts?.length
   <Header />
   <main class="bg-site flex-1" data-reveal>
     <article class="w-full pt-24 pb-20">
-      <div class="site-grid mb-16 pt-10">
-        <header class="site-grid__left">
-          <h1 class="font-normal text-black">{blogTitle}</h1>
-        </header>
-        <div class="site-grid__right flex flex-col gap-8">
-      {posts.map((post) => (
-        <article>
-          <a href={`/blog/${post.slug}`} class="block group">
-            <h2 class="text-xl font-normal text-black group-hover:opacity-80 transition-opacity">
-              {post.data.title}
-            </h2>
-            <time datetime={post.data.pubDate.toISOString()} class="text-muted text-sm block mt-1">
-              {post.data.pubDate.toLocaleDateString('en-GB', { dateStyle: 'medium' })}
-            </time>
-          </a>
-        </article>
-      ))}
-        </div>
+      <div class="w-full max-w-content mx-auto px-8 mb-16 pt-10">
+        <ContentSegmentRow segment={{ heading: blogTitle }} headingLevel="h1">
+          <div slot="body" class="not-prose flex flex-col gap-8">
+            {posts.map((post) => (
+              <article>
+                <a href={`/blog/${post.slug}`} class="block group">
+                  <h2 class="text-xl font-normal text-black group-hover:opacity-80 transition-opacity">
+                    {post.data.title}
+                  </h2>
+                  <time datetime={post.data.pubDate.toISOString()} class="text-muted text-sm block mt-1">
+                    {post.data.pubDate.toLocaleDateString('en-GB', { dateStyle: 'medium' })}
+                  </time>
+                </a>
+              </article>
+            ))}
+          </div>
+        </ContentSegmentRow>
       </div>
     </article>
   </main>

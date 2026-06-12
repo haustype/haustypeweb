@@ -21,7 +21,7 @@ export const pageType = defineType({
       type: 'array',
       title: 'Content',
       description:
-        'Heading + body pairs in the two-column layout. Add as many segments as you need — each is separated by a line, like the homepage typeface list.',
+        'Page content segments. Choose a layout per segment: split (headline cols 3–6, body text cols 7–11, body images cols 7–12) or feature (wide image cols 3–10, body cols 3–8). Segments are separated by a line.',
       of: [{ type: 'contentSegment' }],
     }),
     defineField({

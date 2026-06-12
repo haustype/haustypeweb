@@ -1,4 +1,5 @@
 import { defineType, defineArrayMember } from 'sanity';
+import { imageDisplayFields } from './imageDisplayFields';
 
 export const blockContentType = defineType({
   title: 'Block Content',
@@ -80,9 +81,7 @@ export const blockContentType = defineType({
     defineArrayMember({
       type: 'image',
       options: { hotspot: true },
-      fields: [
-        { name: 'alt', type: 'string', title: 'Alternative Text' },
-      ],
+      fields: imageDisplayFields(),
     }),
   ],
 });

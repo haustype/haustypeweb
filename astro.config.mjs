@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import netlify from '@astrojs/netlify';
 import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
 
@@ -22,4 +23,5 @@ export default defineConfig({
     react(),
   ],
   output: 'static',
+  adapter: netlify(),
 });

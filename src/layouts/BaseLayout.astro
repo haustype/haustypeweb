@@ -12,6 +12,7 @@ interface Props {
   image?: string;
   preloadImages?: string[];
   buyCollectionId?: string;
+  trialFontsHref?: string;
 }
 
 const {
@@ -20,6 +21,7 @@ const {
   image,
   preloadImages = [],
   buyCollectionId,
+  trialFontsHref,
 } = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
@@ -61,45 +63,6 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
       <link rel="preload" as="image" href={new URL(src, Astro.url).href} />
     ))}
     <link rel="stylesheet" href="https://js.fontdue.com/fontdue.css" />
-    <script type="module">
-      import fontdue from "https://js.fontdue.com/fontdue.esm.js";
-      fontdue.initialize({
-        url: "https://store.haustype.com",
-        config: {
-          storeModal: {
-            indexLayout: "styled-font-names",
-          },
-          form: {
-            checkboxStyle: "cross",
-          },
-          typeTester: {
-            selectable: true,
-            textInput: true,
-            groupEdit: false,
-            initialMode: "local",
-            shy: true,
-            autofitOnChange: true,
-            selectButton: true,
-            selectButtonLabel: "Buy →",
-            selectButtonStyle: "inline",
-            priceText: false,
-            alignmentButtons: false,
-            initialAlignment: "left",
-            bulletStyle: "round",
-            variableAxesPosition: "features-panel",
-            openTypeFeatures: {
-              interactionStyle: "panel",
-            },
-            columns: false,
-            size: {
-              min: 12,
-              max: 512,
-              label: false,
-            },
-          },
-        },
-      });
-    </script>
     <script is:inline>
       try {
         if (localStorage.getItem('site-bg') === 'alt') {
@@ -116,6 +79,46 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
   </head>
   <body>
     <fontdue-store-modal></fontdue-store-modal>
+    <script type="module">
+      import fontdue from 'https://js.fontdue.com/fontdue.esm.js';
+
+      fontdue.initialize({
+        url: 'https://store.haustype.com',
+        config: {
+          storeModal: {
+            indexLayout: 'styled-font-names',
+          },
+          form: {
+            checkboxStyle: 'cross',
+          },
+          typeTester: {
+            selectable: true,
+            textInput: true,
+            groupEdit: false,
+            initialMode: 'local',
+            shy: true,
+            autofitOnChange: true,
+            selectButton: true,
+            selectButtonLabel: 'Buy →',
+            selectButtonStyle: 'inline',
+            priceText: false,
+            alignmentButtons: false,
+            initialAlignment: 'left',
+            bulletStyle: 'round',
+            variableAxesPosition: 'features-panel',
+            openTypeFeatures: {
+              interactionStyle: 'panel',
+            },
+            columns: false,
+            size: {
+              min: 12,
+              max: 512,
+              label: false,
+            },
+          },
+        },
+      });
+    </script>
     {screensaver && (
       <Screensaver
         slides={screensaver.slides}
@@ -128,7 +131,7 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
       <slot />
     </div>
     <Footer />
-    <SiteFloatingControls buyCollectionId={buyCollectionId} />
+    <SiteFloatingControls buyCollectionId={buyCollectionId} trialFontsHref={trialFontsHref} />
     <script is:inline>
       (function () {
         const root = document.documentElement;
@@ -161,24 +164,25 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
         }
 
         initSiteBgToggle();
-        document.addEventListener('astro:page-load', initSiteBgToggle);
       })();
     </script>
     <script>
       import { initAllSlideshows } from '../lib/slideshow';
       import { initCharacterViewerStyles } from '../lib/fontdue-character-viewer';
+      import { initStoreModalStyles } from '../lib/fontdue-store-modal';
       import { initTypeTesterStyles } from '../lib/fontdue-type-testers';
-      initAllSlideshows();
-      initCharacterViewerStyles();
-      initTypeTesterStyles();
-      document.addEventListener('astro:page-load', () => {
+
+      function initPageWidgets() {
         initAllSlideshows();
         initCharacterViewerStyles();
+        initStoreModalStyles();
         initTypeTesterStyles();
-      });
+      }
+
+      initPageWidgets();
     </script>
     <script>
-      (function () {
+      function initRevealAnimations() {
         const els = Array.from(document.querySelectorAll('[data-reveal]'));
         if (!els.length) return;
 
@@ -188,9 +192,6 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
           return;
         }
 
-        // Elements marked [data-reveal-once] (e.g. the header) animate only on
-        // the first load of a session; on later page navigations they appear
-        // instantly so the chrome doesn't re-animate every click.
         const ONCE_KEY = 'reveal-once-done';
         let onceDone = false;
         try {
@@ -208,7 +209,6 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
           }
         });
 
-        // Staggered fade-up for everything already in view on load.
         let staggerIndex = 0;
         let animatedOnce = false;
         const toAnimate = [];
@@ -240,7 +240,6 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
           })
         );
 
-        // Reveal below-the-fold elements as they scroll into view.
         if (belowFold.length) {
           const observer = new IntersectionObserver(
             (entries) => {
@@ -255,7 +254,9 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
           );
           belowFold.forEach((el) => observer.observe(el));
         }
-      })();
+      }
+
+      initRevealAnimations();
     </script>
     {customBodyEnd && <Fragment set:html={customBodyEnd} />}
   </body>

@@ -35,88 +35,76 @@ const { typefaces } = Astro.props;
 
       return (
         <li data-reveal>
-          <div class="typeface-list__row group relative">
+          <a
+            href={`/typefaces/${typeface.slug}`}
+            class="typeface-list__row group relative block text-black no-underline"
+            aria-label={`View ${typeface.name}`}
+          >
             <div class="typeface-list__hover-bg" aria-hidden="true"></div>
             <div class="relative z-[1] w-full max-w-content mx-auto px-8">
               <div
                 class:list={[
-                  'typeface-list__grid grid grid-cols-6 gap-6 items-start py-10 border-b border-site transition-[border-color] duration-200 ease-out',
+                  'typeface-list__grid grid grid-cols-12 gap-4 items-start py-10 border-b border-site transition-[border-color] duration-200 ease-out',
                   i === 0 && 'border-t border-site',
                 ]}
               >
-                <div class="col-span-6 md:col-span-1 md:col-start-1">
-                  <a
-                    href={`/typefaces/${typeface.slug}`}
-                    class="typeface-list__link flex items-center gap-3 text-base leading-none text-black"
-                  >
-                    <span
-                      class="typeface-list__dot relative -top-px shrink-0 w-[10px] h-[10px] rounded-full bg-black"
-                      aria-hidden="true"
-                    ></span>
-                    {typeface.name}
-                  </a>
+                <div class="col-span-12 md:col-span-2 md:col-start-1 flex items-center gap-3 text-base leading-none">
+                  <span
+                    class="typeface-list__dot relative -top-px shrink-0 w-[10px] h-[10px] rounded-full bg-black"
+                    aria-hidden="true"
+                  ></span>
+                  {typeface.name}
                 </div>
 
-                <div class="col-span-6 md:col-span-4 md:col-start-2 min-w-0">
-                  <a
-                    href={`/typefaces/${typeface.slug}`}
-                    class="typeface-list__link block"
-                    aria-label={`View ${typeface.name}`}
-                  >
-                    {specimen ? (
-                      <div class="typeface-list__media relative w-full">
-                        {specimenMobile ? (
-                          <>
-                            <img
-                              src={specimen.url}
-                              alt={specimen.alt ?? typeface.name}
-                              width={dims?.width}
-                              height={dims?.height}
-                              class="typeface-list__specimen-img hidden md:block w-full h-auto"
-                              loading={i < 2 ? 'eager' : 'lazy'}
-                              decoding="async"
-                            />
-                            <img
-                              src={specimenMobile.url}
-                              alt={specimenMobile.alt ?? typeface.name}
-                              width={mobileDims?.width}
-                              height={mobileDims?.height}
-                              class="typeface-list__specimen-img block md:hidden w-full h-auto"
-                              loading={i < 2 ? 'eager' : 'lazy'}
-                              decoding="async"
-                            />
-                          </>
-                        ) : (
+                <div class="col-span-12 md:col-span-8 md:col-start-3 min-w-0">
+                  {specimen ? (
+                    <div class="typeface-list__media relative w-full">
+                      {specimenMobile ? (
+                        <>
                           <img
                             src={specimen.url}
                             alt={specimen.alt ?? typeface.name}
                             width={dims?.width}
                             height={dims?.height}
-                            class="typeface-list__specimen-img block w-full h-auto"
+                            class="typeface-list__specimen-img hidden md:block w-full h-auto"
                             loading={i < 2 ? 'eager' : 'lazy'}
                             decoding="async"
                           />
-                        )}
-                      </div>
-                    ) : (
-                      <span class="typeface-list__specimen block text-left text-black">
-                        {typeface.name}
-                      </span>
-                    )}
-                  </a>
+                          <img
+                            src={specimenMobile.url}
+                            alt={specimenMobile.alt ?? typeface.name}
+                            width={mobileDims?.width}
+                            height={mobileDims?.height}
+                            class="typeface-list__specimen-img block md:hidden w-full h-auto"
+                            loading={i < 2 ? 'eager' : 'lazy'}
+                            decoding="async"
+                          />
+                        </>
+                      ) : (
+                        <img
+                          src={specimen.url}
+                          alt={specimen.alt ?? typeface.name}
+                          width={dims?.width}
+                          height={dims?.height}
+                          class="typeface-list__specimen-img block w-full h-auto"
+                          loading={i < 2 ? 'eager' : 'lazy'}
+                          decoding="async"
+                        />
+                      )}
+                    </div>
+                  ) : (
+                    <span class="typeface-list__specimen block text-left text-black">
+                      {typeface.name}
+                    </span>
+                  )}
                 </div>
 
-                <div class="col-span-6 md:col-span-1 md:col-start-6 md:justify-self-end">
-                  <a
-                    href={`/typefaces/${typeface.slug}`}
-                    class="typeface-list__link text-base text-black whitespace-nowrap"
-                  >
-                    Buy →
-                  </a>
+                <div class="col-span-12 md:col-span-2 md:col-start-11 md:justify-self-end text-base whitespace-nowrap">
+                  Buy →
                 </div>
               </div>
             </div>
-          </div>
+          </a>
         </li>
       );
     })}
@@ -126,6 +114,8 @@ const { typefaces } = Astro.props;
 <style>
   .typeface-list__row {
     isolation: isolate;
+    color: inherit;
+    text-decoration: none;
   }
 
   .typeface-list__hover-bg {
@@ -143,7 +133,7 @@ const { typefaces } = Astro.props;
   }
 
   .typeface-list__row:hover .typeface-list__hover-bg,
-  .typeface-list__row:focus-within .typeface-list__hover-bg {
+  .typeface-list__row:focus-visible .typeface-list__hover-bg {
     opacity: 1;
   }
 
@@ -153,13 +143,13 @@ const { typefaces } = Astro.props;
 
   /* Hide divider lines on hover so yellow fill reads as one clean block */
   .typeface-list__row:hover .typeface-list__grid,
-  .typeface-list__row:focus-within .typeface-list__grid {
+  .typeface-list__row:focus-visible .typeface-list__grid {
     border-top-color: transparent;
     border-bottom-color: transparent;
   }
 
   li:has(+ li .typeface-list__row:hover) .typeface-list__grid,
-  li:has(+ li .typeface-list__row:focus-within) .typeface-list__grid {
+  li:has(+ li .typeface-list__row:focus-visible) .typeface-list__grid {
     border-bottom-color: transparent;
   }
 

@@ -14,18 +14,26 @@ export const typefaceType = defineType({
       type: 'array',
       title: 'Content',
       description:
-        'Heading + body pairs in the two-column layout. Add as many segments as you need — each is separated by a line, like the homepage typeface list.',
+        'Heading + body pairs in the two-column layout. The first segment appears in the yellow hero; additional segments appear below the fold.',
       of: [{ type: 'contentSegment' }],
+    }),
+    defineField({
+      name: 'headerSvg',
+      type: 'image',
+      title: 'Header SVG',
+      description:
+        'Large wordmark shown at the bottom of the yellow hero on the typeface page. SVG recommended; fills the width of the viewport.',
+      options: { accept: '.svg,image/*' },
+      fields: [{ name: 'alt', type: 'string', title: 'Alternative Text' }],
     }),
     defineField({
       name: 'pageSections',
       type: 'array',
       title: 'Fontdue sections',
-      description: 'Order of sections below the content segments. Add, remove, or reorder: type tester, character viewer, buy button, custom content.',
+      description: 'Order of sections below the content segments. Add, remove, or reorder: type tester, character viewer, custom content.',
       of: [{ type: 'typefacePageSection' }],
       initialValue: [
         { sectionType: 'typeTester' },
-        { sectionType: 'buyButton' },
         { sectionType: 'characterViewer' },
       ],
     }),
@@ -39,7 +47,7 @@ export const typefaceType = defineType({
       name: 'collectionId',
       type: 'string',
       title: 'Fontdue Collection ID',
-      description: 'For buy button on font detail page. Leave empty if not for sale.',
+      description: 'For the floating buy button on the font detail page. Leave empty if not for sale.',
     }),
     defineField({ name: 'category', type: 'string', title: 'Category' }),
     defineField({ name: 'styles', type: 'number', title: 'Styles', initialValue: 0 }),

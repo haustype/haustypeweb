@@ -1,43 +1,26 @@
 ---
-import PortableText from './PortableText.astro';
+import ContentSegmentRow from './ContentSegmentRow.astro';
+import type { ContentSegment } from '../lib/content-segment';
+import { isContentSegmentVisible } from '../lib/content-segment';
 
-export interface ContentSegment {
-  heading?: string;
-  body?: unknown;
-}
+export type { ContentSegment, ContentSegmentLayout } from '../lib/content-segment';
 
 interface Props {
   segments: ContentSegment[];
 }
 
 const { segments } = Astro.props;
-const visible = segments.filter((s) => s.heading?.trim() || s.body);
+const visible = segments.filter(isContentSegmentVisible);
 ---
 
 {visible.length > 0 && (
   <div class="content-segments w-full max-w-content mx-auto px-8 mb-16">
     {visible.map((segment, i) => (
-      <div
-        class:list={[
-          'grid grid-cols-6 gap-6 items-start py-10',
-          i < visible.length - 1 && 'border-b border-site',
-        ]}
-      >
-        {segment.heading?.trim() && (
-          <header class="site-grid__left">
-            {i === 0 ? (
-              <h1 class="font-normal text-black m-0">{segment.heading}</h1>
-            ) : (
-              <h2 class="font-normal text-black m-0">{segment.heading}</h2>
-            )}
-          </header>
-        )}
-        {segment.body && (
-          <div class:list={['prose max-w-none', segment.heading?.trim() ? 'site-grid__right' : 'col-span-6']}>
-            <PortableText value={segment.body} />
-          </div>
-        )}
-      </div>
+      <ContentSegmentRow
+        segment={segment}
+        headingLevel={i === 0 ? 'h1' : 'h2'}
+        borderBottom={i < visible.length - 1}
+      />
     ))}
   </div>
 )}

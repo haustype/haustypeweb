@@ -1,10 +1,14 @@
 ---
+export const prerender = false;
+
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import ContentSegments from '../../components/ContentSegments.astro';
 import FontdueSection from '../../components/FontdueSection.astro';
-import HausBuyButton from '../../components/HausBuyButton.astro';
 import PortableText from '../../components/PortableText.astro';
+import TypefaceHero from '../../components/TypefaceHero.astro';
+import { sanityImageProjection } from '../../lib/sanity-image';
+import { typefaceSlug } from '../../lib/typeface';
 import { safeLoadQuery } from '../../sanity/lib/safe-fetch';
 
 type PageSection = {
@@ -15,30 +19,15 @@ type PageSection = {
 
 const defaultPageSections: PageSection[] = [
   { _key: 'a', sectionType: 'typeTester' },
-  { _key: 'b', sectionType: 'buyButton' },
   { _key: 'c', sectionType: 'characterViewer' },
 ];
 
-export async function getStaticPaths() {
-  const { data: typefaces } = await safeLoadQuery<Array<{ slug?: { current: string } }>>({
-    query: `*[_type == "typeface"]{ slug }`,
-  });
-
-  const paths = (typefaces ?? [])
-    .map((t) => t.slug?.current)
-    .filter((slug): slug is string => Boolean(slug))
-    .map((slug) => ({ params: { slug } }));
-
-  if (paths.length) {
-    return paths;
-  }
-
-  return [{ params: { slug: 'typeface-name' } }];
+/** Parse dimensions from Sanity asset URLs like `…-750x87.svg`. */
+function assetDimensions(url: string): { width: number; height: number } | null {
+  const match = url.match(/-(\d+)x(\d+)\.\w+(?:\?|$)/);
+  if (!match) return null;
+  return { width: Number(match[1]), height: Number(match[2]) };
 }
-
-const fallbackFonts: Record<string, { name: string; collectionId?: string }> = {
-  'typeface-name': { name: 'Typeface name' },
-};
 
 const { slug } = Astro.params;
 
@@ -50,6 +39,7 @@ const { data: typefacesData } = await safeLoadQuery<Array<{
   detailPageTitle?: string | null;
   contentSegments?: Array<{ heading?: string; body?: unknown }> | null;
   pageSections?: PageSection[] | null;
+  headerSvg?: { url?: string | null; alt?: string | null } | null;
 }>>({
   query: `*[_type == "typeface"]{
     name,
@@ -57,47 +47,82 @@ const { data: typefacesData } = await safeLoadQuery<Array<{
     collectionId,
     body,
     detailPageTitle,
-    contentSegments[]{ heading, body },
-    pageSections
+    contentSegments[]{
+      layout,
+      preHeader,
+      heading,
+      media ${sanityImageProjection},
+      body,
+      aside
+    },
+    pageSections,
+    "headerSvg": headerSvg{
+      "url": asset->url,
+      "alt": alt
+    }
   }`,
 });
 
-const matched = typefacesData?.find((t) => t.slug?.current === slug);
-const font = matched
-  ? {
-      name: matched.name,
-      collectionId: matched.collectionId,
-      pageSections: matched.pageSections,
-      contentSegments:
-        matched.contentSegments?.length
-          ? matched.contentSegments
-          : matched.body || matched.detailPageTitle
-            ? [{ heading: matched.detailPageTitle?.trim() || matched.name, body: matched.body }]
-            : [],
-    }
-  : {
-      name: fallbackFonts[slug ?? '']?.name ?? (slug ?? 'Name'),
-      collectionId: undefined as string | undefined,
-      pageSections: defaultPageSections,
-      contentSegments: [] as Array<{ heading?: string; body?: unknown }>,
-    };
+const matched = typefacesData?.find((t) => typefaceSlug(t) === slug);
+
+if (!matched) {
+  return Astro.redirect('/404');
+}
+
+const font = {
+  name: matched.name,
+  collectionId: matched.collectionId,
+  pageSections: matched.pageSections,
+  headerSvg: matched.headerSvg?.url
+    ? {
+        url: matched.headerSvg.url,
+        alt: matched.headerSvg.alt ?? matched.name,
+        ...(() => {
+          const dims = assetDimensions(matched.headerSvg!.url!);
+          return dims ? { width: dims.width, height: dims.height } : {};
+        })(),
+      }
+    : null,
+  contentSegments:
+    matched.contentSegments?.length
+      ? matched.contentSegments
+      : matched.body || matched.detailPageTitle
+        ? [{ heading: matched.detailPageTitle?.trim() || matched.name, body: matched.body }]
+        : [],
+};
 
 const pageTitle =
   font.contentSegments[0]?.heading?.trim() || font.name;
 
-const sections: PageSection[] =
-  font.pageSections?.length ? font.pageSections : defaultPageSections;
+const introSegment = font.contentSegments[0];
+const extraSegments = font.contentSegments.slice(1);
+
+const sections: PageSection[] = (
+  font.pageSections?.length ? font.pageSections : defaultPageSections
+).filter((section) => section.sectionType !== 'buyButton');
+
+const preloadImages = font.headerSvg?.url ? [font.headerSvg.url] : [];
 ---
 
 <BaseLayout
   title={`${pageTitle} | Haus Type`}
   description={`${pageTitle} - Explore and purchase from Haus Type foundry.`}
   buyCollectionId={font.collectionId}
+  trialFontsHref="#"
+  preloadImages={preloadImages}
 >
   <Header />
-  <main class="bg-site flex-1" data-reveal>
-    <article class="w-full pt-24 pb-20">
-      <ContentSegments segments={font.contentSegments} />
+  <main class="flex-1">
+    <TypefaceHero
+      segment={introSegment}
+      headerSvg={font.headerSvg}
+      typefaceName={font.name}
+    />
+
+    <div class="typeface-page__body bg-site pb-20 pt-16" data-reveal>
+      {extraSegments.length > 0 && (
+        <ContentSegments segments={extraSegments} />
+      )}
 
       <div class="w-full flex flex-col gap-16">
         {sections.map((section) => {
@@ -115,13 +140,6 @@ const sections: PageSection[] =
               </FontdueSection>
             );
           }
-          if (section.sectionType === 'buyButton' && font.collectionId) {
-            return (
-              <FontdueSection align="content">
-                <HausBuyButton collectionId={font.collectionId} />
-              </FontdueSection>
-            );
-          }
           if (section.sectionType === 'content' && section.content) {
             return (
               <FontdueSection align="content">
@@ -134,6 +152,6 @@ const sections: PageSection[] =
           return null;
         })}
       </div>
-    </article>
+    </div>
   </main>
 </BaseLayout>

@@ -22,6 +22,9 @@
   --site-yellow-hover: #f2ba00;
   --site-bg-alt: var(--site-yellow);
   --site-border: rgb(0 0 0 / 0.2);
+  /* Sticky header: 16px padding + 60px bar + 16px padding */
+  --site-header-height: 5.75rem;
+  --site-radius: 10px;
 }
 
 html.site-bg-alt {
@@ -54,18 +57,18 @@ body {
   overscroll-behavior: none;
 }
 
-/* Site-wide 6-column content grid (32px padding, 24px gap) */
+/* Site-wide 12-column content grid (32px padding, 16px gap) */
 @layer components {
   .site-grid {
-    @apply w-full max-w-content mx-auto px-8 grid grid-cols-6 gap-6;
+    @apply w-full max-w-content mx-auto px-8 grid grid-cols-12 gap-4;
   }
 
   .site-grid__left {
-    @apply col-span-6 md:col-span-3 md:col-start-1;
+    @apply col-span-12 md:col-span-6 md:col-start-1;
   }
 
   .site-grid__right {
-    @apply col-span-6 md:col-span-3 md:col-start-4;
+    @apply col-span-12 md:col-span-6 md:col-start-7;
   }
 
   .bg-site {
@@ -80,6 +83,18 @@ body {
     border-color: var(--site-border);
   }
 
+  .site-header__logo-link,
+  .site-footer__brand-mark {
+    width: fit-content;
+    transition-property: color;
+    transition-duration: 0.5s;
+    transition-timing-function: ease-out;
+  }
+
+  .site-header__logo-link .haus-mark {
+    transform: translateY(-2px);
+  }
+
   .site-floating-controls {
     position: fixed;
     right: 2rem;
@@ -88,6 +103,17 @@ body {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+  }
+
+  .site-floating-controls--scroll-reveal {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .site-floating-controls--scroll-reveal.is-visible {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .site-bg-toggle {
@@ -150,6 +176,24 @@ h1, h2, .prose h1, .prose h2 {
 
 .prose p {
   color: #000000;
+}
+
+.prose :where(img) {
+  border-radius: var(--site-radius);
+}
+
+.sanity-image {
+  border-radius: var(--site-radius);
+  overflow: hidden;
+}
+
+/* Split layout: body text cols 7–11; images bleed one column into col 12 */
+@media (min-width: 768px) {
+  .content-segment__body .sanity-image {
+    display: block;
+    width: calc(120% + 1rem);
+    max-width: none;
+  }
 }
 
 .prose li,
@@ -240,6 +284,7 @@ html.reveal-once-done [data-reveal-once] {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  text-decoration: none;
 }
 
 .haus-buy-button--floating:hover {
