@@ -11,7 +11,7 @@ export const contentSegmentType = defineType({
       type: 'string',
       title: 'Layout',
       description:
-        'Split: headline and body in separate columns. Feature: wide image (or heading) across cols 3–10, with body text in cols 3–8 below.',
+        'Split: headline and body in separate columns. Feature: wide image (or heading) across cols 4–11, with body text in cols 4–8 below.',
       options: {
         list: [
           { title: 'Split (headline + body columns)', value: 'split' },
@@ -22,23 +22,16 @@ export const contentSegmentType = defineType({
       initialValue: 'split',
     }),
     defineField({
-      name: 'preHeader',
-      type: 'string',
-      title: 'Pre-header',
-      description: 'Optional small label in column 1 (split layout only). Body copy size.',
-      hidden: ({ parent }) => parent?.layout === 'feature',
-    }),
-    defineField({
       name: 'heading',
       type: 'string',
       title: 'Heading',
-      description: 'Split: columns 3–6. Feature: shown above the image in columns 3–10.',
+      description: 'Split: columns 1–3. Feature: shown above the image in columns 4–11.',
     }),
     defineField({
       name: 'media',
       type: 'image',
       title: 'Image',
-      description: 'Feature layout only. Spans columns 3–10.',
+      description: 'Feature layout only. Spans columns 4–11 by default; choose 6 or 9 columns per image in the image settings.',
       options: { hotspot: true },
       fields: imageDisplayFields({ aspectDefault: '2/1', fitDefault: 'contain' }),
       hidden: ({ parent }) => parent?.layout !== 'feature',
@@ -47,13 +40,13 @@ export const contentSegmentType = defineType({
       name: 'body',
       type: 'blockContent',
       title: 'Body',
-      description: 'Split: text in columns 7–11; images in body span columns 7–12. Feature: columns 3–8 below the image.',
+      description: 'Split: text in columns 4–8; images span 6 or 9 columns from column 4 (set per image). Feature: columns 4–8 below the image.',
     }),
     defineField({
       name: 'aside',
       type: 'blockContent',
       title: 'Aside',
-      description: 'Optional notes or CTA in column 12 (split layout only).',
+      description: 'Optional notes or CTA in column 10 (split layout only).',
       hidden: ({ parent }) => parent?.layout === 'feature',
     }),
   ],

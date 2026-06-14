@@ -1,13 +1,18 @@
-const SLIDER_HANDLE_CSS = `
+import { siteFgColor } from './fontdue-theme';
+
+function sliderHandleCss() {
+  const fg = siteFgColor();
+  return `
   .type-tester__slider__handle,
   .type-tester__slider__handle:hover,
   .type-tester__slider__handle:active,
   .type-tester__slider__handle:focus {
-    background-color: #000000 !important;
-    border-color: #000000 !important;
+    background-color: ${fg} !important;
+    border-color: ${fg} !important;
     transition: none !important;
   }
 `;
+}
 
 function patchShadowRoot(root: ShadowRoot) {
   const id = 'haus-slider-handle-patch';
@@ -17,7 +22,7 @@ function patchShadowRoot(root: ShadowRoot) {
     style.id = id;
     root.appendChild(style);
   }
-  style.textContent = SLIDER_HANDLE_CSS;
+  style.textContent = sliderHandleCss();
 }
 
 function walkShadowRoots(node: Element | ShadowRoot) {
@@ -55,6 +60,8 @@ export function initTypeTesterStyles() {
   for (const delay of [100, 500, 1500, 3000]) {
     setTimeout(patchAll, delay);
   }
+
+  document.documentElement.addEventListener('site-bg-change', patchAll);
 
   if (observerStarted) return;
   observerStarted = true;

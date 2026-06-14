@@ -7,14 +7,15 @@ export type { ContentSegment, ContentSegmentLayout } from '../lib/content-segmen
 
 interface Props {
   segments: ContentSegment[];
+  class?: string;
 }
 
-const { segments } = Astro.props;
+const { segments, class: className } = Astro.props;
 const visible = segments.filter(isContentSegmentVisible);
 ---
 
 {visible.length > 0 && (
-  <div class="content-segments w-full max-w-content mx-auto px-8 mb-16">
+  <div class:list={['content-segments w-full max-w-content mx-auto px-8', className ?? 'mb-16']} data-reveal>
     {visible.map((segment, i) => (
       <ContentSegmentRow
         segment={segment}

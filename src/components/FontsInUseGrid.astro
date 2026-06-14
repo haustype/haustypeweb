@@ -1,4 +1,6 @@
 ---
+import MediaPlaceholder from './MediaPlaceholder.astro';
+
 interface FontsInUseItem {
   url: string;
   alt: string;
@@ -16,12 +18,15 @@ const items =
     ? cmsItems
     : Array.from({ length: PLACEHOLDER_COUNT }, () => null);
 const gridId = `fonts-in-use-${Math.random().toString(36).slice(2)}`;
-const loopItems = [...items, ...items, ...items];
+/** Extra slide copies for swipe runway; middle copy is where we start and normalize. */
+const LOOP_COPY_COUNT = 17;
+const middleCopy = Math.floor(LOOP_COPY_COUNT / 2);
+const loopItems = Array.from({ length: LOOP_COPY_COUNT }, () => items).flat();
 ---
 
 <section class="fonts-in-use bg-site pt-20 md:pt-24 pb-[160px]" id={gridId}>
   <div class="site-grid items-baseline mb-8 fonts-in-use__header" data-reveal>
-    <h2 class="fonts-in-use__title col-span-12 md:col-span-2 md:col-start-3 font-normal text-black m-0">
+    <h2 class="fonts-in-use__title col-span-12 md:col-span-2 md:col-start-1 font-normal text-black m-0">
       Fonts in use
     </h2>
     <div class="col-span-12 md:col-span-2 md:col-start-11 md:justify-self-end flex items-center gap-6">
@@ -55,15 +60,26 @@ const loopItems = [...items, ...items, ...items];
               width={900}
               height={1125}
               class="fonts-in-use__image aspect-[4/5] w-full rounded-site object-cover"
+              data-media-placeholder
+              data-media-placeholder-class="media-placeholder aspect-[4/5] rounded-site"
               loading="lazy"
               decoding="async"
             />
           ) : (
-            <div class="aspect-[4/5] w-full rounded-site bg-white" aria-hidden="true" />
+            <MediaPlaceholder label="Font in use" class="aspect-[4/5]" />
           )}
         </div>
       ))}
     </div>
+  </div>
+
+  <div class="site-grid fonts-in-use__footer mt-8" data-reveal>
+    <a
+      href="/in-use"
+      class="fonts-in-use__more col-span-12 justify-self-end md:col-span-2 md:col-start-11 text-base text-site hover:opacity-80 transition-opacity no-underline"
+    >
+      See more fonts in use →
+    </a>
   </div>
 </section>
 
@@ -75,6 +91,8 @@ const loopItems = [...items, ...items, ...items];
     scrollbar-width: none;
     overscroll-behavior-x: contain;
     scroll-behavior: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
   }
 
   .fonts-in-use__viewport::-webkit-scrollbar {
@@ -87,7 +105,7 @@ const loopItems = [...items, ...items, ...items];
   }
 </style>
 
-<script define:vars={{ gridId, itemCount: items.length }}>
+<script define:vars={{ gridId, itemCount: items.length, middleCopy, loopCopyCount: LOOP_COPY_COUNT }}>
   function initFontsInUseGrid() {
     const section = document.getElementById(gridId);
     const viewport = document.getElementById(`${gridId}-viewport`);
@@ -99,29 +117,315 @@ const loopItems = [...items, ...items, ...items];
 
     const gap = 24;
     let slideWidth = 0;
+    let sideInset = 0;
     let setWidth = 0;
+    let activeIndex = 0;
+    let pendingDelta = 0;
     let lastWidth = 0;
+    let userInteracting = false;
+    let settleFrame = 0;
+    let lastScrollAt = 0;
+    let animating = false;
+    let animFrame = 0;
+    let scrollEndTimer = 0;
+    let animToLeft = 0;
+    let animFromLeft = 0;
+    let animStart = 0;
+    let animDuration = 0;
+    let onAnimComplete = null;
 
-    function gridCol2Offset() {
-      const grid = section.querySelector('.site-grid');
-      if (!grid) return 32;
+    const SCROLL_MS = 420;
+    const SCROLL_MIN_MS = 220;
+    const SCROLL_PX_PER_MS = 0.85;
 
-      const rect = grid.getBoundingClientRect();
-      const padding = 32;
-      const gridGap = 16;
-      const colWidth = (rect.width - padding * 2 - gridGap * 11) / 12;
-
-      // Align with col-start-3 (same position as the old 6-col column 2)
-      return rect.left + padding + colWidth * 2 + gridGap * 2;
+    function easeOutCubic(t) {
+      return 1 - Math.pow(1 - t, 3);
     }
 
-    function layout() {
-      const offset = gridCol2Offset();
-      // Fixed card width (keeps 4:5 ratio); cards bleed off the right edge
-      // instead of being squeezed to fit exactly. Shrinks only on small screens.
-      slideWidth = Math.min(300, window.innerWidth - offset - gap);
+    function stopAnimation() {
+      if (animFrame) {
+        cancelAnimationFrame(animFrame);
+        animFrame = 0;
+      }
+      animating = false;
+    }
 
-      track.style.paddingLeft = `${offset}px`;
+    function snapToMiddleIndex(index) {
+      const slide = getSlides()[itemCount * middleCopy + index];
+      if (!slide) return;
+      viewport.scrollLeft = centerScrollLeft(slide);
+    }
+
+    function modIndex(index) {
+      return ((index % itemCount) + itemCount) % itemCount;
+    }
+
+    function pickForwardTarget(direction, fromLeft, targets) {
+      if (direction === 1) {
+        let best = null;
+        let bestDelta = Infinity;
+        for (const target of targets) {
+          const delta = target - fromLeft;
+          if (delta > 1 && delta < bestDelta) {
+            best = target;
+            bestDelta = delta;
+          }
+        }
+        return best;
+      }
+
+      let best = null;
+      let bestDelta = Infinity;
+      for (const target of targets) {
+        const delta = fromLeft - target;
+        if (delta > 1 && delta < bestDelta) {
+          best = target;
+          bestDelta = delta;
+        }
+      }
+      return best;
+    }
+
+    function scrollTargetForStepSim(direction, fromIndex, toIndex, fromLeft) {
+      const slides = getSlides();
+      const targets = Array.from({ length: loopCopyCount }, (_, copy) =>
+        centerScrollLeft(slides[itemCount * copy + toIndex])
+      );
+
+      let best = pickForwardTarget(direction, fromLeft, targets);
+      if (best === null) {
+        fromLeft += direction === 1 ? -setWidth : setWidth;
+        best = pickForwardTarget(direction, fromLeft, targets);
+      }
+
+      return best ?? centerScrollLeft(slides[itemCount * middleCopy + toIndex]);
+    }
+
+    function processQueue() {
+      if (animating || pendingDelta === 0) return;
+
+      const direction = pendingDelta > 0 ? 1 : -1;
+      const steps = Math.abs(pendingDelta);
+      pendingDelta = 0;
+
+      let pos = activeIndex;
+      let goalLeft = viewport.scrollLeft;
+
+      for (let i = 0; i < steps; i++) {
+        const toIndex = modIndex(pos + direction);
+        goalLeft = scrollTargetForStepSim(direction, pos, toIndex, goalLeft);
+        pos = toIndex;
+      }
+
+      activeIndex = pos;
+      const durationCap = steps > 1 ? Math.min(SCROLL_MS * steps, 900) : SCROLL_MS;
+
+      runAnimation(goalLeft, durationCap, () => {
+        let guard = 0;
+        while (guard++ < 3) {
+          const before = viewport.scrollLeft;
+          maintainInfiniteScroll();
+          if (viewport.scrollLeft === before) break;
+        }
+        snapToMiddleIndex(activeIndex);
+        processQueue();
+      });
+    }
+
+    function beginAnimation(toLeft, durationCap = SCROLL_MS) {
+      const maxScroll = viewport.scrollWidth - viewport.clientWidth;
+      animFromLeft = viewport.scrollLeft;
+      animToLeft = Math.max(0, Math.min(toLeft, maxScroll));
+      const distance = Math.abs(animToLeft - animFromLeft);
+      animDuration = Math.min(
+        durationCap,
+        Math.max(SCROLL_MIN_MS, distance / SCROLL_PX_PER_MS)
+      );
+      animStart = performance.now();
+      animating = true;
+    }
+
+    function runAnimation(toLeft, durationCap, onComplete) {
+      stopAnimation();
+      onAnimComplete = onComplete;
+      beginAnimation(toLeft, durationCap);
+
+      function tick(now) {
+        const t = Math.min(1, (now - animStart) / animDuration);
+        viewport.scrollLeft = animFromLeft + (animToLeft - animFromLeft) * easeOutCubic(t);
+
+        if (t < 1) {
+          animFrame = requestAnimationFrame(tick);
+          return;
+        }
+
+        animFrame = 0;
+        animating = false;
+        const complete = onAnimComplete;
+        onAnimComplete = null;
+        if (complete) complete();
+      }
+
+      animFrame = requestAnimationFrame(tick);
+    }
+
+    function stepBy(direction) {
+      clearTimeout(scrollEndTimer);
+      pendingDelta += direction;
+      processQueue();
+    }
+
+    function getSlides() {
+      return Array.from(track.querySelectorAll('.fonts-in-use__slide'));
+    }
+
+    function centerScrollLeft(slideEl) {
+      return slideEl.offsetLeft - (viewport.clientWidth - slideWidth) / 2;
+    }
+
+    function measureSetWidth() {
+      const slides = getSlides();
+      const start = itemCount * middleCopy;
+      if (slides.length < start + itemCount) {
+        return itemCount * slideWidth + Math.max(0, itemCount - 1) * gap;
+      }
+      return slides[start + itemCount].offsetLeft - slides[start].offsetLeft;
+    }
+
+    function middleSlide(index = activeIndex) {
+      return getSlides()[itemCount * middleCopy + index];
+    }
+
+    function scrollToIndex(index, smooth = false) {
+      activeIndex = modIndex(index);
+      const slide = middleSlide();
+      if (!slide) return;
+      viewport.scrollTo({ left: centerScrollLeft(slide), behavior: smooth ? 'smooth' : 'auto' });
+    }
+
+    function updateActiveIndexFromScroll() {
+      const slides = getSlides();
+      const viewportCenter = viewport.scrollLeft + viewport.clientWidth / 2;
+      let nearestIdx = 0;
+      let nearestDist = Infinity;
+
+      slides.forEach((slide, i) => {
+        const slideCenter = slide.offsetLeft + slideWidth / 2;
+        const dist = Math.abs(slideCenter - viewportCenter);
+        if (dist < nearestDist) {
+          nearestDist = dist;
+          nearestIdx = i;
+        }
+      });
+
+      activeIndex = nearestIdx % itemCount;
+    }
+
+    function maintainInfiniteScroll() {
+      if (setWidth <= 0 || itemCount <= 0) return;
+
+      const slides = getSlides();
+      const viewportCenter = viewport.scrollLeft + viewport.clientWidth / 2;
+      let nearestIdx = 0;
+      let nearestDist = Infinity;
+
+      slides.forEach((slide, i) => {
+        const slideCenter = slide.offsetLeft + slideWidth / 2;
+        const dist = Math.abs(slideCenter - viewportCenter);
+        if (dist < nearestDist) {
+          nearestDist = dist;
+          nearestIdx = i;
+        }
+      });
+
+      const copyIndex = Math.floor(nearestIdx / itemCount);
+      if (copyIndex < middleCopy) {
+        viewport.scrollLeft += (middleCopy - copyIndex) * setWidth;
+      } else if (copyIndex > middleCopy) {
+        viewport.scrollLeft -= (copyIndex - middleCopy) * setWidth;
+      }
+    }
+
+    function onScrollEnd() {
+      clearTimeout(scrollEndTimer);
+      scrollEndTimer = 0;
+
+      if (animating || userInteracting) return;
+
+      let guard = 0;
+      while (guard++ < 3) {
+        const before = viewport.scrollLeft;
+        maintainInfiniteScroll();
+        if (viewport.scrollLeft === before) break;
+      }
+
+      updateActiveIndexFromScroll();
+      pendingDelta = 0;
+    }
+
+    function onViewportScroll() {
+      if (animating) return;
+
+      lastScrollAt = performance.now();
+
+      if (!userInteracting) {
+        scheduleScrollEnd();
+      }
+    }
+
+    function scheduleScrollEnd() {
+      clearTimeout(scrollEndTimer);
+      if (settleFrame) {
+        cancelAnimationFrame(settleFrame);
+        settleFrame = 0;
+      }
+
+      scrollEndTimer = window.setTimeout(() => {
+        const quietFor = performance.now() - lastScrollAt;
+        if (quietFor < 180) {
+          scheduleScrollEnd();
+          return;
+        }
+
+        const sample = viewport.scrollLeft;
+        settleFrame = requestAnimationFrame(() => {
+          settleFrame = 0;
+          if (userInteracting || animating) return;
+          if (Math.abs(viewport.scrollLeft - sample) > 1) {
+            scheduleScrollEnd();
+            return;
+          }
+          onScrollEnd();
+        });
+      }, 80);
+    }
+
+    function onUserScrollStart() {
+      userInteracting = true;
+      stopAnimation();
+      pendingDelta = 0;
+      clearTimeout(scrollEndTimer);
+      if (settleFrame) {
+        cancelAnimationFrame(settleFrame);
+        settleFrame = 0;
+      }
+    }
+
+    function onUserScrollFinish() {
+      userInteracting = false;
+      scheduleScrollEnd();
+    }
+
+    function layout(preserveIndex = false) {
+      stopAnimation();
+      pendingDelta = 0;
+
+      const viewportWidth = viewport.clientWidth;
+      const index = preserveIndex ? activeIndex : 0;
+
+      slideWidth = Math.min(300, viewportWidth - gap * 2);
+      sideInset = Math.max(0, (viewportWidth - slideWidth) / 2);
+
       track.style.gap = `${gap}px`;
 
       track.querySelectorAll('.fonts-in-use__slide').forEach((slide) => {
@@ -129,47 +433,29 @@ const loopItems = [...items, ...items, ...items];
         slide.style.flex = `0 0 ${slideWidth}px`;
       });
 
-      setWidth = itemCount * (slideWidth + gap);
-      // Start centered on the middle copy so we can scroll both directions.
-      viewport.scrollLeft = setWidth;
+      setWidth = measureSetWidth();
+      track.style.paddingLeft = `${sideInset + setWidth}px`;
+      track.style.paddingRight = `${sideInset + setWidth}px`;
+
+      scrollToIndex(index, false);
     }
 
-    // Keep the scroll position within the middle copy so the loop is seamless.
-    function recenter() {
-      if (setWidth <= 0) return;
-      const sl = viewport.scrollLeft;
-      if (sl < setWidth * 0.5) {
-        viewport.scrollLeft = sl + setWidth;
-      } else if (sl > setWidth * 1.5) {
-        viewport.scrollLeft = sl - setWidth;
-      }
-    }
-
-    const step = () => slideWidth + gap;
-
-    let scrollEndTimer = 0;
-
-    // Only recenter after scrolling stops — never during a swipe (that caused visible jumps).
-    function onScrollEnd() {
-      clearTimeout(scrollEndTimer);
-      scrollEndTimer = 0;
-      recenter();
-    }
+    viewport.addEventListener('scroll', onViewportScroll, { passive: true });
 
     viewport.addEventListener(
-      'scroll',
+      'scrollend',
       () => {
-        clearTimeout(scrollEndTimer);
-        scrollEndTimer = window.setTimeout(onScrollEnd, 120);
+        if (!animating && !userInteracting) scheduleScrollEnd();
       },
       { passive: true }
     );
 
-    viewport.addEventListener('scrollend', onScrollEnd, { passive: true });
-
-    function stepBy(direction) {
-      viewport.scrollBy({ left: direction * step(), behavior: 'smooth' });
-    }
+    viewport.addEventListener('pointerdown', onUserScrollStart, { passive: true });
+    viewport.addEventListener('pointerup', onUserScrollFinish, { passive: true });
+    viewport.addEventListener('pointercancel', onUserScrollFinish, { passive: true });
+    viewport.addEventListener('touchstart', onUserScrollStart, { passive: true });
+    viewport.addEventListener('touchend', onUserScrollFinish, { passive: true });
+    viewport.addEventListener('touchcancel', onUserScrollFinish, { passive: true });
 
     prevBtn.addEventListener('click', () => stepBy(-1));
     nextBtn.addEventListener('click', () => stepBy(1));
@@ -177,11 +463,18 @@ const loopItems = [...items, ...items, ...items];
     function onResize() {
       if (window.innerWidth === lastWidth) return;
       lastWidth = window.innerWidth;
-      layout();
+      layout(true);
     }
 
     lastWidth = window.innerWidth;
     layout();
+
+    track.querySelectorAll('img').forEach((img) => {
+      if (!img.complete) {
+        img.addEventListener('load', () => layout(true), { once: true });
+      }
+    });
+
     window.addEventListener('resize', onResize, { passive: true });
   }
 

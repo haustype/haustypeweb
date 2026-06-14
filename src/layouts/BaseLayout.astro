@@ -4,10 +4,17 @@ import Footer from '../components/Footer.astro';
 import Screensaver from '../components/Screensaver.astro';
 import SiteFloatingControls from '../components/SiteFloatingControls.astro';
 import { loadScreensaverOptions } from '../lib/screensaver-config';
-import { safeLoadQuery } from '../sanity/lib/safe-fetch';
+import {
+  buildDocumentTitle,
+  faviconMimeType,
+  loadSiteSettings,
+} from '../lib/site-identity';
 
 interface Props {
-  title: string;
+  /** Page-specific title; combined with the CMS title suffix unless fullTitle is set. */
+  title?: string;
+  /** Full document <title> override (homepage, 404, etc.). */
+  fullTitle?: string;
   description?: string;
   image?: string;
   preloadImages?: string[];
@@ -17,22 +24,38 @@ interface Props {
 
 const {
   title,
-  description = 'Haus Type is a type foundry in Valencia, Spain. Retail and custom typefaces for global businesses.',
-  image,
+  fullTitle,
+  description: descriptionProp,
+  image: imageProp,
   preloadImages = [],
   buyCollectionId,
   trialFontsHref,
 } = Astro.props;
+
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const isHome = Astro.url.pathname === '/';
 
-const { data: siteSettings } = await safeLoadQuery<{
-  customCode?: { headEnd?: string | null; bodyEnd?: string | null };
-} | null>({
-  query: `*[_type == "siteSettings"][0]{ customCode { headEnd, bodyEnd } }`,
-});
+const { siteIdentity, customCode } = await loadSiteSettings();
+const customHeadEnd = customCode.headEnd;
+const customBodyEnd = customCode.bodyEnd;
 
-const customHeadEnd = siteSettings?.customCode?.headEnd?.trim() ?? '';
-const customBodyEnd = siteSettings?.customCode?.bodyEnd?.trim() ?? '';
+const documentTitle =
+  fullTitle?.trim() ||
+  (isHome ? siteIdentity.homeTitle : title ? buildDocumentTitle(title, siteIdentity) : siteIdentity.siteName);
+
+const description =
+  descriptionProp?.trim() ||
+  (isHome ? siteIdentity.homeDescription : '') ||
+  siteIdentity.defaultDescription;
+const shareImage = imageProp || siteIdentity.defaultShareImageUrl || undefined;
+const shareImageUrl = shareImage ? new URL(shareImage, Astro.url).href : undefined;
+const faviconType = siteIdentity.faviconUrl
+  ? faviconMimeType(siteIdentity.faviconUrl)
+  : undefined;
+const twitterHandle = siteIdentity.twitterHandle
+  ? siteIdentity.twitterHandle.replace(/^@/, '')
+  : null;
+const gaId = siteIdentity.googleAnalyticsId;
 
 const isBlog =
   Astro.url.pathname === '/blog' || Astro.url.pathname.startsWith('/blog/');
@@ -45,36 +68,84 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
+    <meta name="theme-color" content={siteIdentity.themeColor} />
+    <title>{documentTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalURL} />
+    {siteIdentity.faviconUrl && (
+      <link
+        rel="icon"
+        href={new URL(siteIdentity.faviconUrl, Astro.url).href}
+        {...(faviconType ? { type: faviconType } : {})}
+      />
+    )}
+    {siteIdentity.appleTouchIconUrl && (
+      <link rel="apple-touch-icon" href={siteIdentity.appleTouchIconUrl} />
+    )}
     <meta property="og:type" content="website" />
-    <meta property="og:title" content={title} />
+    <meta property="og:site_name" content={siteIdentity.siteName} />
+    <meta property="og:title" content={documentTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalURL} />
-    {image && <meta property="og:image" content={new URL(image, Astro.url).href} />}
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={title} />
+    {shareImageUrl && <meta property="og:image" content={shareImageUrl} />}
+    <meta name="twitter:card" content={shareImageUrl ? 'summary_large_image' : 'summary'} />
+    {twitterHandle && <meta name="twitter:site" content={`@${twitterHandle}`} />}
+    <meta name="twitter:title" content={documentTitle} />
     <meta name="twitter:description" content={description} />
+    {shareImageUrl && <meta name="twitter:image" content={shareImageUrl} />}
     <link rel="preload" href="/fonts/Selandia-Regular.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="https://js.fontdue.com/fontdue.css" as="style" />
-    {image && <link rel="preload" as="image" href={new URL(image, Astro.url).href} />}
+    {shareImageUrl && <link rel="preload" as="image" href={shareImageUrl} />}
     {preloadImages.map((src) => (
       <link rel="preload" as="image" href={new URL(src, Astro.url).href} />
     ))}
     <link rel="stylesheet" href="https://js.fontdue.com/fontdue.css" />
+    {gaId && (
+      <>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></script>
+        <script is:inline define:vars={{ gaId }}>
+          window.dataLayer = window.dataLayer || [];
+          function gtag() {
+            dataLayer.push(arguments);
+          }
+          gtag('js', new Date());
+          gtag('config', gaId);
+        </script>
+      </>
+    )}
     <script is:inline>
       try {
-        if (localStorage.getItem('site-bg') === 'alt') {
-          document.documentElement.classList.add('site-bg-alt');
+        var siteBg = localStorage.getItem('site-bg');
+        var toggleRotation = 0;
+        if (siteBg === 'dark') {
+          document.documentElement.classList.add('site-bg-dark');
+          toggleRotation = 120;
+        } else if (siteBg === 'alt' || siteBg === 'yellow') {
+          document.documentElement.classList.add('site-bg-yellow');
+          toggleRotation = 240;
         }
+        document.documentElement.style.setProperty(
+          '--site-bg-toggle-rotation',
+          toggleRotation + 'deg',
+        );
       } catch (_) {}
       try {
         if (sessionStorage.getItem('reveal-once-done') === '1') {
           document.documentElement.classList.add('reveal-once-done');
         }
       } catch (_) {}
+      document.documentElement.classList.add('reveal-pending');
     </script>
+    <style is:inline>
+      html.reveal-pending [data-reveal]:not(.is-revealed):not(.reveal-no-animation) {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      html.reveal-pending [data-reveal='fade']:not(.is-revealed):not(.reveal-no-animation),
+      html.reveal-pending [data-reveal].reveal-on-scroll:not(.is-revealed):not(.reveal-no-animation) {
+        transform: none;
+      }
+    </style>
     {customHeadEnd && <Fragment set:html={customHeadEnd} />}
   </head>
   <body>
@@ -132,47 +203,15 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
     </div>
     <Footer />
     <SiteFloatingControls buyCollectionId={buyCollectionId} trialFontsHref={trialFontsHref} />
-    <script is:inline>
-      (function () {
-        const root = document.documentElement;
-
-        function syncBgToggle(toggle) {
-          const isAlt = root.classList.contains('site-bg-alt');
-          toggle.setAttribute(
-            'aria-label',
-            isAlt ? 'Switch to grey background' : 'Switch to yellow background'
-          );
-        }
-
-        function initSiteBgToggle() {
-          const toggle = document.querySelector('[data-bg-toggle]');
-          if (!toggle || toggle.dataset.bound === 'true') return;
-          toggle.dataset.bound = 'true';
-
-          toggle.addEventListener('click', () => {
-            root.classList.toggle('site-bg-alt');
-            try {
-              localStorage.setItem(
-                'site-bg',
-                root.classList.contains('site-bg-alt') ? 'alt' : 'default'
-              );
-            } catch (_) {}
-            syncBgToggle(toggle);
-          });
-
-          syncBgToggle(toggle);
-        }
-
-        initSiteBgToggle();
-      })();
-    </script>
     <script>
       import { initAllSlideshows } from '../lib/slideshow';
       import { initCharacterViewerStyles } from '../lib/fontdue-character-viewer';
       import { initStoreModalStyles } from '../lib/fontdue-store-modal';
       import { initTypeTesterStyles } from '../lib/fontdue-type-testers';
+      import { initSiteBgToggle } from '../lib/site-bg';
 
       function initPageWidgets() {
+        initSiteBgToggle();
         initAllSlideshows();
         initCharacterViewerStyles();
         initStoreModalStyles();
@@ -184,11 +223,15 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
     <script>
       function initRevealAnimations() {
         const els = Array.from(document.querySelectorAll('[data-reveal]'));
-        if (!els.length) return;
+        if (!els.length) {
+          document.documentElement.classList.remove('reveal-pending');
+          return;
+        }
 
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (reduce) {
           els.forEach((el) => el.classList.add('is-revealed'));
+          document.documentElement.classList.remove('reveal-pending');
           return;
         }
 
@@ -250,13 +293,22 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
                 }
               });
             },
-            { threshold: 0.05, rootMargin: '0px 0px -40px 0px' }
+            { threshold: 0.08, rootMargin: '0px 0px 0px 0px' }
           );
-          belowFold.forEach((el) => observer.observe(el));
+          belowFold.forEach((el) => {
+            el.classList.add('reveal-on-scroll');
+            observer.observe(el);
+          });
         }
+
+        document.documentElement.classList.remove('reveal-pending');
       }
 
       initRevealAnimations();
+    </script>
+    <script type="module">
+      import { initMediaPlaceholders } from '../lib/media-placeholder.ts';
+      initMediaPlaceholders();
     </script>
     {customBodyEnd && <Fragment set:html={customBodyEnd} />}
   </body>

@@ -26,16 +26,10 @@ export const postType = defineType({
     }),
     defineField({ name: 'author', type: 'string', title: 'Author' }),
     defineField({
-      name: 'preHeader',
-      type: 'string',
-      title: 'Pre-header',
-      description: 'Optional label in column 1. Body copy size.',
-    }),
-    defineField({
       name: 'aside',
       type: 'blockContent',
       title: 'Aside',
-      description: 'Optional notes in column 12 (12px, muted).',
+      description: 'Optional notes in column 10 (12px, muted).',
     }),
     defineField({
       name: 'mainImage',

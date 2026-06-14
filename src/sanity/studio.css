@@ -1,0 +1,9 @@
+/* Light preview behind SVG/image uploads so dark assets stay visible in dark Studio */
+.light-bg-image-input [data-ui='Card'] {
+  background-color: var(--light-bg-image-preview, #eeeeee) !important;
+}
+
+.light-bg-image-input img,
+.light-bg-image-input svg {
+  background-color: var(--light-bg-image-preview, #eeeeee);
+}

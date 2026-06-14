@@ -2,6 +2,7 @@ import { orderableDocumentListDeskItem } from '@sanity/orderable-document-list';
 import { defineConfig } from 'sanity';
 import { structureTool } from 'sanity/structure';
 import { schema } from './src/sanity/schemaTypes';
+import './src/sanity/studio.css';
 
 /** Sanity CLI uses CJS for deploy/build; use env vars (see sanity.cli.js, .env). */
 const projectId = process.env.PUBLIC_SANITY_PROJECT_ID ?? 'b5rdpzo3';

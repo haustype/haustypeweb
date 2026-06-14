@@ -168,88 +168,91 @@ const contactLinks = [
 ];
 ---
 
-<footer class="site-footer text-white">
+<footer class="site-footer text-white" data-reveal="fade">
   <div class="site-grid site-footer__grid pt-[64px] pb-[160px]">
     <a
       href="/"
-      class="site-footer__brand-mark col-span-12 md:col-span-2 md:col-start-1 md:row-start-1 self-end justify-self-start text-white hover:text-haus-yellow"
+      class="site-footer__brand-mark col-span-12 md:col-span-3 md:col-start-1 md:row-start-1 self-end justify-self-start text-white hover:text-haus-yellow"
       aria-label="Haus Type home"
     >
       <HausMark class="text-inherit" />
     </a>
 
-    <p class="site-footer__heading col-span-12 md:col-span-2 md:col-start-3 md:row-start-1 self-end m-0">
-      Typefaces
-    </p>
-
-    <p class="site-footer__heading col-span-12 md:col-span-2 md:col-start-7 md:row-start-1 self-end m-0">
-      Links
-    </p>
-
-    <p class="site-footer__heading col-span-12 md:col-span-2 md:col-start-9 md:row-start-1 self-end m-0">
-      Contact
-    </p>
-
-    <div class="col-span-12 md:col-span-4 md:col-start-3 md:row-start-2 md:self-start mt-4">
-      <div class="grid grid-cols-2 gap-x-6">
-        <ul class="site-footer__list list-none m-0 p-0 flex flex-col">
-          {typefacesLeft.map((typeface) => (
-            <li>
-              <a
-                href={`/typefaces/${typeface.slug}`}
-                class="site-footer__link text-base"
-              >
-                {typeface.name}
-              </a>
-            </li>
-          ))}
-        </ul>
-        <ul class="site-footer__list list-none m-0 p-0 flex flex-col">
-          {typefacesRight.map((typeface) => (
-            <li>
-              <a
-                href={`/typefaces/${typeface.slug}`}
-                class="site-footer__link text-base"
-              >
-                {typeface.name}
-              </a>
-            </li>
-          ))}
-        </ul>
+    <div class="site-footer__column col-span-12 md:col-span-4 md:col-start-4 md:row-start-1 md:row-span-2">
+      <p class="site-footer__heading m-0 md:self-end">
+        Typefaces
+      </p>
+      <div class="site-footer__column-body mt-4 md:mt-0">
+        <div class="grid grid-cols-2 gap-x-6">
+          <ul class="site-footer__list list-none m-0 p-0 flex flex-col">
+            {typefacesLeft.map((typeface) => (
+              <li>
+                <a
+                  href={`/typefaces/${typeface.slug}`}
+                  class="site-footer__link text-base"
+                >
+                  {typeface.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <ul class="site-footer__list list-none m-0 p-0 flex flex-col">
+            {typefacesRight.map((typeface) => (
+              <li>
+                <a
+                  href={`/typefaces/${typeface.slug}`}
+                  class="site-footer__link text-base"
+                >
+                  {typeface.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
 
-    <ul class="site-footer__list col-span-12 md:col-span-2 md:col-start-7 md:row-start-2 md:self-start mt-4 list-none m-0 p-0 flex flex-col">
-      {footerLinks.map((link) => (
-        <li>
-          <a
-            href={link.href}
-            class="site-footer__link text-base"
-            {...(link.external
-              ? { target: '_blank', rel: 'noopener noreferrer' }
-              : {})}
-          >
-            {link.label}
-          </a>
-        </li>
-      ))}
-    </ul>
+    <div class="site-footer__column col-span-12 md:col-span-2 md:col-start-8 md:row-start-1 md:row-span-2">
+      <p class="site-footer__heading m-0 md:self-end">
+        Links
+      </p>
+      <ul class="site-footer__column-body site-footer__list mt-4 md:mt-0 list-none m-0 p-0 flex flex-col">
+        {footerLinks.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              class="site-footer__link text-base"
+              {...(link.external
+                ? { target: '_blank', rel: 'noopener noreferrer' }
+                : {})}
+            >
+              {link.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
 
-    <ul class="site-footer__list col-span-12 md:col-span-2 md:col-start-9 md:row-start-2 md:self-start mt-4 list-none m-0 p-0 flex flex-col">
-      {contactLinks.map((link) => (
-        <li>
-          <a
-            href={link.href}
-            class="site-footer__link text-base"
-            {...(link.external
-              ? { target: '_blank', rel: 'noopener noreferrer' }
-              : {})}
-          >
-            {link.label}
-          </a>
-        </li>
-      ))}
-    </ul>
+    <div class="site-footer__column col-span-12 md:col-span-2 md:col-start-10 md:row-start-1 md:row-span-2">
+      <p class="site-footer__heading m-0 md:self-end">
+        Contact
+      </p>
+      <ul class="site-footer__column-body site-footer__list mt-4 md:mt-0 list-none m-0 p-0 flex flex-col">
+        {contactLinks.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              class="site-footer__link text-base"
+              {...(link.external
+                ? { target: '_blank', rel: 'noopener noreferrer' }
+                : {})}
+            >
+              {link.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
   </div>
 </footer>
 
@@ -258,9 +261,25 @@ const contactLinks = [
     background-color: #000000;
   }
 
+  .site-footer__grid {
+    row-gap: 2rem;
+  }
+
   @media (min-width: 768px) {
     .site-footer__grid {
       grid-template-rows: auto auto;
+      row-gap: 0;
+    }
+
+    .site-footer__column {
+      display: grid;
+      grid-row: span 2;
+      grid-template-rows: subgrid;
+      row-gap: 1rem;
+    }
+
+    .site-footer__column-body {
+      align-self: start;
     }
   }
 

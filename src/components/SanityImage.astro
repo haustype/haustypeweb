@@ -3,6 +3,7 @@ import { urlForImage } from '../sanity/lib/url-for-image';
 import {
   aspectClass,
   hotspotObjectPosition,
+  imageColumnSpanClass,
   parseAspectRatio,
   type SanityImageValue,
 } from '../lib/sanity-image';
@@ -21,6 +22,7 @@ const alt = image?.alt ?? '';
 const aspectRatio = image?.aspectRatio ?? 'auto';
 const fit = image?.fit === 'cover' ? 'cover' : 'contain';
 const aspect = aspectClass(aspectRatio);
+const spanClass = imageColumnSpanClass(image?.columnSpan);
 const constrained = Boolean(aspect);
 const ratio = parseAspectRatio(aspectRatio);
 
@@ -44,6 +46,7 @@ if (hasImage && image) {
 <figure
   class:list={[
     'sanity-image m-0 w-full',
+    spanClass,
     constrained && aspect,
     constrained && fit === 'contain' && 'flex items-center justify-center',
     className,

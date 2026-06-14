@@ -25,10 +25,10 @@ export default {
         site: '10px',
       },
       fontSize: {
-        base: ['1rem', { lineHeight: '1.7' }],
+        base: ['1rem', { lineHeight: '1.6' }],
       },
       lineHeight: {
-        normal: '1.7',
+        normal: '1.6',
       },
     },
   },
@@ -36,11 +36,11 @@ export default {
     typography({
       DEFAULT: {
         css: {
-          lineHeight: '1.7',
+          lineHeight: '1.6',
           color: '#000000',
-          p: { lineHeight: '1.7' },
-          li: { lineHeight: '1.7' },
-          blockquote: { lineHeight: '1.7', color: '#000000' },
+          p: { lineHeight: '1.6' },
+          li: { lineHeight: '1.6' },
+          blockquote: { lineHeight: '1.6', color: '#000000' },
           a: { color: '#000000' },
           strong: { color: '#000000' },
           'ul > li::marker': { color: '#000000' },
@@ -48,7 +48,7 @@ export default {
           'blockquote p:first-of-type::before': { color: '#000000' },
           'blockquote p:last-of-type::after': { color: '#000000' },
           code: { color: '#000000' },
-          'h1, h2, h3, h4, h5, h6': { fontWeight: '400', lineHeight: '1.7', color: '#000000' },
+          'h1, h2, h3, h4, h5, h6': { fontWeight: '400', lineHeight: '1.6', color: '#000000' },
         },
       },
     }),

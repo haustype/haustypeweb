@@ -1,8 +1,23 @@
 <button
   type="button"
   class="site-bg-toggle"
-  aria-label="Switch to yellow background"
+  aria-label="Switch to black background"
   data-bg-toggle
 >
-  <span class="site-bg-toggle__swatch" aria-hidden="true"></span>
+  <span class="site-bg-toggle__swatch" aria-hidden="true">
+    <svg
+      class="site-bg-toggle__icon"
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <!-- 120° wedges: grey top, yellow bottom-right, black bottom-left -->
+      <path d="M8 8L1.938 4.5A7 7 0 0 0 14.062 4.5Z" fill="#eeeeee" />
+      <path d="M8 8L14.062 4.5A7 7 0 0 1 8 15Z" fill="#ffcc01" />
+      <path d="M8 8L8 15A7 7 0 0 1 1.938 4.5Z" fill="#000000" />
+      <circle cx="8" cy="8" r="7.5" stroke="#000000" stroke-width="1" />
+    </svg>
+  </span>
 </button>

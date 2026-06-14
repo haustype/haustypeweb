@@ -1,4 +1,6 @@
 ---
+import MediaPlaceholder from './MediaPlaceholder.astro';
+
 interface Specimen {
   url: string;
   alt?: string;
@@ -16,6 +18,8 @@ interface Typeface {
   slug: string;
   specimen?: Specimen;
   specimenMobile?: Specimen;
+  specimenPaddingTop?: number;
+  specimenPaddingBottom?: number;
 }
 
 interface Props {
@@ -32,6 +36,8 @@ const { typefaces } = Astro.props;
       const specimenMobile = typeface.specimenMobile;
       const dims = specimen?.url ? specimenDimensions(specimen.url) : null;
       const mobileDims = specimenMobile?.url ? specimenDimensions(specimenMobile.url) : null;
+      const paddingTop = typeface.specimenPaddingTop ?? 32;
+      const paddingBottom = typeface.specimenPaddingBottom ?? 32;
 
       return (
         <li data-reveal>
@@ -44,19 +50,20 @@ const { typefaces } = Astro.props;
             <div class="relative z-[1] w-full max-w-content mx-auto px-8">
               <div
                 class:list={[
-                  'typeface-list__grid grid grid-cols-12 gap-4 items-start py-10 border-b border-site transition-[border-color] duration-200 ease-out',
+                  'typeface-list__grid grid grid-cols-12 gap-4 items-start border-b border-site transition-[border-color] duration-200 ease-out',
                   i === 0 && 'border-t border-site',
                 ]}
+                style={`--specimen-padding-top: ${paddingTop}px; --specimen-padding-bottom: ${paddingBottom}px;`}
               >
-                <div class="col-span-12 md:col-span-2 md:col-start-1 flex items-center gap-3 text-base leading-none">
+                <div class="col-span-12 md:col-span-3 md:col-start-1 flex items-center gap-3 text-base leading-none">
                   <span
-                    class="typeface-list__dot relative -top-px shrink-0 w-[10px] h-[10px] rounded-full bg-black"
+                    class="typeface-list__dot relative -top-px shrink-0 w-[10px] h-[10px] rounded-full bg-site-fg"
                     aria-hidden="true"
                   ></span>
                   {typeface.name}
                 </div>
 
-                <div class="col-span-12 md:col-span-8 md:col-start-3 min-w-0">
+                <div class="col-span-12 md:col-span-8 md:col-start-4 min-w-0">
                   {specimen ? (
                     <div class="typeface-list__media relative w-full">
                       {specimenMobile ? (
@@ -67,6 +74,7 @@ const { typefaces } = Astro.props;
                             width={dims?.width}
                             height={dims?.height}
                             class="typeface-list__specimen-img hidden md:block w-full h-auto"
+                            data-media-placeholder
                             loading={i < 2 ? 'eager' : 'lazy'}
                             decoding="async"
                           />
@@ -76,6 +84,7 @@ const { typefaces } = Astro.props;
                             width={mobileDims?.width}
                             height={mobileDims?.height}
                             class="typeface-list__specimen-img block md:hidden w-full h-auto"
+                            data-media-placeholder
                             loading={i < 2 ? 'eager' : 'lazy'}
                             decoding="async"
                           />
@@ -87,19 +96,21 @@ const { typefaces } = Astro.props;
                           width={dims?.width}
                           height={dims?.height}
                           class="typeface-list__specimen-img block w-full h-auto"
+                          data-media-placeholder
                           loading={i < 2 ? 'eager' : 'lazy'}
                           decoding="async"
                         />
                       )}
                     </div>
                   ) : (
-                    <span class="typeface-list__specimen block text-left text-black">
-                      {typeface.name}
-                    </span>
+                    <MediaPlaceholder
+                      label={`${typeface.name} specimen unavailable`}
+                      class="typeface-list__specimen-placeholder"
+                    />
                   )}
                 </div>
 
-                <div class="col-span-12 md:col-span-2 md:col-start-11 md:justify-self-end text-base whitespace-nowrap">
+                <div class="col-span-12 md:col-span-1 md:col-start-12 md:justify-self-end text-base whitespace-nowrap">
                   Buy →
                 </div>
               </div>
@@ -137,6 +148,7 @@ const { typefaces } = Astro.props;
     opacity: 1;
   }
 
+  html.site-bg-yellow .typeface-list__hover-bg,
   html.site-bg-alt .typeface-list__hover-bg {
     background: var(--site-yellow-hover);
   }
@@ -153,11 +165,20 @@ const { typefaces } = Astro.props;
     border-bottom-color: transparent;
   }
 
-  .typeface-list__specimen {
-    font-family: system-ui, -apple-system, sans-serif;
-    font-weight: 900;
-    font-size: clamp(2.5rem, 9vw, 6rem);
-    line-height: 0.95;
+  .typeface-list__grid {
+    padding-top: 32px;
+    padding-bottom: 32px;
+  }
+
+  @media (min-width: 768px) {
+    .typeface-list__grid {
+      padding-top: var(--specimen-padding-top, 32px);
+      padding-bottom: var(--specimen-padding-bottom, 32px);
+    }
+  }
+
+  .typeface-list__specimen-placeholder {
+    min-height: clamp(2.5rem, 9vw, 6rem);
   }
 
   .typeface-list__specimen-img {
@@ -165,5 +186,27 @@ const { typefaces } = Astro.props;
     width: 100%;
     max-width: 100%;
     height: auto;
+    transition: filter 0.2s ease;
+  }
+
+  /* Dark background: invert black specimen SVGs to white */
+  html.site-bg-dark .typeface-list__specimen-img {
+    filter: brightness(0) invert(1);
+  }
+
+  /* Yellow hover: black text and original specimen color */
+  html.site-bg-dark .typeface-list__row.text-black:hover,
+  html.site-bg-dark .typeface-list__row.text-black:focus-visible {
+    color: #000000;
+  }
+
+  html.site-bg-dark .typeface-list__row:hover .typeface-list__dot,
+  html.site-bg-dark .typeface-list__row:focus-visible .typeface-list__dot {
+    background-color: #000000;
+  }
+
+  html.site-bg-dark .typeface-list__row:hover .typeface-list__specimen-img,
+  html.site-bg-dark .typeface-list__row:focus-visible .typeface-list__specimen-img {
+    filter: none;
   }
 </style>

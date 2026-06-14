@@ -36,14 +36,11 @@ const posts = sanityPosts?.length
       .map((p) => ({ slug: p.slug, data: p.data }));
 ---
 
-<BaseLayout
-  title={`${blogTitle} | Haus Type`}
-  description="News and articles from Haus Type foundry."
->
+<BaseLayout title={blogTitle}>
   <Header />
-  <main class="bg-site flex-1" data-reveal>
+  <main class="bg-site flex-1">
     <article class="w-full pt-24 pb-20">
-      <div class="w-full max-w-content mx-auto px-8 mb-16 pt-10">
+      <div class="content-segments w-full max-w-content mx-auto px-8 mb-16" data-reveal>
         <ContentSegmentRow segment={{ heading: blogTitle }} headingLevel="h1">
           <div slot="body" class="not-prose flex flex-col gap-8">
             {posts.map((post) => (

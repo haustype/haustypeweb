@@ -23,7 +23,7 @@ const headerAlt = headerSvg?.alt ?? typefaceName;
 const showIntro = segment ? isContentSegmentVisible(segment) : false;
 ---
 
-<section class="typeface-hero">
+<section class="typeface-hero site-surface-fixed">
   <div class="typeface-hero__bg" aria-hidden="true"></div>
   <div class="typeface-hero__inner w-full max-w-content mx-auto px-8">
     {showIntro && segment && (
@@ -63,6 +63,21 @@ const showIntro = segment ? isContentSegmentVisible(segment) : false;
     inset: 0;
     z-index: 0;
     background-color: var(--site-yellow);
+    opacity: 0;
+    animation: typeface-hero-bg-in 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  @keyframes typeface-hero-bg-in {
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .typeface-hero__bg {
+      opacity: 1;
+      animation: none;
+    }
   }
 
   .typeface-hero__inner {

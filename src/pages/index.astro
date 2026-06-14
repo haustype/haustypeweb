@@ -14,7 +14,7 @@ const fallbackAboutText =
   'Haus Type is a New York–based type foundry creating versatile Latin type for text and display. The studio also takes on selected custom projects in wordmark refinement and bespoke typeface design.';
 
 const fallbackTypefaces = [
-  { name: 'Chubby', slug: 'chubby' },
+  { name: 'Chumbo', slug: 'chumbo' },
   { name: 'Rubrica', slug: 'rubrica' },
   { name: 'Squoze', slug: 'squoze' },
   { name: 'Yeehaw', slug: 'yeehaw' },
@@ -24,8 +24,16 @@ type TypefaceFromSanity = {
   name: string;
   slug?: { current: string };
   collectionId?: string;
-  specimen?: { url?: string | null; alt?: string | null } | null;
+  specimen?: {
+    url?: string | null;
+    alt?: string | null;
+    paddingTop?: number | null;
+    paddingBottom?: number | null;
+  } | null;
   specimenMobile?: { url?: string | null; alt?: string | null } | null;
+  /** @deprecated Legacy top-level fields — coalesced into specimen padding */
+  specimenPaddingTop?: number | null;
+  specimenPaddingBottom?: number | null;
 };
 
 const typefaceProjection = `{
@@ -36,17 +44,23 @@ const typefaceProjection = `{
   "specimen": coalesce(
     specimen{
       "url": asset->url,
-      "alt": alt
+      "alt": alt,
+      "paddingTop": coalesce(listPadding.top, 32),
+      "paddingBottom": coalesce(listPadding.bottom, 32)
     },
     specimens[0]{
       "url": asset->url,
-      "alt": alt
+      "alt": alt,
+      "paddingTop": 32,
+      "paddingBottom": 32
     }
   ),
   "specimenMobile": specimenMobile{
     "url": asset->url,
     "alt": alt
-  }
+  },
+  specimenPaddingTop,
+  specimenPaddingBottom
 }`;
 
 const { data: homepageSettings } = await safeLoadQuery<{
@@ -92,6 +106,8 @@ const typefaces =
         specimenMobile: t.specimenMobile?.url
           ? { url: t.specimenMobile.url, alt: t.specimenMobile.alt ?? undefined }
           : undefined,
+        specimenPaddingTop: t.specimen?.paddingTop ?? t.specimenPaddingTop ?? 32,
+        specimenPaddingBottom: t.specimen?.paddingBottom ?? t.specimenPaddingBottom ?? 32,
       }))
     : fallbackTypefaces;
 
@@ -112,7 +128,7 @@ const fontsInUseItems = rawFontsInUse
 
 ---
 
-<BaseLayout title="Haus Type | Type Foundry" description={aboutText}>
+<BaseLayout description={aboutText}>
   <Header />
   <main class="flex-1">
     {import.meta.env.DEV && !typefacesFromSanity && (

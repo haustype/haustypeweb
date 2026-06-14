@@ -112,7 +112,8 @@ async function run() {
   });
   console.log('✓ Site Settings');
 
-  // 2. Typefaces
+  // Legacy seed data — do not re-run on production without review.
+  // Document IDs are typeface-{slug}; use normalize-typeface-ids.mjs if IDs drift.
   const typefaces = [
     { name: 'Metrostile', category: 'Sans', styles: 1, slug: 'metrostile', image: 'typefaces/haus_19.png', collectionId: 'Rm9udENvbGxlY3Rpb246MTkzNzI0Mzc0MDk1NTc3NDcwMA==' },
     { name: 'Guglielmo Marconi*', category: 'Squoza', styles: 14, slug: 'guglielmo-marconi', image: 'typefaces/haus_07.png' },

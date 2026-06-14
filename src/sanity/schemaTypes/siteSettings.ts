@@ -10,6 +10,103 @@ export const siteSettingsType = defineType({
   },
   fields: [
     defineField({
+      name: 'siteIdentity',
+      type: 'object',
+      title: 'Site identity & SEO',
+      description: 'Favicon, default meta tags, social sharing, and analytics.',
+      options: { collapsible: true, collapsed: false },
+      fields: [
+        defineField({
+          name: 'siteName',
+          type: 'string',
+          title: 'Site name',
+          description: 'Used for Open Graph site name and title fallbacks.',
+          initialValue: 'Haus Type®',
+        }),
+        defineField({
+          name: 'titleSuffix',
+          type: 'string',
+          title: 'Title suffix',
+          description: 'Appended to page titles in the browser tab, e.g. " | Haus Type®".',
+          initialValue: ' | Haus Type®',
+        }),
+        defineField({
+          name: 'homeTitle',
+          type: 'string',
+          title: 'Homepage title',
+          description: 'Full <title> for the homepage (suffix is not added).',
+          initialValue: 'Haus Type | Type Foundry',
+        }),
+        defineField({
+          name: 'defaultDescription',
+          type: 'text',
+          title: 'Default meta description',
+          rows: 3,
+          description: 'Fallback when a page does not set its own description.',
+          initialValue:
+            'Haus Type is a type foundry creating versatile Latin type for text and display. Retail and custom typefaces for global businesses.',
+        }),
+        defineField({
+          name: 'homeDescription',
+          type: 'text',
+          title: 'Homepage meta description',
+          rows: 3,
+          description: 'Optional. When empty, the homepage uses the about text.',
+        }),
+        defineField({
+          name: 'favicon',
+          type: 'image',
+          title: 'Favicon',
+          description: 'SVG or square PNG. Shown in browser tabs.',
+          options: { accept: '.svg,image/png,image/webp,image/x-icon' },
+        }),
+        defineField({
+          name: 'appleTouchIcon',
+          type: 'image',
+          title: 'Apple touch icon',
+          description: 'Optional. 180×180 PNG recommended for iOS home screen.',
+          options: { accept: 'image/png,image/webp' },
+        }),
+        defineField({
+          name: 'defaultShareImage',
+          type: 'image',
+          title: 'Default share image',
+          description: 'Open Graph / social preview fallback. 1200×630 recommended.',
+          options: { hotspot: true },
+        }),
+        defineField({
+          name: 'themeColor',
+          type: 'string',
+          title: 'Browser theme color',
+          description: 'Mobile browser chrome. Hex value, e.g. #eeeeee or #ffcc01.',
+          initialValue: '#eeeeee',
+          validation: (Rule) =>
+            Rule.regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, {
+              name: 'hex color',
+              invert: false,
+            }).warning('Use a hex color like #eeeeee'),
+        }),
+        defineField({
+          name: 'twitterHandle',
+          type: 'string',
+          title: 'Twitter / X handle',
+          description: 'Without @, e.g. haustype',
+        }),
+        defineField({
+          name: 'googleAnalyticsId',
+          type: 'string',
+          title: 'Google Analytics ID',
+          description: 'GA4 measurement ID, e.g. G-XXXXXXXXXX',
+          validation: (Rule) =>
+            Rule.custom((value) => {
+              const id = typeof value === 'string' ? value.trim() : '';
+              if (!id) return true;
+              return /^G-[A-Z0-9]+$/.test(id) ? true : 'Use a GA4 measurement ID like G-XXXXXXXXXX';
+            }),
+        }),
+      ],
+    }),
+    defineField({
       name: 'blogPageTitle',
       type: 'string',
       title: 'Blog page title',

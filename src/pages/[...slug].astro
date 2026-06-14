@@ -23,7 +23,6 @@ let description = '';
 
 const contentSegmentProjection = `{
   layout,
-  preHeader,
   heading,
   media ${sanityImageProjection},
   body,
@@ -89,16 +88,16 @@ const astroContent = astroPage ? await astroPage.render() : null;
 ---
 
 <BaseLayout
-  title={`${title} | Haus Type`}
+  title={title}
   description={description}
 >
   <Header />
-  <main class="bg-site flex-1" data-reveal>
+  <main class="bg-site flex-1">
     <article class="w-full pt-24 pb-20">
       {source === 'sanity' ? (
         <ContentSegments segments={contentSegments} />
       ) : astroContent ? (
-        <div class="site-grid heading-row mb-16 w-full max-w-content mx-auto px-8">
+        <div class="site-grid heading-row mb-16 w-full max-w-content mx-auto px-8" data-reveal>
           <header class="site-grid__left">
             <h1 class="font-normal text-black">{title}</h1>
           </header>

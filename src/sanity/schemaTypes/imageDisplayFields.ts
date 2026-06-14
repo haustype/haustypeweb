@@ -14,6 +14,21 @@ export function imageDisplayFields(options?: {
       title: 'Alternative text',
     }),
     defineField({
+      name: 'columnSpan',
+      type: 'string',
+      title: 'Width on page',
+      description:
+        'How many grid columns the image spans from column 4. Text stays 5 columns; images can extend to 6 or 9.',
+      options: {
+        list: [
+          { title: '6 columns', value: '6' },
+          { title: '9 columns (full bleed)', value: '9' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: '6',
+    }),
+    defineField({
       name: 'aspectRatio',
       type: 'string',
       title: 'Frame ratio',

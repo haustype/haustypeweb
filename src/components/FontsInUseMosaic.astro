@@ -1,0 +1,141 @@
+---
+import MediaPlaceholder from './MediaPlaceholder.astro';
+import {
+  inUseColSpan,
+  inUseImageUrlWidth,
+  resolveInUseImageWidth,
+  type InUseImageWidth,
+} from '../lib/fonts-in-use-mosaic';
+
+export interface FontsInUseMosaicItem {
+  url: string;
+  alt: string;
+  caption?: string;
+  width?: InUseImageWidth;
+  typeface?: {
+    name: string;
+    slug: string;
+  };
+}
+
+interface Props {
+  items?: FontsInUseMosaicItem[];
+}
+
+const PLACEHOLDER_COUNT = 8;
+const PLACEHOLDER_WIDTHS: InUseImageWidth[] = ['50', '25', '25', '25', '25', '50', '25', '25'];
+
+const { items: cmsItems = [] } = Astro.props;
+const items =
+  cmsItems.length > 0
+    ? cmsItems
+    : Array.from({ length: PLACEHOLDER_COUNT }, () => null);
+---
+
+<section class="fonts-in-use-mosaic bg-site w-full" data-reveal>
+  <div class="fonts-in-use-mosaic__grid">
+    {items.map((item, index) => {
+      const imageWidth = item?.width ?? PLACEHOLDER_WIDTHS[index % PLACEHOLDER_WIDTHS.length];
+      const colSpan = inUseColSpan(imageWidth);
+      const urlWidth = inUseImageUrlWidth(imageWidth);
+
+      return (
+        <figure
+          class:list={[
+            'fonts-in-use-mosaic__tile',
+            colSpan === 6 && 'fonts-in-use-mosaic__tile--half',
+          ]}
+          style={`--in-use-col-span: ${colSpan}`}
+        >
+          {item ? (
+            <>
+              <img
+                src={item.url}
+                alt={item.alt}
+                width={urlWidth}
+                class="fonts-in-use-mosaic__image w-full h-auto rounded-site"
+                data-media-placeholder
+                data-media-placeholder-class="media-placeholder rounded-site aspect-[4/5]"
+                loading="lazy"
+                decoding="async"
+              />
+              {(item.caption || item.typeface) && (
+                <figcaption class="fonts-in-use-mosaic__meta mt-2 flex flex-col gap-1">
+                  {item.caption && (
+                    <span class="fonts-in-use-mosaic__caption text-sm text-muted">
+                      {item.caption}
+                    </span>
+                  )}
+                  {item.typeface && (
+                    <a
+                      href={`/typefaces/${item.typeface.slug}`}
+                      class="fonts-in-use-mosaic__typeface text-sm text-site hover:opacity-80 transition-opacity"
+                    >
+                      {item.typeface.name} →
+                    </a>
+                  )}
+                </figcaption>
+              )}
+            </>
+          ) : (
+            <MediaPlaceholder label="Font in use" class="aspect-[4/5] rounded-site" />
+          )}
+        </figure>
+      );
+    })}
+  </div>
+</section>
+
+<style>
+  .fonts-in-use-mosaic__grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    align-items: start;
+    gap: 1rem;
+    width: 100%;
+    max-width: 1512px;
+    margin-inline: auto;
+    padding-inline: 2rem;
+  }
+
+  .fonts-in-use-mosaic__tile {
+    margin: 0;
+    min-width: 0;
+    grid-column: span var(--in-use-col-span, 3);
+  }
+
+  .fonts-in-use-mosaic__image {
+    display: block;
+    vertical-align: top;
+  }
+
+  @media (max-width: 768px) {
+    .fonts-in-use-mosaic__grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      padding-inline: 1.5rem;
+    }
+
+    .fonts-in-use-mosaic__tile {
+      grid-column: span 3;
+    }
+
+    .fonts-in-use-mosaic__tile--half {
+      grid-column: span 6;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .fonts-in-use-mosaic__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    .fonts-in-use-mosaic__tile {
+      grid-column: span 1;
+    }
+
+    .fonts-in-use-mosaic__tile--half {
+      grid-column: span 2;
+    }
+  }
+</style>

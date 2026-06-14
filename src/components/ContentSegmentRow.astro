@@ -20,43 +20,39 @@ const hasHeadingExtra = Astro.slots.has('heading-extra');
 
 <div
   class:list={[
-    'content-segment grid grid-cols-12 gap-4 items-start md:items-baseline py-10',
+    'content-segment grid grid-cols-12 gap-4 items-start py-10',
     borderBottom && 'border-b border-site',
     className,
   ]}
 >
   {layout === 'split' ? (
     <>
-      {segment.preHeader?.trim() && (
-        <p class="content-segment__pre-header col-span-12 md:col-span-1 md:col-start-1 m-0">
-          {segment.preHeader}
-        </p>
-      )}
-
       {(segment.heading?.trim() || hasHeadingExtra) && (
-        <header class="content-segment__headline col-span-12 md:col-span-4 md:col-start-3 flex flex-col gap-4">
-          {segment.heading?.trim() && (
-            <HeadingTag class="font-normal text-black m-0">{segment.heading}</HeadingTag>
-          )}
-          {hasHeadingExtra && <slot name="heading-extra" />}
-        </header>
+        <div class="content-segment__left col-span-12 md:col-span-3 md:col-start-1 flex flex-col gap-4">
+          <header class="content-segment__headline flex flex-col gap-4">
+            {segment.heading?.trim() && (
+              <HeadingTag class="font-normal text-black m-0">{segment.heading}</HeadingTag>
+            )}
+            {hasHeadingExtra && <slot name="heading-extra" />}
+          </header>
+        </div>
       )}
 
       {(segment.body || hasBodySlot) && (
-        <div class="content-segment__body col-span-12 md:col-span-5 md:col-start-7 prose max-w-none">
+        <div class="content-segment__body col-span-12 md:col-span-5 md:col-start-4 prose max-w-none">
           {hasBodySlot ? <slot name="body" /> : <PortableText value={segment.body} />}
         </div>
       )}
 
       {segment.aside && (
-        <aside class="content-segment__aside col-span-12 md:col-span-1 md:col-start-12">
+        <aside class="content-segment__aside col-span-12 md:col-span-1 md:col-start-10">
           <PortableText value={segment.aside} />
         </aside>
       )}
     </>
   ) : (
     <>
-      <div class="content-segment__feature-main col-span-12 md:col-span-8 md:col-start-3 flex flex-col gap-8">
+      <div class="content-segment__feature-main col-span-12 md:col-span-8 md:col-start-4 flex flex-col gap-8">
         {segment.heading?.trim() && (
           <header>
             <HeadingTag class="font-normal text-black m-0">{segment.heading}</HeadingTag>
@@ -69,7 +65,7 @@ const hasHeadingExtra = Astro.slots.has('heading-extra');
       </div>
 
       {(segment.body || hasBodySlot) && (
-        <div class="content-segment__feature-body col-span-12 md:col-span-6 md:col-start-3 prose max-w-none">
+        <div class="content-segment__feature-body col-span-12 md:col-span-5 md:col-start-4 prose max-w-none">
           {hasBodySlot ? <slot name="body" /> : <PortableText value={segment.body} />}
         </div>
       )}
@@ -78,21 +74,17 @@ const hasHeadingExtra = Astro.slots.has('heading-extra');
 </div>
 
 <style>
-  .content-segment__pre-header {
-    font-size: 1rem;
-    line-height: 1.7;
-    color: #000000;
-  }
-
+  /* Nudge 12px aside down to align first-line baseline with 16px body copy */
   .content-segment__aside {
     font-size: 12px;
-    line-height: 1.7;
+    line-height: var(--site-line-height);
     color: rgb(0 0 0 / 0.45);
+    padding-top: 4px;
   }
 
   .content-segment__aside :where(p, li, blockquote) {
     margin: 0;
-    line-height: 1.7;
+    line-height: var(--site-line-height);
     color: inherit;
   }
 
@@ -101,12 +93,12 @@ const hasHeadingExtra = Astro.slots.has('heading-extra');
   }
 
   .content-segment__aside :where(a) {
-    color: rgb(0 0 0 / 0.45);
+    color: var(--site-fg-muted);
     text-decoration: none;
     transition: color 0.25s ease;
   }
 
   .content-segment__aside :where(a:hover) {
-    color: #000000;
+    color: var(--site-fg);
   }
 </style>

@@ -45,23 +45,25 @@ const navItems =
 <header class="site-header sticky top-0 z-50 p-4" data-site-header>
   <div class="site-header__shell h-[60px] w-full overflow-hidden rounded-[10px] bg-white px-4 text-black">
     <div class="site-header__bar grid h-full w-full grid-cols-12 items-center gap-4">
-      <a
-        href="/"
-        class="site-header__logo-link col-start-1 col-span-2 flex items-center justify-self-start text-black hover:text-haus-yellow"
-        aria-label="Haus Type home"
-      >
-        <HausMark class="site-header__mark text-inherit" />
-      </a>
+      <div class="site-header__brand col-start-1 col-span-10 lg:col-span-3 flex min-w-0 items-center gap-8">
+        <a
+          href="/"
+          class="site-header__logo-link flex shrink-0 items-center justify-self-start text-black hover:text-haus-yellow"
+          aria-label="Haus Type home"
+        >
+          <HausMark class="site-header__mark text-inherit" />
+        </a>
 
-      <a
-        href="/"
-        class="site-header__name col-start-3 col-span-2 flex min-w-0 items-center justify-self-start text-base leading-none"
-      >
-        Haus Type®
-      </a>
+        <a
+          href="/"
+          class="site-header__name flex min-w-0 items-center text-base leading-none"
+        >
+          Haus Type®
+        </a>
+      </div>
 
       <nav
-        class="site-header__nav col-span-4 col-start-7 flex min-w-0 items-center gap-7"
+        class="site-header__nav col-span-6 col-start-4 flex min-w-0 items-center gap-8"
         aria-label="Main navigation"
       >
         {navItems.map((item) => (
@@ -107,7 +109,7 @@ const navItems =
 
   <div
     id="nav-menu"
-    class="site-header__menu-panel hidden fixed inset-0 flex flex-col items-center justify-center bg-site px-8 pt-16 pb-16 text-black"
+    class="site-header__menu-panel hidden fixed inset-0 flex flex-col items-center justify-center px-8 pt-16 pb-16 text-black"
     aria-hidden="true"
   >
     <nav class="flex flex-col gap-[1.5rem] items-center" aria-label="Mobile navigation">
@@ -204,6 +206,7 @@ const navItems =
   .site-header__name {
     overflow: hidden;
     white-space: nowrap;
+    flex-shrink: 0;
     max-width: 11rem;
     transition: opacity 0.25s ease, max-width 0s ease 0s;
   }

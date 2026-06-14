@@ -1,4 +1,4 @@
-const SITE_BORDER = 'rgb(0 0 0 / 0.2)';
+import { isSiteBgDark, siteBorderColor, siteFgColor } from './fontdue-theme';
 
 function patchStyle(viewer: Element) {
   const root = viewer.shadowRoot;
@@ -12,19 +12,22 @@ function patchStyle(viewer: Element) {
     root.appendChild(style);
   }
 
-  const border = SITE_BORDER;
+  const dark = isSiteBgDark();
+  const border = siteBorderColor();
+  const fg = siteFgColor();
+
   style.textContent = `
     .character-viewer__block__character-list > div {
-      color: #000000;
+      color: ${fg};
       border-color: ${border};
     }
     .character-viewer__block__character-list > div[data-selected="true"],
     .character-viewer__block__character-list > div:hover {
-      color: #ffffff;
+      color: ${dark ? '#000000' : '#ffffff'};
       border-color: ${border};
     }
     .character-viewer__monitor__character {
-      color: #ffffff;
+      color: ${fg};
     }
   `;
 }
@@ -40,6 +43,8 @@ export function initCharacterViewerStyles() {
   for (const delay of [100, 500, 1500, 3000]) {
     setTimeout(patchAll, delay);
   }
+
+  document.documentElement.addEventListener('site-bg-change', patchAll);
 
   if (observerStarted) return;
   observerStarted = true;

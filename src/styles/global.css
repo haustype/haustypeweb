@@ -20,20 +20,32 @@
   --site-bg: #eeeeee;
   --site-yellow: #ffcc01;
   --site-yellow-hover: #f2ba00;
-  --site-bg-alt: var(--site-yellow);
+  --site-fg: #000000;
+  --site-fg-muted: rgb(0 0 0 / 0.45);
   --site-border: rgb(0 0 0 / 0.2);
   /* Sticky header: 16px padding + 60px bar + 16px padding */
   --site-header-height: 5.75rem;
   --site-radius: 10px;
+  --site-grid-gap: 1rem;
+  --site-grid-cols: 12;
+  --site-line-height: 1.6;
 }
 
+html.site-bg-yellow,
 html.site-bg-alt {
   --site-bg: var(--site-yellow);
 }
 
+html.site-bg-dark {
+  --site-bg: #000000;
+  --site-fg: #ffffff;
+  --site-fg-muted: rgb(255 255 255 / 0.45);
+  --site-border: rgb(255 255 255 / 0.2);
+}
+
 html {
   font-size: 16px;
-  line-height: 1.7;
+  line-height: var(--site-line-height);
   background-color: var(--site-bg);
   scroll-behavior: auto;
   overscroll-behavior: none;
@@ -48,7 +60,8 @@ html {
 }
 
 body {
-  @apply antialiased text-base text-black;
+  @apply antialiased text-base;
+  color: var(--site-fg);
   background-color: var(--site-bg);
   font-family: 'Selandia', system-ui, sans-serif;
   display: flex;
@@ -64,11 +77,11 @@ body {
   }
 
   .site-grid__left {
-    @apply col-span-12 md:col-span-6 md:col-start-1;
+    @apply col-span-12 md:col-span-3 md:col-start-1;
   }
 
   .site-grid__right {
-    @apply col-span-12 md:col-span-6 md:col-start-7;
+    @apply col-span-12 md:col-span-5 md:col-start-4;
   }
 
   .bg-site {
@@ -76,7 +89,15 @@ body {
   }
 
   .text-muted {
-    color: rgb(0 0 0 / 0.45);
+    color: var(--site-fg-muted);
+  }
+
+  .text-site {
+    color: var(--site-fg);
+  }
+
+  .bg-site-fg {
+    background-color: var(--site-fg);
   }
 
   .border-site {
@@ -87,12 +108,38 @@ body {
   .site-footer__brand-mark {
     width: fit-content;
     transition-property: color;
-    transition-duration: 0.5s;
+    transition-duration: 0.3s;
     transition-timing-function: ease-out;
   }
 
   .site-header__logo-link .haus-mark {
     transform: translateY(-2px);
+  }
+
+  /* Header chrome — never follows the background toggle */
+  .site-header {
+    --site-fg: #000000;
+    --site-fg-muted: rgb(0 0 0 / 0.45);
+    --site-border: rgb(0 0 0 / 0.2);
+    color: #000000;
+  }
+
+  .site-header .site-header__shell {
+    background-color: #ffffff;
+    color: #000000;
+  }
+
+  .site-header__menu-panel {
+    background-color: #eeeeee;
+    color: #000000;
+  }
+
+  /* Fixed surfaces (e.g. typeface hero yellow) — own bg, always black text */
+  .site-surface-fixed {
+    --site-fg: #000000;
+    --site-fg-muted: rgb(0 0 0 / 0.45);
+    --site-border: rgb(0 0 0 / 0.2);
+    color: #000000;
   }
 
   .site-floating-controls {
@@ -134,24 +181,29 @@ body {
 
   .site-bg-toggle__swatch {
     display: block;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    box-sizing: border-box;
-    border: 1px solid #000000;
-    background: linear-gradient(to right, #000000 50%, #ffffff 50%);
-    transform: rotate(0deg);
+    width: 16px;
+    height: 16px;
+    line-height: 0;
+    transform: rotate(var(--site-bg-toggle-rotation, 0deg));
     transition: transform 0.25s ease;
   }
 
-  html.site-bg-alt .site-bg-toggle__swatch {
-    transform: rotate(180deg);
+  .site-bg-toggle__icon {
+    display: block;
+    width: 16px;
+    height: 16px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-bg-toggle__swatch {
+      transition: none;
+    }
   }
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-weight: 400;
-  line-height: 1.7;
+  line-height: var(--site-line-height);
 }
 
 /* H1 and H2 (20px) */
@@ -164,18 +216,18 @@ h1, h2, .prose h1, .prose h2 {
   align-items: baseline;
 }
 
-/* Body copy globally #000000, line-height 1.7 (overrides typography plugin 1.75) */
+/* Body copy — line-height 1.6 (overrides typography plugin 1.65) */
 .prose {
-  line-height: 1.7;
-  color: #000000;
+  line-height: var(--site-line-height);
+  color: var(--site-fg);
 }
 
 .prose :where(p, li, blockquote, dd, dt, figcaption, .lead, td, th) {
-  line-height: 1.7;
+  line-height: var(--site-line-height);
 }
 
 .prose p {
-  color: #000000;
+  color: var(--site-fg);
 }
 
 .prose :where(img) {
@@ -187,28 +239,110 @@ h1, h2, .prose h1, .prose h2 {
   overflow: hidden;
 }
 
-/* Split layout: body text cols 7–11; images bleed one column into col 12 */
+.media-placeholder {
+  display: block;
+  width: 100%;
+  min-height: 2.5rem;
+  background-color: rgb(0 0 0 / 0.06);
+  border-radius: var(--site-radius);
+}
+
+/* Split layout: body text cols 4–8; images span 6 or 9 grid columns from col 4 */
 @media (min-width: 768px) {
-  .content-segment__body .sanity-image {
+  .content-segment {
+    container-type: inline-size;
+    overflow-x: clip;
+  }
+
+  /* N cols wide in the 12-column grid (gap-4) */
+  .content-segment__body .sanity-image--span-6 {
     display: block;
-    width: calc(120% + 1rem);
+    width: calc(
+      (100cqw - (var(--site-grid-cols) - 1) * var(--site-grid-gap)) / var(--site-grid-cols) * 6 +
+        5 * var(--site-grid-gap)
+    );
     max-width: none;
+  }
+
+  .content-segment__body .sanity-image--span-9 {
+    display: block;
+    width: calc(
+      (100cqw - (var(--site-grid-cols) - 1) * var(--site-grid-gap)) / var(--site-grid-cols) * 9 +
+        8 * var(--site-grid-gap)
+    );
+    max-width: calc(
+      (100cqw - (var(--site-grid-cols) - 1) * var(--site-grid-gap)) / var(--site-grid-cols) * 9 +
+        8 * var(--site-grid-gap)
+    );
+  }
+
+  .content-segment__feature-main .sanity-image--span-6 {
+    display: block;
+    width: calc(
+      (100cqw - (var(--site-grid-cols) - 1) * var(--site-grid-gap)) / var(--site-grid-cols) * 6 +
+        5 * var(--site-grid-gap)
+    );
+    max-width: none;
+  }
+
+  .content-segment__feature-main .sanity-image--span-9 {
+    display: block;
+    width: calc(
+      (100cqw - (var(--site-grid-cols) - 1) * var(--site-grid-gap)) / var(--site-grid-cols) * 9 +
+        8 * var(--site-grid-gap)
+    );
+    max-width: calc(
+      (100cqw - (var(--site-grid-cols) - 1) * var(--site-grid-gap)) / var(--site-grid-cols) * 9 +
+        8 * var(--site-grid-gap)
+    );
   }
 }
 
 .prose li,
 .prose td,
 .prose th {
+  color: var(--site-fg);
+}
+
+html.site-bg-dark .site-shell .prose :where(a, strong, code, h1, h2, h3, h4, h5, h6) {
+  color: var(--site-fg);
+}
+
+html.site-bg-dark .site-shell .text-black {
+  color: var(--site-fg);
+}
+
+html.site-bg-dark .site-header .text-black,
+html.site-bg-dark .site-surface-fixed .text-black {
   color: #000000;
 }
 
-/* Premium fade-up reveal (on load for in-view, on scroll for below-fold) */
+html.site-bg-dark .site-header .site-header__logo-link:hover,
+html.site-bg-dark .site-header .site-header__logo-link:focus-visible {
+  color: var(--site-yellow);
+}
+
+html.site-bg-dark .media-placeholder {
+  background-color: rgb(255 255 255 / 0.08);
+}
+
+/* Premium fade-up reveal (on load for in-view, fade-only on scroll) */
 [data-reveal] {
   opacity: 0;
   transform: translateY(14px);
   transition:
     opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-reveal='fade'] {
+  transform: none;
+  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-reveal].reveal-on-scroll {
+  transform: none;
+  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 [data-reveal].is-revealed {
@@ -259,8 +393,8 @@ html.reveal-once-done [data-reveal-once] {
 .haus-buy-button {
   font-family: inherit;
   font-size: 1rem;
-  line-height: 1.7;
-  color: #000000;
+  line-height: var(--site-line-height);
+  color: var(--site-fg);
   background: transparent;
   border: none;
   padding: 0;
@@ -291,44 +425,121 @@ html.reveal-once-done [data-reveal-once] {
   opacity: 1;
 }
 
+/* Fontdue customer login — orders page */
+fontdue-customer-login-form {
+  --primary_text_color: var(--site-fg);
+  --primary_background_color: #ffffff;
+  --secondary_background_color: #ffffff;
+  --link_color: var(--site-fg);
+  --link_hover_color: var(--site-fg);
+  --button_text_color: var(--site-fg);
+  --button_background_color: transparent;
+  --button_border_color: var(--site-border);
+  --button_hover_text_color: var(--site-fg);
+  --button_hover_background_color: transparent;
+  --button_hover_border_color: var(--site-fg);
+  --horizontal_rule_color: var(--site-border);
+  --border-color: var(--site-border);
+  --font-family: 'Selandia', system-ui, sans-serif;
+  font-family: 'Selandia', system-ui, sans-serif;
+  color: var(--site-fg);
+}
+
+fontdue-customer-login-form .text-field__input {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000;
+  caret-color: #000000;
+  border-radius: 10px;
+}
+
+fontdue-customer-login-form .text-field__input::placeholder {
+  color: rgb(0 0 0 / 0.45);
+}
+
+fontdue-customer-login-form .submit-button {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #000000 !important;
+  border-radius: 10px;
+}
+
+fontdue-customer-login-form .submit-button:hover:not(:disabled) {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #000000 !important;
+  opacity: 0.85;
+}
+
+fontdue-customer-login-form .submit-button:disabled {
+  background-color: rgb(0 0 0 / 0.35) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+}
+
+html.site-bg-dark fontdue-customer-login-form .submit-button {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff !important;
+}
+
+html.site-bg-dark fontdue-customer-login-form .submit-button:hover:not(:disabled) {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff !important;
+  opacity: 0.85;
+}
+
+html.site-bg-dark fontdue-customer-login-form .submit-button:disabled {
+  background-color: rgb(255 255 255 / 0.35) !important;
+  color: #000000 !important;
+  border-color: transparent !important;
+}
+
+html.site-bg-dark fontdue-customer-login-form .text-field__input {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000;
+  caret-color: #000000;
+}
+
 /* Fontdue type testers — match Haus Type UI */
 fontdue-type-testers {
-  --primary_text_color: #000000;
-  /* Slider handle fill (Fontdue uses primary_background_color for the thumb) */
-  --primary_background_color: #000000;
-  --link_color: #000000;
-  --link_hover_color: #000000;
-  --button_text_color: #000000;
+  --primary_text_color: var(--site-fg);
+  --primary_background_color: var(--site-fg);
+  --link_color: var(--site-fg);
+  --link_hover_color: var(--site-fg);
+  --button_text_color: var(--site-fg);
   --button_background_color: transparent;
   --button_border_color: transparent;
-  --button_hover_text_color: rgb(0 0 0 / 0.8);
+  --button_hover_text_color: color-mix(in srgb, var(--site-fg) 80%, transparent);
   --button_hover_background_color: transparent;
   --button_hover_border_color: transparent;
-  --button_selected_text_color: #000000;
+  --button_selected_text_color: var(--site-fg);
   --button_selected_background_color: transparent;
   --button_selected_border_color: transparent;
   --horizontal_rule_color: var(--site-border);
   --border-color: var(--site-border);
   --font-family: 'Selandia', system-ui, sans-serif;
   font-family: 'Selandia', system-ui, sans-serif;
-  color: #000000;
+  color: var(--site-fg);
 }
 
-/* Fontdue character viewer — monitor + selection use primary_background for glyph color */
+/* Fontdue character viewer */
 fontdue-character-viewer {
   --character_viewer_sticky_top: 84px;
-  --primary_text_color: #000000;
-  --primary_background_color: #ffffff;
-  --character_viewer_selected_background_color: #000000;
-  --character_viewer_selected_text_color: #ffffff;
+  --primary_text_color: var(--site-fg);
+  --primary_background_color: var(--site-bg);
+  --character_viewer_selected_background_color: var(--site-fg);
+  --character_viewer_selected_text_color: var(--site-bg);
   --character_viewer_selected_border_color: var(--site-border);
-  --link_color: #000000;
-  --link_hover_color: #000000;
+  --link_color: var(--site-fg);
+  --link_hover_color: var(--site-fg);
   --horizontal_rule_color: var(--site-border);
   --border-color: var(--site-border);
   --font-family: 'Selandia', system-ui, sans-serif;
   font-family: 'Selandia', system-ui, sans-serif;
-  color: #000000;
+  color: var(--site-fg);
 }
 
 fontdue-character-viewer,
@@ -337,7 +548,7 @@ fontdue-character-viewer,
   overflow: visible;
 }
 
-/* Fontdue store modal / cart — keep solid panel background and default buttons */
+/* Fontdue store modal / cart — always light, independent of site background */
 fontdue-store-modal {
   --primary_background_color: #ffffff;
   --primary_text_color: #000000;
@@ -346,6 +557,7 @@ fontdue-store-modal {
   --horizontal_rule_color: rgb(0 0 0 / 0.2);
   --border-color: rgb(0 0 0 / 0.2);
   --font-family: 'Selandia', system-ui, sans-serif;
+  color: #000000;
 }
 
 /* Hide Fontdue collection description – we use Sanity body instead */
@@ -436,4 +648,10 @@ html.is-tab-hidden .screensaver.is-active .screensaver__slide {
 .screensaver.is-active.is-resuming,
 .screensaver.is-active.is-resuming .screensaver__slide {
   transition: none !important;
+}
+
+/* Override Tailwind utilities — single source of truth for body line-height */
+.text-base,
+.leading-normal {
+  line-height: var(--site-line-height);
 }

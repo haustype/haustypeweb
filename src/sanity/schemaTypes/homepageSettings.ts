@@ -18,7 +18,7 @@ export const homepageSettingsType = defineType({
       name: 'fontsInUse',
       type: 'array',
       title: 'Fonts In Use Carousel',
-      description: 'Images for the "Fonts in use" section',
+      description: 'Images for the homepage carousel only. For the full /in-use gallery, edit the In Use page.',
       of: [
         {
           type: 'object',
