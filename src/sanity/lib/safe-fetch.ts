@@ -1,6 +1,10 @@
 import { loadQuery } from './load-query';
 
-const isConfigured = () => Boolean(import.meta.env.PUBLIC_SANITY_PROJECT_ID?.trim());
+/** Match astro.config.mjs Sanity defaults so production works even if env vars are missing. */
+const FALLBACK_PROJECT_ID = 'b5rdpzo3';
+
+const isConfigured = () =>
+  Boolean((import.meta.env.PUBLIC_SANITY_PROJECT_ID ?? FALLBACK_PROJECT_ID).trim());
 
 export async function safeLoadQuery<QueryResponse>(args: {
   query: string;
@@ -12,7 +16,8 @@ export async function safeLoadQuery<QueryResponse>(args: {
   try {
     const { data } = await loadQuery<QueryResponse>(args);
     return { data, fromSanity: true };
-  } catch {
+  } catch (error) {
+    console.error('[sanity] query failed', error);
     return { data: null, fromSanity: false };
   }
 }
