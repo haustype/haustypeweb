@@ -4,7 +4,6 @@ export const prerender = false;
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import ContentSegmentRow from '../../components/ContentSegmentRow.astro';
-import { getCollection, type CollectionEntry } from 'astro:content';
 import { safeLoadQuery } from '../../sanity/lib/safe-fetch';
 
 const slugParam = Astro.params.slug;
@@ -13,16 +12,6 @@ const slug = Array.isArray(slugParam) ? slugParam.join('/') : slugParam;
 if (!slug) {
   return Astro.redirect('/404');
 }
-
-let title = '';
-let description = '';
-let pubDate: Date = new Date();
-let author = '';
-let body: unknown = null;
-let aside: unknown = null;
-let image: string | undefined;
-let source: 'sanity' | 'astro' = 'sanity';
-let astroPost: CollectionEntry<'blog'> | null = null;
 
 const { data: post } = await safeLoadQuery<{
   title: string;
@@ -45,31 +34,19 @@ const { data: post } = await safeLoadQuery<{
   params: { slug },
 });
 
-if (post) {
-  title = post.title;
-  description = post.description ?? '';
-  pubDate = post.publishedAt ? new Date(post.publishedAt) : new Date();
-  author = post.author ?? '';
-  body = post.body;
-  aside = post.aside;
-  image = post.mainImage
-    ? (await import('../../sanity/lib/url-for-image')).urlForImage(post.mainImage).url()
-    : undefined;
-} else {
-  const posts = await getCollection('blog', ({ data }) => !data.draft);
-  astroPost = posts.find((entry) => entry.slug === slug) ?? null;
-  if (!astroPost) {
-    return Astro.redirect('/404');
-  }
-  source = 'astro';
-  title = astroPost.data.title;
-  description = astroPost.data.description ?? '';
-  pubDate = astroPost.data.pubDate;
-  author = astroPost.data.author ?? '';
-  image = astroPost.data.image;
+if (!post) {
+  return Astro.redirect('/404');
 }
 
-const astroContent = astroPost ? await astroPost.render() : null;
+const title = post.title;
+const description = post.description ?? '';
+const pubDate = post.publishedAt ? new Date(post.publishedAt) : new Date();
+const author = post.author ?? '';
+const body = post.body;
+const aside = post.aside;
+const image = post.mainImage
+  ? (await import('../../sanity/lib/url-for-image')).urlForImage(post.mainImage).url()
+  : undefined;
 ---
 
 <BaseLayout
@@ -79,12 +56,12 @@ const astroContent = astroPost ? await astroPost.render() : null;
 >
   <Header />
   <main class="bg-site flex-1">
-    <article class="w-full pt-24 pb-20">
-      <div class="content-segments w-full max-w-content mx-auto px-8 mb-16" data-reveal>
+    <article class="site-page">
+      <div class="content-segments w-full max-w-content mx-auto px-8 site-content-trail" data-reveal>
         <ContentSegmentRow
           segment={{
             heading: title,
-            body: source === 'sanity' ? body : undefined,
+            body,
             aside: aside || undefined,
           }}
           headingLevel="h1"
@@ -96,9 +73,6 @@ const astroContent = astroPost ? await astroPost.render() : null;
                 {pubDate.toLocaleDateString('en-GB', { dateStyle: 'long' })}
               </time>
             </div>
-          ) : null}
-          {source !== 'sanity' && astroContent ? (
-            <astroContent.Content slot="body" />
           ) : null}
         </ContentSegmentRow>
       </div>

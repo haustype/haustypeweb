@@ -1,14 +1,63 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import PageWentPoof from '../components/PageWentPoof.astro';
 ---
 
-<BaseLayout title="404" description="Page not found">
-  <div class="min-h-screen flex-1 w-full flex flex-col items-center justify-center bg-black text-white text-center px-6">
-    <h1 class="text-[10rem] sm:text-[14rem] font-medium leading-none text-white/90">404</h1>
-    <p class="text-xl sm:text-2xl text-stone-500 mt-4 mb-2">Page not found</p>
-    <p class="text-stone-600 text-sm sm:text-base max-w-md mb-10">The page you're looking for has wandered off.</p>
-    <a href="/" class="text-stone-400 hover:text-white underline underline-offset-4 transition-colors text-lg">
-      Back to home
-    </a>
-  </div>
+<BaseLayout fullTitle="404 — Haus Type" description="Page not found">
+  <Header />
+  <main class="not-found-page bg-site flex-1">
+    <div class="not-found-page__content px-8 text-center">
+      <h1 class="not-found-page__title m-0">
+        <span class="sr-only">Page went poof.</span>
+        <PageWentPoof class="not-found-page__title-art" />
+      </h1>
+      <p class="not-found-page__redirect m-0">Redirecting you to the homepage...</p>
+    </div>
+  </main>
 </BaseLayout>
+
+<style>
+  .not-found-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - var(--site-header-height) - 12rem);
+    padding-block: 4rem;
+  }
+
+  .not-found-page__title {
+    width: 75vw;
+    max-width: 100%;
+    margin-inline: auto;
+  }
+
+  .not-found-page__title-art {
+    display: block;
+  }
+
+  .not-found-page__title .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .not-found-page__redirect {
+    margin-top: 2.5rem;
+    font-size: 1rem;
+    line-height: var(--site-line-height);
+    color: var(--site-fg-muted);
+  }
+</style>
+
+<script is:inline>
+  window.setTimeout(function () {
+    window.location.replace('/');
+  }, 5000);
+</script>

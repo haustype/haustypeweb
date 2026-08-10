@@ -14,9 +14,10 @@ interface Props {
   segment?: ContentSegment | null;
   headerSvg?: HeaderSvg | null;
   typefaceName: string;
+  bottomPadding?: number;
 }
 
-const { segment, headerSvg, typefaceName } = Astro.props;
+const { segment, headerSvg, typefaceName, bottomPadding = 36 } = Astro.props;
 
 const headerSrc = headerSvg?.url;
 const headerAlt = headerSvg?.alt ?? typefaceName;
@@ -25,10 +26,13 @@ const showIntro = segment ? isContentSegmentVisible(segment) : false;
 
 <section class="typeface-hero site-surface-fixed">
   <div class="typeface-hero__bg" aria-hidden="true"></div>
-  <div class="typeface-hero__inner w-full max-w-content mx-auto px-8">
+  <div
+    class="typeface-hero__inner w-full max-w-content mx-auto px-8"
+    style={`--typeface-hero-padding-bottom: ${bottomPadding}px;`}
+  >
     {showIntro && segment && (
       <div class="typeface-hero__intro" data-reveal>
-        <ContentSegmentRow segment={segment} headingLevel="h1" class="!py-10" />
+        <ContentSegmentRow segment={segment} headingLevel="h1" class="site-content-inset" />
       </div>
     )}
 
@@ -86,13 +90,13 @@ const showIntro = segment ? isContentSegmentVisible(segment) : false;
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding-bottom: 2rem;
+    padding-bottom: var(--typeface-hero-padding-bottom, 36px);
     box-sizing: border-box;
   }
 
   .typeface-hero__intro {
     flex: 0 0 auto;
-    padding-top: 6rem;
+    padding-top: 8rem;
   }
 
   .typeface-hero__mark {

@@ -8,8 +8,13 @@ import { sanityImageProjection } from '../lib/sanity-image';
 import FontdueSection from '../components/FontdueSection.astro';
 import HausBuyButton from '../components/HausBuyButton.astro';
 import PortableText from '../components/PortableText.astro';
-import { getCollection, type CollectionEntry } from 'astro:content';
+import PageCustomEmbed from '../components/PageCustomEmbed.astro';
+import FontsInUseMosaic from '../components/FontsInUseMosaic.astro';
+import { galleryItemProjection, mapGalleryItems } from '../lib/gallery-items';
+import { resolvePageLayout } from '../lib/gallery-pages';
+import type { SanityImageValue } from '../lib/sanity-image';
 import { safeLoadQuery } from '../sanity/lib/safe-fetch';
+import { urlForImage } from '../sanity/lib/url-for-image';
 
 const slugParam = Astro.params.slug;
 const slug = Array.isArray(slugParam) ? slugParam.join('/') : slugParam;
@@ -23,6 +28,7 @@ let description = '';
 
 const contentSegmentProjection = `{
   layout,
+  hideOnMobile,
   heading,
   media ${sanityImageProjection},
   body,
@@ -38,27 +44,37 @@ type PageSection = {
 
 let contentSegments: ContentSegment[] = [];
 let pageSections: PageSection[] = [];
-let source: 'sanity' | 'astro' = 'sanity';
-let astroPage: CollectionEntry<'pages'> | null = null;
+let customEmbed = '';
+let pageLayout: 'standard' | 'gallery' = 'standard';
+let mosaicItems = mapGalleryItems([]);
+let ordersIllustrationUrl: string | null = null;
 
 const { data: page } = await safeLoadQuery<{
   title: string;
   description?: string;
   body?: unknown;
+  pageLayout?: 'standard' | 'gallery' | null;
   contentSegments?: ContentSegment[] | null;
   pageSections?: PageSection[] | null;
+  customEmbed?: string | null;
+  inUseGallery?: unknown[] | null;
+  ordersIllustration?: SanityImageValue | null;
 } | null>({
   query: `*[_type == "page" && slug.current == $slug][0]{
     title,
     description,
     body,
+    pageLayout,
+    customEmbed,
+    ordersIllustration ${sanityImageProjection},
     contentSegments[]${contentSegmentProjection},
     pageSections[]{
       _key,
       sectionType,
       content,
       typeface->{ slug, name, collectionId }
-    }
+    },
+    inUseGallery[]${galleryItemProjection}
   }`,
   params: { slug },
 });
@@ -66,6 +82,7 @@ const { data: page } = await safeLoadQuery<{
 if (page) {
   title = page.title;
   description = page.description ?? '';
+  pageLayout = resolvePageLayout(page.pageLayout, slug);
   contentSegments =
     page.contentSegments?.length
       ? page.contentSegments
@@ -73,18 +90,22 @@ if (page) {
         ? [{ heading: page.title, body: page.body }]
         : [];
   pageSections = page.pageSections ?? [];
-} else {
-  const pages = await getCollection('pages');
-  astroPage = pages.find((entry) => entry.slug === slug) ?? null;
-  if (!astroPage) {
-    return Astro.redirect('/404');
+  customEmbed = page.customEmbed?.trim() ?? '';
+  mosaicItems = mapGalleryItems(page.inUseGallery ?? []);
+  if (page.ordersIllustration?.asset) {
+    ordersIllustrationUrl = urlForImage(page.ordersIllustration)
+      .height(680)
+      .format('png')
+      .url();
   }
-  source = 'astro';
-  title = astroPage.data.title;
-  description = astroPage.data.description ?? '';
+} else {
+  return Astro.redirect('/404');
 }
-
-const astroContent = astroPage ? await astroPage.render() : null;
+const isGalleryPage = pageLayout === 'gallery';
+const isOrdersPage = slug === 'orders';
+const ordersIllustrationSrc = isOrdersPage
+  ? (ordersIllustrationUrl ?? '/images/hauser.png')
+  : null;
 ---
 
 <BaseLayout
@@ -93,20 +114,29 @@ const astroContent = astroPage ? await astroPage.render() : null;
 >
   <Header />
   <main class="bg-site flex-1">
-    <article class="w-full pt-24 pb-20">
-      {source === 'sanity' ? (
-        <ContentSegments segments={contentSegments} />
-      ) : astroContent ? (
-        <div class="site-grid heading-row mb-16 w-full max-w-content mx-auto px-8" data-reveal>
-          <header class="site-grid__left">
-            <h1 class="font-normal text-black">{title}</h1>
-          </header>
-          <div class="site-grid__right prose max-w-none">
-            <astroContent.Content />
-          </div>
+    <article
+      class:list={[
+        'site-page-top',
+        isGalleryPage || (customEmbed && !isOrdersPage)
+          ? 'site-page--gallery'
+          : isOrdersPage
+            ? 'site-page--orders'
+            : 'site-page--default',
+        isGalleryPage && 'gallery-page',
+        customEmbed && 'page-with-custom-embed',
+        isOrdersPage && 'orders-page__article',
+      ]}
+    >
+      <ContentSegments
+        segments={contentSegments}
+        class={isGalleryPage || customEmbed ? 'mb-0' : undefined}
+      />
+      {isGalleryPage && (
+        <div class="gallery-page__mosaic">
+          <FontsInUseMosaic items={mosaicItems} />
         </div>
-      ) : null}
-      {source === 'sanity' && pageSections.length > 0 && (
+      )}
+      {!isGalleryPage && pageSections.length > 0 && (
         <div class="w-full flex flex-col gap-16">
           {pageSections.map((section) => {
             const collectionSlug = section.typeface?.slug?.current;
@@ -146,6 +176,34 @@ const astroContent = astroPage ? await astroPage.render() : null;
           })}
         </div>
       )}
+      {customEmbed && <PageCustomEmbed html={customEmbed} />}
+      {ordersIllustrationSrc && (
+        <img
+          src={ordersIllustrationSrc}
+          alt=""
+          aria-hidden="true"
+          class="orders-page__hauser"
+          loading="lazy"
+          decoding="async"
+          draggable="false"
+        />
+      )}
     </article>
   </main>
 </BaseLayout>
+
+<style>
+  :global(.gallery-page .content-segment:last-child) {
+    padding-bottom: 0;
+  }
+
+  .gallery-page__mosaic {
+    margin-top: 3rem;
+  }
+
+  @media (min-width: 768px) {
+    .gallery-page__mosaic {
+      margin-top: 6rem;
+    }
+  }
+</style>

@@ -10,15 +10,16 @@ interface Props {
 }
 
 const { items } = Astro.props;
-const slides = items.length ? items : [{ type: 'image' as const, src: '/hero-placeholder.jpg', alt: 'Haus Type font display' }];
 ---
 
+{items.length > 0 && (
 <section class="hero-slideshow h-screen flex items-center justify-center relative overflow-hidden bg-site">
   <div class="hero-slideshow__stage w-full max-w-content px-8 flex justify-center items-center h-full relative">
     <ImageSlideshow
-      items={slides}
+      items={items}
       mediaClass="slideshow__media max-w-full max-h-[65vh] w-auto object-contain"
       stageClass="w-full h-full"
     />
   </div>
 </section>
+)}

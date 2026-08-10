@@ -1,6 +1,4 @@
 ---
-import MediaPlaceholder from './MediaPlaceholder.astro';
-
 interface FontsInUseItem {
   url: string;
   alt: string;
@@ -10,64 +8,61 @@ interface Props {
   items?: FontsInUseItem[];
 }
 
-const PLACEHOLDER_COUNT = 4;
-
 const { items: cmsItems = [] } = Astro.props;
-const items =
-  cmsItems.length > 0
-    ? cmsItems
-    : Array.from({ length: PLACEHOLDER_COUNT }, () => null);
+const items = cmsItems;
 const gridId = `fonts-in-use-${Math.random().toString(36).slice(2)}`;
 /** Extra slide copies for swipe runway; middle copy is where we start and normalize. */
 const LOOP_COPY_COUNT = 17;
 const middleCopy = Math.floor(LOOP_COPY_COUNT / 2);
-const loopItems = Array.from({ length: LOOP_COPY_COUNT }, () => items).flat();
+const loopItems = items.length > 0
+  ? Array.from({ length: LOOP_COPY_COUNT }, () => items).flat()
+  : [];
 ---
 
-<section class="fonts-in-use bg-site pt-20 md:pt-24 pb-[160px]" id={gridId}>
-  <div class="site-grid items-baseline mb-8 fonts-in-use__header" data-reveal>
-    <h2 class="fonts-in-use__title col-span-12 md:col-span-2 md:col-start-1 font-normal text-black m-0">
-      Fonts in use
-    </h2>
-    <div class="col-span-12 md:col-span-2 md:col-start-11 md:justify-self-end flex items-center gap-6">
-      <button
-        type="button"
-        class="fonts-in-use__prev text-base text-black hover:opacity-80 transition-opacity bg-transparent border-none cursor-pointer p-0"
-        aria-label="Previous"
-        data-grid-id={gridId}
-      >
-        ←
-      </button>
-      <button
-        type="button"
-        class="fonts-in-use__next text-base text-black hover:opacity-80 transition-opacity bg-transparent border-none cursor-pointer p-0"
-        aria-label="Next"
-        data-grid-id={gridId}
-      >
-        →
-      </button>
+{items.length > 0 && (
+<section class="fonts-in-use bg-site site-section-y" id={gridId}>
+  <div class="site-grid mb-8 fonts-in-use__header" data-reveal>
+    <div class="fonts-in-use__header-row col-span-12">
+      <h2 class="fonts-in-use__title font-normal text-black m-0">
+        Fonts in use
+      </h2>
+      <div class="fonts-in-use__controls flex items-center gap-6 shrink-0">
+        <button
+          type="button"
+          class="fonts-in-use__prev text-base text-black hover:opacity-80 transition-opacity bg-transparent border-none cursor-pointer p-0"
+          aria-label="Previous"
+          data-grid-id={gridId}
+        >
+          ←
+        </button>
+        <button
+          type="button"
+          class="fonts-in-use__next text-base text-black hover:opacity-80 transition-opacity bg-transparent border-none cursor-pointer p-0"
+          aria-label="Next"
+          data-grid-id={gridId}
+        >
+          →
+        </button>
+      </div>
     </div>
   </div>
 
   <div class="fonts-in-use__viewport" id={`${gridId}-viewport`} data-reveal>
-    <div class="fonts-in-use__track flex gap-6" id={`${gridId}-track`}>
+    <div class="fonts-in-use__track flex" id={`${gridId}-track`}>
       {loopItems.map((item, loopIndex) => (
         <div class="fonts-in-use__slide shrink-0" data-slide-index={loopIndex}>
-          {item ? (
-            <img
-              src={item.url}
-              alt={item.alt}
-              width={900}
-              height={1125}
-              class="fonts-in-use__image aspect-[4/5] w-full rounded-site object-cover"
-              data-media-placeholder
-              data-media-placeholder-class="media-placeholder aspect-[4/5] rounded-site"
-              loading="lazy"
-              decoding="async"
-            />
-          ) : (
-            <MediaPlaceholder label="Font in use" class="aspect-[4/5]" />
-          )}
+          <img
+            src={item.url}
+            alt={item.alt}
+            width={600}
+            height={750}
+            class="fonts-in-use__image aspect-[4/5] w-full rounded-site object-cover"
+            data-media-placeholder
+            data-media-placeholder-class="media-placeholder aspect-[4/5] rounded-site"
+            loading="lazy"
+            decoding="async"
+            draggable="false"
+          />
         </div>
       ))}
     </div>
@@ -75,15 +70,37 @@ const loopItems = Array.from({ length: LOOP_COPY_COUNT }, () => items).flat();
 
   <div class="site-grid fonts-in-use__footer mt-8" data-reveal>
     <a
-      href="/in-use"
+      href="/fonts-in-use"
       class="fonts-in-use__more col-span-12 justify-self-end md:col-span-2 md:col-start-11 text-base text-site hover:opacity-80 transition-opacity no-underline"
     >
       See more fonts in use →
     </a>
   </div>
 </section>
+)}
 
 <style>
+  .fonts-in-use__header-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+
+  .fonts-in-use__title {
+    min-width: 0;
+  }
+
+  @media (max-width: 480px) {
+    .fonts-in-use__header-row {
+      flex-wrap: wrap;
+    }
+  }
+
+  .fonts-in-use__track {
+    gap: var(--site-grid-gap);
+  }
+
   .fonts-in-use__viewport {
     overflow-x: auto;
     overflow-y: hidden;
@@ -93,6 +110,15 @@ const loopItems = Array.from({ length: LOOP_COPY_COUNT }, () => items).flat();
     scroll-behavior: auto;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x pan-y;
+    cursor: grab;
+  }
+
+  .fonts-in-use__viewport--dragging {
+    cursor: grabbing;
+  }
+
+  .fonts-in-use__viewport--dragging .fonts-in-use__image {
+    pointer-events: none;
   }
 
   .fonts-in-use__viewport::-webkit-scrollbar {
@@ -102,6 +128,9 @@ const loopItems = Array.from({ length: LOOP_COPY_COUNT }, () => items).flat();
   .fonts-in-use__image {
     display: block;
     height: auto;
+    border-radius: var(--site-image-radius);
+    -webkit-user-drag: none;
+    user-select: none;
   }
 </style>
 
@@ -115,7 +144,14 @@ const loopItems = Array.from({ length: LOOP_COPY_COUNT }, () => items).flat();
 
     if (!section || !viewport || !track || !prevBtn || !nextBtn || itemCount <= 0) return;
 
-    const gap = 24;
+    function readGap() {
+      const styles = getComputedStyle(track);
+      const raw = styles.columnGap || styles.gap || '0';
+      const value = parseFloat(raw);
+      return Number.isFinite(value) ? value : 16;
+    }
+
+    let gap = readGap();
     let slideWidth = 0;
     let sideInset = 0;
     let setWidth = 0;
@@ -133,10 +169,15 @@ const loopItems = Array.from({ length: LOOP_COPY_COUNT }, () => items).flat();
     let animStart = 0;
     let animDuration = 0;
     let onAnimComplete = null;
+    let dragPointerId = null;
+    let dragStartX = 0;
+    let dragStartScrollLeft = 0;
+    let dragActive = false;
 
     const SCROLL_MS = 420;
     const SCROLL_MIN_MS = 220;
     const SCROLL_PX_PER_MS = 0.85;
+    const DRAG_THRESHOLD_PX = 4;
 
     function easeOutCubic(t) {
       return 1 - Math.pow(1 - t, 3);
@@ -416,17 +457,66 @@ const loopItems = Array.from({ length: LOOP_COPY_COUNT }, () => items).flat();
       scheduleScrollEnd();
     }
 
+    function resetDragState() {
+      dragPointerId = null;
+      dragStartX = 0;
+      dragStartScrollLeft = 0;
+      dragActive = false;
+      viewport.classList.remove('fonts-in-use__viewport--dragging');
+    }
+
+    function onPointerDown(e) {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+      dragPointerId = e.pointerId;
+      dragStartX = e.clientX;
+      dragStartScrollLeft = viewport.scrollLeft;
+      dragActive = false;
+
+      if (e.pointerType === 'mouse') {
+        viewport.setPointerCapture(e.pointerId);
+      }
+
+      onUserScrollStart();
+    }
+
+    function onPointerMove(e) {
+      if (dragPointerId !== e.pointerId || e.pointerType !== 'mouse') return;
+
+      const deltaX = e.clientX - dragStartX;
+      if (!dragActive) {
+        if (Math.abs(deltaX) < DRAG_THRESHOLD_PX) return;
+        dragActive = true;
+        viewport.classList.add('fonts-in-use__viewport--dragging');
+      }
+
+      e.preventDefault();
+      viewport.scrollLeft = dragStartScrollLeft - deltaX;
+      lastScrollAt = performance.now();
+    }
+
+    function onPointerUpOrCancel(e) {
+      if (dragPointerId !== e.pointerId) return;
+
+      if (e.pointerType === 'mouse' && viewport.hasPointerCapture(e.pointerId)) {
+        viewport.releasePointerCapture(e.pointerId);
+      }
+
+      resetDragState();
+      onUserScrollFinish();
+    }
+
     function layout(preserveIndex = false) {
       stopAnimation();
       pendingDelta = 0;
+
+      gap = readGap();
 
       const viewportWidth = viewport.clientWidth;
       const index = preserveIndex ? activeIndex : 0;
 
       slideWidth = Math.min(300, viewportWidth - gap * 2);
       sideInset = Math.max(0, (viewportWidth - slideWidth) / 2);
-
-      track.style.gap = `${gap}px`;
 
       track.querySelectorAll('.fonts-in-use__slide').forEach((slide) => {
         slide.style.width = `${slideWidth}px`;
@@ -450,12 +540,10 @@ const loopItems = Array.from({ length: LOOP_COPY_COUNT }, () => items).flat();
       { passive: true }
     );
 
-    viewport.addEventListener('pointerdown', onUserScrollStart, { passive: true });
-    viewport.addEventListener('pointerup', onUserScrollFinish, { passive: true });
-    viewport.addEventListener('pointercancel', onUserScrollFinish, { passive: true });
-    viewport.addEventListener('touchstart', onUserScrollStart, { passive: true });
-    viewport.addEventListener('touchend', onUserScrollFinish, { passive: true });
-    viewport.addEventListener('touchcancel', onUserScrollFinish, { passive: true });
+    viewport.addEventListener('pointerdown', onPointerDown);
+    viewport.addEventListener('pointermove', onPointerMove);
+    viewport.addEventListener('pointerup', onPointerUpOrCancel);
+    viewport.addEventListener('pointercancel', onPointerUpOrCancel);
 
     prevBtn.addEventListener('click', () => stepBy(-1));
     nextBtn.addEventListener('click', () => stepBy(1));

@@ -4,6 +4,7 @@ export type ContentSegmentLayout = 'split' | 'feature';
 
 export interface ContentSegment {
   layout?: ContentSegmentLayout;
+  hideOnMobile?: boolean | null;
   heading?: string;
   media?: SanityImageValue | null;
   body?: unknown;

@@ -13,11 +13,18 @@ const { data: settings } = await safeLoadQuery<{
         "label": page->title
       },
       _type == "builtInPage" => {
-        "href": "/" + route,
+        "href": select(
+          route == "blog" => "/blog",
+          route == "typefaces" => "/typefaces",
+          route == "in-use" => "/fonts-in-use",
+          route == "fonts-in-use" => "/fonts-in-use",
+          "/" + route
+        ),
         "label": select(
           route == "blog" => "Blog",
           route == "typefaces" => "Typefaces",
           route == "in-use" => "In Use",
+          route == "fonts-in-use" => "In Use",
           route
         )
       },
@@ -29,124 +36,129 @@ const { data: settings } = await safeLoadQuery<{
   }`,
 });
 
-const navItems =
+const cmsNavItems =
   settings?.navigation?.length
     ? settings.navigation
         .filter((item) => item.label && item.href)
         .map((item) => ({ label: item.label!, href: item.href! }))
-    : [
-        { href: '/typefaces', label: 'Typefaces' },
-        { href: '/in-use', label: 'In Use' },
-        { href: '/projects', label: 'Projects' },
-        { href: '/information', label: 'Information' },
-      ];
+    : [];
+
+const navItems = [
+  { href: '/typefaces', label: 'Typefaces' },
+  ...cmsNavItems.filter((item) => item.href !== '/typefaces'),
+];
 ---
 
-<header class="site-header sticky top-0 z-50 p-4" data-site-header>
-  <div class="site-header__shell h-[60px] w-full overflow-hidden rounded-[10px] bg-white px-4 text-black">
-    <div class="site-header__bar grid h-full w-full grid-cols-12 items-center gap-4">
-      <div class="site-header__brand col-start-1 col-span-10 lg:col-span-3 flex min-w-0 items-center gap-8">
-        <a
-          href="/"
-          class="site-header__logo-link flex shrink-0 items-center justify-self-start text-black hover:text-haus-yellow"
-          aria-label="Haus Type home"
-        >
-          <HausMark class="site-header__mark text-inherit" />
-        </a>
+<header class="site-header sticky top-0 z-50" data-site-header>
+  <div class="site-header__shell w-full">
+    <div class="site-header__surface rounded-[10px] bg-white px-4 text-black">
+      <div class="site-header__bar grid h-[60px] w-full grid-cols-12 items-center gap-4">
+        <div class="site-header__brand col-start-1 col-span-10 lg:col-span-3 flex min-w-0 items-center gap-8">
+          <a
+            href="/"
+            class="site-header__logo-link flex shrink-0 items-center justify-self-start text-black hover:text-haus-yellow"
+            aria-label="Haus Type home"
+          >
+            <HausMark class="site-header__mark text-inherit" />
+          </a>
 
-        <a
-          href="/"
-          class="site-header__name flex min-w-0 items-center text-base leading-none"
+          <a
+            href="/"
+            class="site-header__name flex min-w-0 items-center text-base leading-none"
+          >
+            Haus Type®
+          </a>
+        </div>
+
+        <nav
+          class="site-header__nav col-span-6 col-start-4 flex min-w-0 items-center gap-8"
+          aria-label="Main navigation"
         >
-          Haus Type®
-        </a>
+          {navItems.map((item) => (
+            <a href={item.href} class="text-base leading-none whitespace-nowrap">
+              {item.label}
+            </a>
+          ))}
+        </nav>
+
+        <div class="site-header__actions col-start-11 col-span-2 flex items-center justify-self-end gap-6">
+          <button
+            type="button"
+            id="nav-toggle"
+            class="site-header__menu-toggle site-header__action-btn text-base leading-none rounded-none bg-transparent border-none cursor-pointer text-inherit shrink-0"
+            aria-label="Open menu"
+            aria-expanded="false"
+            aria-controls="nav-menu"
+          >
+            <span class="site-header__menu-toggle-inner" aria-hidden="true">
+              <svg
+                class="nav-icon-open"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 16 12"
+                aria-hidden="true"
+              >
+                <path
+                  stroke="currentColor"
+                  stroke-linecap="butt"
+                  stroke-linejoin="miter"
+                  stroke-width="1"
+                  vector-effect="non-scaling-stroke"
+                  d="M0 1h16M0 6h16M0 11h16"
+                />
+              </svg>
+              <svg
+                class="nav-icon-close"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 16 16"
+                aria-hidden="true"
+              >
+                <path
+                  stroke="currentColor"
+                  stroke-linecap="butt"
+                  stroke-linejoin="miter"
+                  stroke-width="1"
+                  vector-effect="non-scaling-stroke"
+                  d="M1 1 15 15M15 1 1 15"
+                />
+              </svg>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            fontdue-click="open-store-modal"
+            fontdue-store-route="cart"
+            class="site-header__cart site-header__action-btn text-base leading-none bg-transparent border-none cursor-pointer font-inherit whitespace-nowrap"
+          >
+            Cart
+          </button>
+        </div>
       </div>
 
-      <nav
-        class="site-header__nav col-span-6 col-start-4 flex min-w-0 items-center gap-8"
-        aria-label="Main navigation"
-      >
-        {navItems.map((item) => (
-          <a href={item.href} class="text-base leading-none whitespace-nowrap">
-            {item.label}
-          </a>
-        ))}
-      </nav>
-
-      <div class="site-header__actions col-start-11 col-span-2 flex items-center justify-self-end gap-6">
-        <button
-          type="button"
-          id="nav-toggle"
-          class="site-header__menu-toggle site-header__action-btn text-base leading-none rounded-none bg-transparent border-none cursor-pointer text-inherit shrink-0"
-          aria-label="Toggle menu"
-          aria-expanded="false"
-        >
-          <span class="site-header__menu-toggle-inner" aria-hidden="true">
-            <svg class="nav-icon-open" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 12" aria-hidden="true">
-              <path
-                stroke="#000000"
-                stroke-linecap="butt"
-                stroke-linejoin="miter"
-                stroke-width="1"
-                vector-effect="non-scaling-stroke"
-                d="M0 1h16M0 6h16M0 11h16"
-              />
-            </svg>
-          </span>
-        </button>
-
-        <button
-          type="button"
-          fontdue-click="open-store-modal"
-          fontdue-store-route="cart"
-          class="site-header__cart site-header__action-btn text-base leading-none bg-transparent border-none cursor-pointer font-inherit whitespace-nowrap"
-        >
-          Cart
-        </button>
+      <div id="nav-menu" class="site-header__menu-panel" aria-hidden="true">
+        <div class="site-header__menu-panel-inner">
+          <nav class="site-header__mobile-nav" aria-label="Mobile navigation">
+            {navItems.map((item) => (
+              <a href={item.href} class="site-header__mobile-link">
+                {item.label}
+              </a>
+            ))}
+            <button
+              type="button"
+              data-mobile-cart
+              fontdue-click="open-store-modal"
+              fontdue-store-route="cart"
+              class="site-header__mobile-link site-header__mobile-cart bg-transparent border-none cursor-pointer font-inherit text-inherit text-left p-0"
+            >
+              Cart
+            </button>
+          </nav>
+        </div>
       </div>
     </div>
   </div>
-
-  <div
-    id="nav-menu"
-    class="site-header__menu-panel hidden fixed inset-0 flex flex-col items-center justify-center px-8 pt-16 pb-16 text-black"
-    aria-hidden="true"
-  >
-    <nav class="flex flex-col gap-[1.5rem] items-center" aria-label="Mobile navigation">
-      {navItems.map((item) => (
-        <a href={item.href} class="text-[1.5rem] leading-normal py-2 hover:opacity-80 transition-opacity">
-          {item.label}
-        </a>
-      ))}
-      <button
-        type="button"
-        data-mobile-cart
-        fontdue-click="open-store-modal"
-        fontdue-store-route="cart"
-        class="text-[1.5rem] leading-normal py-2 hover:opacity-80 transition-opacity bg-transparent border-none cursor-pointer font-inherit text-inherit"
-      >
-        Cart
-      </button>
-    </nav>
-  </div>
-
-  <button
-    type="button"
-    id="nav-close"
-    class="site-header__menu-close hidden"
-    aria-label="Close menu"
-  >
-    <svg class="nav-icon-close-overlay" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 16" aria-hidden="true">
-      <path
-        stroke="#000000"
-        stroke-linecap="butt"
-        stroke-linejoin="miter"
-        stroke-width="1"
-        vector-effect="non-scaling-stroke"
-        d="M1 1 15 15M15 1 1 15"
-      />
-    </svg>
-  </button>
 </header>
 
 <style>
@@ -162,45 +174,65 @@ const navItems =
   .site-header__shell {
     position: relative;
     z-index: 2;
+    height: 60px;
     container-type: inline-size;
     container-name: site-header;
   }
 
+  .site-header__surface {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 3;
+    --site-header-name-indent: calc(24px + 2rem);
+    --site-header-mobile-nav-inset-top: calc(2.5rem - 4px);
+    --site-header-mobile-nav-inset-bottom: calc(2.5rem + 4px);
+    display: grid;
+    grid-template-rows: 60px 0fr;
+    overflow: hidden;
+    transition: grid-template-rows 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .site-header.is-menu-open .site-header__surface {
+    grid-template-rows: 60px 1fr;
+  }
+
   .site-header__menu-panel {
-    z-index: 1;
+    min-height: 0;
+    overflow: hidden;
+    pointer-events: none;
   }
 
-  .site-header.is-menu-open .site-header__menu-toggle {
-    visibility: hidden;
+  .site-header.is-menu-open .site-header__menu-panel {
+    pointer-events: auto;
   }
 
-  .site-header__menu-close {
-    position: fixed;
-    top: calc(1rem + 30px);
-    right: calc(1rem + 1rem);
-    z-index: 60;
+  .site-header__menu-panel-inner {
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .site-header__mobile-nav {
     display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    width: 44px;
-    height: 44px;
-    padding: 0;
-    margin: 0;
-    border: none;
-    background: transparent;
-    color: #000000;
-    cursor: pointer;
-    transform: translateY(-50%);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+    padding-top: var(--site-header-mobile-nav-inset-top);
+    padding-bottom: var(--site-header-mobile-nav-inset-bottom);
+    padding-left: var(--site-header-name-indent);
   }
 
-  .site-header__menu-close.hidden {
-    display: none;
+  .site-header__mobile-link {
+    font-size: 1rem;
+    line-height: var(--site-line-height);
+    color: inherit;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
   }
 
-  .nav-icon-close-overlay {
-    display: block;
-    width: 1.5rem;
-    height: 1.5rem;
+  .site-header__mobile-link:hover {
+    opacity: 0.75;
   }
 
   .site-header__name {
@@ -228,10 +260,22 @@ const navItems =
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    width: 44px;
+    width: auto;
+    min-width: 1.5rem;
     height: 44px;
     padding: 0;
     flex-shrink: 0;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .site-header__menu-toggle:focus {
+    outline: none;
+  }
+
+  .site-header__menu-toggle:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
   }
 
   .site-header__cart {
@@ -241,6 +285,7 @@ const navItems =
   }
 
   .site-header__menu-toggle-inner {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -249,10 +294,26 @@ const navItems =
     line-height: 0;
   }
 
-  .site-header__menu-toggle-inner .nav-icon-open {
+  .site-header__menu-toggle-inner svg {
     display: block;
     width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .site-header__menu-toggle-inner .nav-icon-open {
     height: 1.125rem;
+  }
+
+  .site-header__menu-toggle-inner .nav-icon-close {
+    display: none;
+  }
+
+  .site-header.is-menu-open .site-header__menu-toggle-inner .nav-icon-open {
+    display: none;
+  }
+
+  .site-header.is-menu-open .site-header__menu-toggle-inner .nav-icon-close {
+    display: block;
   }
 
   @media (min-width: 1024px) {
@@ -261,7 +322,8 @@ const navItems =
         display: flex;
       }
 
-      .site-header__menu-toggle {
+      .site-header__menu-toggle,
+      .site-header__menu-panel {
         display: none;
       }
 
@@ -278,11 +340,16 @@ const navItems =
       }
     }
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-header__surface {
+      transition: none;
+    }
+  }
 </style>
 
 <script>
   const toggle = document.getElementById('nav-toggle');
-  const menuClose = document.getElementById('nav-close');
   const menu = document.getElementById('nav-menu');
   const header = document.querySelector('[data-site-header]');
   const scrollThreshold = 32;
@@ -290,9 +357,7 @@ const navItems =
 
   function setMenuOpen(open: boolean) {
     if (!menu || !toggle) return;
-    menu.classList.toggle('hidden', !open);
     header?.classList.toggle('is-menu-open', open);
-    menuClose?.classList.toggle('hidden', !open);
     toggle.setAttribute('aria-expanded', String(open));
     toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
     menu.setAttribute('aria-hidden', String(!open));
@@ -300,20 +365,20 @@ const navItems =
   }
 
   toggle?.addEventListener('click', () => {
-    const isOpen = menu?.classList.contains('hidden') ?? true;
-    setMenuOpen(isOpen);
-  });
-
-  menuClose?.addEventListener('click', () => {
-    closeMenu();
+    const isOpen = header?.classList.contains('is-menu-open') ?? false;
+    setMenuOpen(!isOpen);
   });
 
   document.querySelector('[data-mobile-cart]')?.addEventListener('click', () => {
     closeMenu();
   });
 
+  menu?.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', () => closeMenu());
+  });
+
   function closeMenu() {
-    if (!menu || menu.classList.contains('hidden')) return;
+    if (!header?.classList.contains('is-menu-open')) return;
     setMenuOpen(false);
   }
 
@@ -334,6 +399,13 @@ const navItems =
     lastScrollY = scrollY;
   }
 
+  function handleDesktopNav() {
+    const shell = header?.querySelector('.site-header__shell');
+    if (!shell) return;
+    if (shell.offsetWidth >= 704) closeMenu();
+  }
+
   updateHeaderScroll();
   window.addEventListener('scroll', updateHeaderScroll, { passive: true });
+  window.addEventListener('resize', handleDesktopNav, { passive: true });
 </script>

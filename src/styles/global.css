@@ -26,8 +26,10 @@
   /* Sticky header: 16px padding + 60px bar + 16px padding */
   --site-header-height: 5.75rem;
   --site-radius: 10px;
+  --site-image-radius: 5px;
   --site-grid-gap: 1rem;
   --site-grid-cols: 12;
+  --site-edge-padding: 1rem;
   --site-line-height: 1.6;
 }
 
@@ -84,6 +86,47 @@ body {
     @apply col-span-12 md:col-span-5 md:col-start-4;
   }
 
+  /* Page shell — tighter vertical padding on mobile */
+  .site-page {
+    @apply w-full pt-16 pb-10 md:pt-32 md:pb-20;
+  }
+
+  .site-page-top {
+    @apply w-full pt-16 md:pt-32;
+  }
+
+  .site-page--gallery {
+    @apply pb-20 md:pb-[160px];
+  }
+
+  .site-page--orders {
+    @apply pb-4 md:pb-8;
+  }
+
+  .site-page--default {
+    @apply pb-10 md:pb-20;
+  }
+
+  .site-page-body {
+    @apply pt-8 pb-10 md:pt-16 md:pb-20;
+  }
+
+  .site-content-inset {
+    @apply pt-4 pb-6 md:pt-8 md:pb-12;
+  }
+
+  .site-content-trail {
+    @apply mb-8 md:mb-16;
+  }
+
+  .site-section-y {
+    @apply pt-[3.5rem] pb-[4.5rem] md:pt-[7rem] md:pb-[9rem];
+  }
+
+  .site-footer__grid {
+    @apply pt-[64px] pb-[72px] md:pb-[144px];
+  }
+
   .bg-site {
     background-color: var(--site-bg);
   }
@@ -104,6 +147,17 @@ body {
     border-color: var(--site-border);
   }
 
+  /* Keep footer below the fold on short pages; shell fills at least one viewport. */
+  .site-shell {
+    min-height: 100dvh;
+  }
+
+  .site-shell > main {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+  }
+
   .site-header__logo-link,
   .site-footer__brand-mark {
     width: fit-content;
@@ -122,15 +176,15 @@ body {
     --site-fg-muted: rgb(0 0 0 / 0.45);
     --site-border: rgb(0 0 0 / 0.2);
     color: #000000;
+    padding: var(--site-edge-padding);
   }
 
-  .site-header .site-header__shell {
+  .site-header .site-header__surface {
     background-color: #ffffff;
     color: #000000;
   }
 
   .site-header__menu-panel {
-    background-color: #eeeeee;
     color: #000000;
   }
 
@@ -144,8 +198,8 @@ body {
 
   .site-floating-controls {
     position: fixed;
-    right: 2rem;
-    bottom: 2rem;
+    right: var(--site-edge-padding);
+    bottom: var(--site-edge-padding);
     z-index: 40;
     display: flex;
     align-items: center;
@@ -230,13 +284,27 @@ h1, h2, .prose h1, .prose h2 {
   color: var(--site-fg);
 }
 
-.prose :where(img) {
-  border-radius: var(--site-radius);
+.prose :where(img:not([src$=".svg"]):not([src*=".svg?"])) {
+  border-radius: var(--site-image-radius);
+}
+
+/* All raster images in page content (SVGs excluded by src) */
+.site-shell img:not([src$=".svg"]):not([src*=".svg?"]) {
+  border-radius: var(--site-image-radius);
 }
 
 .sanity-image {
-  border-radius: var(--site-radius);
+  border-radius: var(--site-image-radius);
   overflow: hidden;
+}
+
+.sanity-image--no-radius {
+  border-radius: 0;
+  overflow: visible;
+}
+
+.sanity-image--no-radius img {
+  border-radius: 0;
 }
 
 .media-placeholder {
@@ -244,10 +312,10 @@ h1, h2, .prose h1, .prose h2 {
   width: 100%;
   min-height: 2.5rem;
   background-color: rgb(0 0 0 / 0.06);
-  border-radius: var(--site-radius);
+  border-radius: var(--site-image-radius);
 }
 
-/* Split layout: body text cols 4–8; images span 6 or 9 grid columns from col 4 */
+/* Split layout: body text cols 4–8; images span 6–9 grid columns from col 4 */
 @media (min-width: 768px) {
   .content-segment {
     container-type: inline-size;
@@ -260,6 +328,24 @@ h1, h2, .prose h1, .prose h2 {
     width: calc(
       (100cqw - (var(--site-grid-cols) - 1) * var(--site-grid-gap)) / var(--site-grid-cols) * 6 +
         5 * var(--site-grid-gap)
+    );
+    max-width: none;
+  }
+
+  .content-segment__body .sanity-image--span-7 {
+    display: block;
+    width: calc(
+      (100cqw - (var(--site-grid-cols) - 1) * var(--site-grid-gap)) / var(--site-grid-cols) * 7 +
+        6 * var(--site-grid-gap)
+    );
+    max-width: none;
+  }
+
+  .content-segment__body .sanity-image--span-8 {
+    display: block;
+    width: calc(
+      (100cqw - (var(--site-grid-cols) - 1) * var(--site-grid-gap)) / var(--site-grid-cols) * 8 +
+        7 * var(--site-grid-gap)
     );
     max-width: none;
   }
@@ -281,6 +367,24 @@ h1, h2, .prose h1, .prose h2 {
     width: calc(
       (100cqw - (var(--site-grid-cols) - 1) * var(--site-grid-gap)) / var(--site-grid-cols) * 6 +
         5 * var(--site-grid-gap)
+    );
+    max-width: none;
+  }
+
+  .content-segment__feature-main .sanity-image--span-7 {
+    display: block;
+    width: calc(
+      (100cqw - (var(--site-grid-cols) - 1) * var(--site-grid-gap)) / var(--site-grid-cols) * 7 +
+        6 * var(--site-grid-gap)
+    );
+    max-width: none;
+  }
+
+  .content-segment__feature-main .sanity-image--span-8 {
+    display: block;
+    width: calc(
+      (100cqw - (var(--site-grid-cols) - 1) * var(--site-grid-gap)) / var(--site-grid-cols) * 8 +
+        7 * var(--site-grid-gap)
     );
     max-width: none;
   }
@@ -326,9 +430,13 @@ html.site-bg-dark .media-placeholder {
   background-color: rgb(255 255 255 / 0.08);
 }
 
-/* Premium fade-up reveal (on load for in-view, fade-only on scroll) */
+/* Premium fade reveal (on load for in-view, fade-only on scroll) */
 [data-reveal] {
   opacity: 0;
+  transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-reveal='up'] {
   transform: translateY(14px);
   transition:
     opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
@@ -336,13 +444,17 @@ html.site-bg-dark .media-placeholder {
 }
 
 [data-reveal='fade'] {
-  transform: none;
-  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 [data-reveal].reveal-on-scroll {
-  transform: none;
   transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-reveal='up'].reveal-on-scroll {
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 [data-reveal].is-revealed {
@@ -425,8 +537,64 @@ html.reveal-once-done [data-reveal-once] {
   opacity: 1;
 }
 
-/* Fontdue customer login — orders page */
-fontdue-customer-login-form {
+/* Page custom embed — Fontdue forms below CMS page content */
+.page-with-custom-embed .content-segment:last-child {
+  padding-bottom: 0;
+}
+
+.orders-page__article {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.page-custom-embed {
+  margin-top: 2rem;
+}
+
+.page-custom-embed--form {
+  flex: 1;
+  align-content: start;
+}
+
+.page-custom-embed__inner {
+  position: relative;
+  z-index: 1;
+}
+
+.orders-page__hauser {
+  position: absolute;
+  right: 32px;
+  bottom: 32px;
+  z-index: 0;
+  display: block;
+  height: 340px;
+  width: auto;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.site-shell img.orders-page__hauser {
+  border-radius: 0;
+  background: none;
+}
+
+.page-custom-embed__inner fontdue-customer-login-form,
+.page-custom-embed__inner fontdue-test-fonts-form {
+  display: block;
+  width: 100%;
+  max-width: 24rem;
+}
+
+/* Fontdue forms — orders + trial fonts pages */
+fontdue-customer-login-form,
+fontdue-test-fonts-form {
   --primary_text_color: var(--site-fg);
   --primary_background_color: #ffffff;
   --secondary_background_color: #ffffff;
@@ -445,7 +613,8 @@ fontdue-customer-login-form {
   color: var(--site-fg);
 }
 
-fontdue-customer-login-form .text-field__input {
+fontdue-customer-login-form .text-field__input,
+fontdue-test-fonts-form .text-field__input {
   background-color: #ffffff !important;
   color: #000000 !important;
   -webkit-text-fill-color: #000000;
@@ -453,50 +622,58 @@ fontdue-customer-login-form .text-field__input {
   border-radius: 10px;
 }
 
-fontdue-customer-login-form .text-field__input::placeholder {
+fontdue-customer-login-form .text-field__input::placeholder,
+fontdue-test-fonts-form .text-field__input::placeholder {
   color: rgb(0 0 0 / 0.45);
 }
 
-fontdue-customer-login-form .submit-button {
+fontdue-customer-login-form .submit-button,
+fontdue-test-fonts-form .submit-button {
   background-color: #000000 !important;
   color: #ffffff !important;
   border-color: #000000 !important;
   border-radius: 10px;
 }
 
-fontdue-customer-login-form .submit-button:hover:not(:disabled) {
+fontdue-customer-login-form .submit-button:hover:not(:disabled),
+fontdue-test-fonts-form .submit-button:hover:not(:disabled) {
   background-color: #000000 !important;
   color: #ffffff !important;
   border-color: #000000 !important;
   opacity: 0.85;
 }
 
-fontdue-customer-login-form .submit-button:disabled {
+fontdue-customer-login-form .submit-button:disabled,
+fontdue-test-fonts-form .submit-button:disabled {
   background-color: rgb(0 0 0 / 0.35) !important;
   color: #ffffff !important;
   border-color: transparent !important;
 }
 
-html.site-bg-dark fontdue-customer-login-form .submit-button {
+html.site-bg-dark fontdue-customer-login-form .submit-button,
+html.site-bg-dark fontdue-test-fonts-form .submit-button {
   background-color: #ffffff !important;
   color: #000000 !important;
   border-color: #ffffff !important;
 }
 
-html.site-bg-dark fontdue-customer-login-form .submit-button:hover:not(:disabled) {
+html.site-bg-dark fontdue-customer-login-form .submit-button:hover:not(:disabled),
+html.site-bg-dark fontdue-test-fonts-form .submit-button:hover:not(:disabled) {
   background-color: #ffffff !important;
   color: #000000 !important;
   border-color: #ffffff !important;
   opacity: 0.85;
 }
 
-html.site-bg-dark fontdue-customer-login-form .submit-button:disabled {
+html.site-bg-dark fontdue-customer-login-form .submit-button:disabled,
+html.site-bg-dark fontdue-test-fonts-form .submit-button:disabled {
   background-color: rgb(255 255 255 / 0.35) !important;
   color: #000000 !important;
   border-color: transparent !important;
 }
 
-html.site-bg-dark fontdue-customer-login-form .text-field__input {
+html.site-bg-dark fontdue-customer-login-form .text-field__input,
+html.site-bg-dark fontdue-test-fonts-form .text-field__input {
   background-color: #ffffff !important;
   color: #000000 !important;
   -webkit-text-fill-color: #000000;
@@ -527,7 +704,7 @@ fontdue-type-testers {
 
 /* Fontdue character viewer */
 fontdue-character-viewer {
-  --character_viewer_sticky_top: 84px;
+  --character_viewer_sticky_top: 108px;
   --primary_text_color: var(--site-fg);
   --primary_background_color: var(--site-bg);
   --character_viewer_selected_background_color: var(--site-fg);
@@ -606,7 +783,7 @@ html.is-screensaver-active .site-header {
   z-index: 55;
 }
 
-html.is-screensaver-active .site-header__shell {
+html.is-screensaver-active .site-header__surface {
   background: transparent !important;
 }
 

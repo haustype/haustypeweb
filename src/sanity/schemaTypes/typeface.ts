@@ -1,6 +1,7 @@
 import { orderRankField, orderRankOrdering } from '@sanity/orderable-document-list';
 import { defineField, defineType } from 'sanity';
 import { createLightBgImageInput } from '../components/LightBgImageInput';
+import { bottomPaddingField, verticalPaddingField } from './boxPadding';
 
 const headerSvgInput = createLightBgImageInput('#ffcc01');
 const specimenSvgInput = createLightBgImageInput('#eeeeee');
@@ -31,6 +32,11 @@ export const typefaceType = defineType({
       fields: [{ name: 'alt', type: 'string', title: 'Alternative Text' }],
       components: { input: headerSvgInput },
     }),
+    bottomPaddingField(
+      'headerSvgPadding',
+      'Header SVG bottom padding',
+      'Space under the Header SVG in the yellow hero. Default 36px.',
+    ),
     defineField({
       name: 'pageSections',
       type: 'array',
@@ -57,44 +63,32 @@ export const typefaceType = defineType({
     defineField({ name: 'category', type: 'string', title: 'Category' }),
     defineField({ name: 'styles', type: 'number', title: 'Styles', initialValue: 0 }),
     defineField({
+      name: 'homepageImages',
+      type: 'array',
+      title: 'Homepage images',
+      description:
+        'Images for the homepage mosaic. Set width and padding per image. Reorder tiles on Homepage Settings.',
+      of: [{ type: 'typefaceHomepageImage' }],
+    }),
+    defineField({
       name: 'specimen',
       type: 'image',
-      title: 'Homepage specimen',
-      description: 'SVG shown in the homepage typeface list (769px and wider). More specimens can be added via Fontdue on the detail page.',
+      title: 'Typefaces page specimen',
+      description: 'SVG shown in the typefaces list (769px and wider).',
       options: { accept: '.svg' },
-      fields: [
-        defineField({ name: 'alt', type: 'string', title: 'Alternative Text' }),
-        defineField({
-          name: 'listPadding',
-          type: 'object',
-          title: 'List padding (desktop)',
-          description: 'Vertical spacing on the homepage list at 769px and wider. Mobile always uses 32px.',
-          options: { columns: 2 },
-          fields: [
-            defineField({
-              name: 'top',
-              type: 'number',
-              title: 'Top (px)',
-              initialValue: 32,
-              validation: (Rule) => Rule.min(0).max(200),
-            }),
-            defineField({
-              name: 'bottom',
-              type: 'number',
-              title: 'Bottom (px)',
-              initialValue: 32,
-              validation: (Rule) => Rule.min(0).max(200),
-            }),
-          ],
-        }),
-      ],
+      fields: [defineField({ name: 'alt', type: 'string', title: 'Alternative Text' })],
       components: { input: specimenSvgInput },
     }),
+    verticalPaddingField(
+      'listPadding',
+      'Typefaces list padding',
+      'Top and bottom spacing for this typeface row on the /typefaces page (desktop). Mobile uses 32px.',
+    ),
     defineField({
       name: 'specimenMobile',
       type: 'image',
-      title: 'Homepage specimen (mobile)',
-      description: 'Optional SVG for the homepage typeface list at 768px and below. Falls back to the main specimen when empty.',
+      title: 'Typefaces page specimen (mobile)',
+      description: 'Optional SVG for the typefaces list at 768px and below. Falls back to the main specimen when empty.',
       options: { accept: '.svg' },
       fields: [{ name: 'alt', type: 'string', title: 'Alternative Text' }],
       components: { input: specimenSvgInput },

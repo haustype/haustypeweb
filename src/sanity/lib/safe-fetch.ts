@@ -1,9 +1,6 @@
 import { loadQuery } from './load-query';
 
-const isConfigured = () => {
-  const id = import.meta.env.PUBLIC_SANITY_PROJECT_ID ?? 'b5rdpzo3';
-  return id && id !== 'placeholder';
-};
+const isConfigured = () => Boolean(import.meta.env.PUBLIC_SANITY_PROJECT_ID?.trim());
 
 export async function safeLoadQuery<QueryResponse>(args: {
   query: string;

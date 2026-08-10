@@ -7,6 +7,7 @@ type LinkMarkDef = {
   href?: string;
   linkType?: 'url' | 'email';
   email?: string;
+  openInNewTab?: 'same' | 'new';
 };
 
 const { node, ...attrs } = Astro.props;
@@ -16,10 +17,15 @@ const href =
   markDef.linkType === 'email' && markDef.email
     ? `mailto:${markDef.email.trim()}`
     : markDef.href ?? '';
+
+const openInNewTab = markDef.openInNewTab === 'new';
+const linkAttrs = openInNewTab
+  ? { target: '_blank', rel: 'noopener noreferrer' }
+  : {};
 ---
 
 {href ? (
-  <a href={href} {...attrs}>
+  <a href={href} {...linkAttrs} {...attrs}>
     <slot />
   </a>
 ) : (

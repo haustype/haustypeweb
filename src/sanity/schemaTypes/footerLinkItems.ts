@@ -31,7 +31,7 @@ export const footerLinkItems = [
           list: [
             { title: 'Blog', value: 'blog' },
             { title: 'Typefaces', value: 'typefaces' },
-            { title: 'In Use', value: 'in-use' },
+            { title: 'In Use', value: 'fonts-in-use' },
           ],
           layout: 'dropdown',
         },
@@ -46,7 +46,7 @@ export const footerLinkItems = [
             ? 'Blog'
             : route === 'typefaces'
               ? 'Typefaces'
-              : route === 'in-use'
+              : route === 'fonts-in-use' || route === 'in-use'
                 ? 'In Use'
                 : route || 'Select',
       }),

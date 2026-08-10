@@ -29,140 +29,100 @@ interface Props {
 const { typefaces } = Astro.props;
 ---
 
-<section class="bg-site">
+<section class="typeface-list w-full max-w-content mx-auto px-8 site-content-trail">
   <ul class="list-none m-0 p-0">
-    {typefaces.map((typeface, i) => {
-      const specimen = typeface.specimen;
-      const specimenMobile = typeface.specimenMobile;
-      const dims = specimen?.url ? specimenDimensions(specimen.url) : null;
-      const mobileDims = specimenMobile?.url ? specimenDimensions(specimenMobile.url) : null;
-      const paddingTop = typeface.specimenPaddingTop ?? 32;
-      const paddingBottom = typeface.specimenPaddingBottom ?? 32;
+      {typefaces.map((typeface, i) => {
+        const specimen = typeface.specimen;
+        const specimenMobile = typeface.specimenMobile;
+        const dims = specimen?.url ? specimenDimensions(specimen.url) : null;
+        const mobileDims = specimenMobile?.url ? specimenDimensions(specimenMobile.url) : null;
+        const paddingTop = typeface.specimenPaddingTop ?? 32;
+        const paddingBottom = typeface.specimenPaddingBottom ?? 32;
+        const isFirst = i === 0;
+        const isLast = i === typefaces.length - 1;
 
-      return (
-        <li data-reveal>
-          <a
-            href={`/typefaces/${typeface.slug}`}
-            class="typeface-list__row group relative block text-black no-underline"
-            aria-label={`View ${typeface.name}`}
-          >
-            <div class="typeface-list__hover-bg" aria-hidden="true"></div>
-            <div class="relative z-[1] w-full max-w-content mx-auto px-8">
+        return (
+          <li data-reveal>
+            <a
+              href={`/typefaces/${typeface.slug}`}
+              class="typeface-list__link block text-black no-underline"
+              aria-label={`View ${typeface.name}`}
+            >
               <div
                 class:list={[
-                  'typeface-list__grid grid grid-cols-12 gap-4 items-start border-b border-site transition-[border-color] duration-200 ease-out',
-                  i === 0 && 'border-t border-site',
+                  'typeface-list__grid grid grid-cols-12 gap-4 items-start',
+                  isFirst && 'typeface-list__grid--first',
+                  isLast && 'typeface-list__grid--last',
+                  i < typefaces.length - 1 && 'border-b border-site',
                 ]}
                 style={`--specimen-padding-top: ${paddingTop}px; --specimen-padding-bottom: ${paddingBottom}px;`}
               >
-                <div class="col-span-12 md:col-span-3 md:col-start-1 flex items-center gap-3 text-base leading-none">
-                  <span
-                    class="typeface-list__dot relative -top-px shrink-0 w-[10px] h-[10px] rounded-full bg-site-fg"
-                    aria-hidden="true"
-                  ></span>
-                  {typeface.name}
-                </div>
+              <div class="col-span-12 md:col-span-3 md:col-start-1 flex items-center text-base leading-none">
+                {typeface.name}
+              </div>
 
-                <div class="col-span-12 md:col-span-8 md:col-start-4 min-w-0">
-                  {specimen ? (
-                    <div class="typeface-list__media relative w-full">
-                      {specimenMobile ? (
-                        <>
-                          <img
-                            src={specimen.url}
-                            alt={specimen.alt ?? typeface.name}
-                            width={dims?.width}
-                            height={dims?.height}
-                            class="typeface-list__specimen-img hidden md:block w-full h-auto"
-                            data-media-placeholder
-                            loading={i < 2 ? 'eager' : 'lazy'}
-                            decoding="async"
-                          />
-                          <img
-                            src={specimenMobile.url}
-                            alt={specimenMobile.alt ?? typeface.name}
-                            width={mobileDims?.width}
-                            height={mobileDims?.height}
-                            class="typeface-list__specimen-img block md:hidden w-full h-auto"
-                            data-media-placeholder
-                            loading={i < 2 ? 'eager' : 'lazy'}
-                            decoding="async"
-                          />
-                        </>
-                      ) : (
+              <div class="col-span-12 md:col-span-7 md:col-start-4 min-w-0">
+                {specimen ? (
+                  <div class="typeface-list__media w-full">
+                    {specimenMobile ? (
+                      <>
                         <img
                           src={specimen.url}
                           alt={specimen.alt ?? typeface.name}
                           width={dims?.width}
                           height={dims?.height}
-                          class="typeface-list__specimen-img block w-full h-auto"
+                          class="typeface-list__specimen-img hidden md:block w-full h-auto"
                           data-media-placeholder
                           loading={i < 2 ? 'eager' : 'lazy'}
                           decoding="async"
                         />
-                      )}
-                    </div>
-                  ) : (
-                    <MediaPlaceholder
-                      label={`${typeface.name} specimen unavailable`}
-                      class="typeface-list__specimen-placeholder"
-                    />
-                  )}
-                </div>
+                        <img
+                          src={specimenMobile.url}
+                          alt={specimenMobile.alt ?? typeface.name}
+                          width={mobileDims?.width}
+                          height={mobileDims?.height}
+                          class="typeface-list__specimen-img block md:hidden w-full h-auto"
+                          data-media-placeholder
+                          loading={i < 2 ? 'eager' : 'lazy'}
+                          decoding="async"
+                        />
+                      </>
+                    ) : (
+                      <img
+                        src={specimen.url}
+                        alt={specimen.alt ?? typeface.name}
+                        width={dims?.width}
+                        height={dims?.height}
+                        class="typeface-list__specimen-img block w-full h-auto"
+                        data-media-placeholder
+                        loading={i < 2 ? 'eager' : 'lazy'}
+                        decoding="async"
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <MediaPlaceholder
+                    label={`${typeface.name} specimen unavailable`}
+                    class="typeface-list__specimen-placeholder"
+                  />
+                )}
+              </div>
 
-                <div class="col-span-12 md:col-span-1 md:col-start-12 md:justify-self-end text-base whitespace-nowrap">
-                  Buy →
-                </div>
+              <div class="hidden md:block col-span-12 md:col-span-1 md:col-start-12 md:justify-self-end text-base whitespace-nowrap">
+                Buy →
               </div>
             </div>
           </a>
         </li>
       );
-    })}
-  </ul>
+      })}
+    </ul>
 </section>
 
 <style>
-  .typeface-list__row {
-    isolation: isolate;
+  .typeface-list__link {
     color: inherit;
     text-decoration: none;
-  }
-
-  .typeface-list__hover-bg {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    width: 100vw;
-    transform: translateX(-50%);
-    pointer-events: none;
-    z-index: 0;
-    background: var(--site-yellow);
-    opacity: 0;
-    transition: opacity 0.2s ease;
-  }
-
-  .typeface-list__row:hover .typeface-list__hover-bg,
-  .typeface-list__row:focus-visible .typeface-list__hover-bg {
-    opacity: 1;
-  }
-
-  html.site-bg-yellow .typeface-list__hover-bg,
-  html.site-bg-alt .typeface-list__hover-bg {
-    background: var(--site-yellow-hover);
-  }
-
-  /* Hide divider lines on hover so yellow fill reads as one clean block */
-  .typeface-list__row:hover .typeface-list__grid,
-  .typeface-list__row:focus-visible .typeface-list__grid {
-    border-top-color: transparent;
-    border-bottom-color: transparent;
-  }
-
-  li:has(+ li .typeface-list__row:hover) .typeface-list__grid,
-  li:has(+ li .typeface-list__row:focus-visible) .typeface-list__grid {
-    border-bottom-color: transparent;
   }
 
   .typeface-list__grid {
@@ -170,10 +130,26 @@ const { typefaces } = Astro.props;
     padding-bottom: 32px;
   }
 
+  .typeface-list__grid--first {
+    padding-top: 1rem;
+  }
+
+  .typeface-list__grid--last {
+    padding-bottom: 1.5rem;
+  }
+
   @media (min-width: 768px) {
     .typeface-list__grid {
       padding-top: var(--specimen-padding-top, 32px);
       padding-bottom: var(--specimen-padding-bottom, 32px);
+    }
+
+    .typeface-list__grid--first {
+      padding-top: 2rem;
+    }
+
+    .typeface-list__grid--last {
+      padding-bottom: 3rem;
     }
   }
 
@@ -186,27 +162,9 @@ const { typefaces } = Astro.props;
     width: 100%;
     max-width: 100%;
     height: auto;
-    transition: filter 0.2s ease;
   }
 
-  /* Dark background: invert black specimen SVGs to white */
   html.site-bg-dark .typeface-list__specimen-img {
     filter: brightness(0) invert(1);
-  }
-
-  /* Yellow hover: black text and original specimen color */
-  html.site-bg-dark .typeface-list__row.text-black:hover,
-  html.site-bg-dark .typeface-list__row.text-black:focus-visible {
-    color: #000000;
-  }
-
-  html.site-bg-dark .typeface-list__row:hover .typeface-list__dot,
-  html.site-bg-dark .typeface-list__row:focus-visible .typeface-list__dot {
-    background-color: #000000;
-  }
-
-  html.site-bg-dark .typeface-list__row:hover .typeface-list__specimen-img,
-  html.site-bg-dark .typeface-list__row:focus-visible .typeface-list__specimen-img {
-    filter: none;
   }
 </style>

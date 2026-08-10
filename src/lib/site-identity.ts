@@ -16,11 +16,10 @@ export type SiteIdentity = {
 };
 
 const DEFAULTS: SiteIdentity = {
-  siteName: 'Haus Type®',
-  titleSuffix: ' | Haus Type®',
-  defaultDescription:
-    'Haus Type is a type foundry creating versatile Latin type for text and display. Retail and custom typefaces for global businesses.',
-  homeTitle: 'Haus Type | Type Foundry',
+  siteName: '',
+  titleSuffix: '',
+  defaultDescription: '',
+  homeTitle: '',
   homeDescription: '',
   faviconUrl: null,
   appleTouchIconUrl: null,
@@ -103,7 +102,7 @@ export async function loadSiteSettings() {
     defaultDescription: trim(identity?.defaultDescription) || DEFAULTS.defaultDescription,
     homeTitle: trim(identity?.homeTitle) || DEFAULTS.homeTitle,
     homeDescription: trim(identity?.homeDescription),
-    faviconUrl: identity?.faviconUrl ?? imageUrl(identity?.favicon as unknown) ?? '/haus-mark.svg',
+    faviconUrl: identity?.faviconUrl ?? imageUrl(identity?.favicon as unknown),
     appleTouchIconUrl:
       identity?.appleTouchIconUrl ?? imageUrl(identity?.appleTouchIcon as unknown, 180),
     defaultShareImageUrl: shareImage,

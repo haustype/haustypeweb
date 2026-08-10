@@ -11,6 +11,7 @@ import react from '@astrojs/react';
 export default defineConfig({
   site: 'https://haustypeweb.netlify.app',
   server: { port: 4321 },
+  devToolbar: { enabled: false },
   integrations: [
     tailwind(),
     sitemap(),

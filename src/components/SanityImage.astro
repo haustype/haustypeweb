@@ -1,5 +1,6 @@
 ---
 import { urlForImage } from '../sanity/lib/url-for-image';
+import { boxPaddingStyle, resolveContentImagePadding } from '../lib/box-padding';
 import {
   aspectClass,
   hotspotObjectPosition,
@@ -7,6 +8,7 @@ import {
   parseAspectRatio,
   type SanityImageValue,
 } from '../lib/sanity-image';
+import { fetchSvgMarkup, isSvgImage } from '../lib/sanity-svg';
 
 interface Props {
   image?: SanityImageValue | null;
@@ -23,48 +25,104 @@ const aspectRatio = image?.aspectRatio ?? 'auto';
 const fit = image?.fit === 'cover' ? 'cover' : 'contain';
 const aspect = aspectClass(aspectRatio);
 const spanClass = imageColumnSpanClass(image?.columnSpan);
+const roundedCorners = image?.roundedCorners !== false;
+const followSiteColor = image?.followSiteColor === true && isSvgImage(image);
 const constrained = Boolean(aspect);
 const ratio = parseAspectRatio(aspectRatio);
+const padding = resolveContentImagePadding(image?.padding);
+const paddingStyle = padding ? `padding: ${boxPaddingStyle(padding)};` : undefined;
 
 let url = '';
 let objectPosition: string | undefined;
+let inlineSvgMarkup = '';
 
 if (hasImage && image) {
-  let builder = urlForImage(image).auto('format');
-  if (fit === 'cover' && ratio) {
-    const height = Math.round(width / ratio);
-    builder = builder.width(width).height(height).fit('crop');
-  } else {
-    builder = builder.width(width);
+  if (followSiteColor) {
+    inlineSvgMarkup = await fetchSvgMarkup(image);
   }
-  url = builder.url();
-  objectPosition = fit === 'cover' ? hotspotObjectPosition(image.hotspot) : undefined;
+
+  if (!inlineSvgMarkup) {
+    let builder = urlForImage(image).auto('format');
+    if (fit === 'cover' && ratio) {
+      const height = Math.round(width / ratio);
+      builder = builder.width(width).height(height).fit('crop');
+    } else {
+      builder = builder.width(width);
+    }
+    url = builder.url();
+    objectPosition = fit === 'cover' ? hotspotObjectPosition(image.hotspot) : undefined;
+  }
 }
 ---
 
-{hasImage && (
+{hasImage && (inlineSvgMarkup || url) && (
 <figure
   class:list={[
     'sanity-image m-0 w-full',
     spanClass,
+    !roundedCorners && 'sanity-image--no-radius',
+    followSiteColor && inlineSvgMarkup && 'sanity-image--follow-site-color',
     constrained && aspect,
     constrained && fit === 'contain' && 'flex items-center justify-center',
     className,
   ]}
+  style={paddingStyle}
 >
-  <img
-    src={url}
-    alt={alt}
-    class:list={[
-      constrained && fit === 'contain'
-        ? 'max-w-full max-h-full w-auto h-auto object-contain'
-        : constrained && fit === 'cover'
-          ? 'block w-full h-full object-cover'
-          : 'block max-w-full h-auto',
-    ]}
-    style={objectPosition ? `object-position: ${objectPosition}` : undefined}
-    loading={eager ? 'eager' : 'lazy'}
-    decoding="async"
-  />
+  {inlineSvgMarkup ? (
+    <div class="sanity-image__svg" aria-hidden={alt ? undefined : true} set:html={inlineSvgMarkup} />
+  ) : (
+    <img
+      src={url}
+      alt={alt}
+      class:list={[
+        constrained && fit === 'contain'
+          ? 'max-w-full max-h-full w-auto h-auto object-contain'
+          : constrained && fit === 'cover'
+            ? 'block w-full h-full object-cover'
+            : 'block max-w-full h-auto',
+      ]}
+      style={objectPosition ? `object-position: ${objectPosition}` : undefined}
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+    />
+  )}
+  {inlineSvgMarkup && alt && <span class="sr-only">{alt}</span>}
 </figure>
 )}
+
+<style>
+  .sanity-image--follow-site-color {
+    color: var(--site-fg);
+  }
+
+  .sanity-image--follow-site-color .sanity-image__svg :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+    color: inherit;
+  }
+
+  .sanity-image--follow-site-color .sanity-image__svg :global(path),
+  .sanity-image--follow-site-color .sanity-image__svg :global(polygon),
+  .sanity-image--follow-site-color .sanity-image__svg :global(circle),
+  .sanity-image--follow-site-color .sanity-image__svg :global(rect),
+  .sanity-image--follow-site-color .sanity-image__svg :global(text) {
+    fill: currentColor;
+  }
+
+  .sanity-image--follow-site-color .sanity-image__svg :global([fill='none']) {
+    fill: none;
+  }
+
+  .sanity-image--follow-site-color .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>

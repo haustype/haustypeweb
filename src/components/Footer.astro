@@ -10,11 +10,18 @@ const footerLinkProjection = `{
     "external": false
   },
   _type == "builtInPage" => {
-    "href": "/" + route,
+    "href": select(
+      route == "blog" => "/blog",
+      route == "typefaces" => "/typefaces",
+      route == "in-use" => "/fonts-in-use",
+      route == "fonts-in-use" => "/fonts-in-use",
+      "/" + route
+    ),
     "label": select(
       route == "blog" => "Blog",
       route == "typefaces" => "Typefaces",
       route == "in-use" => "In Use",
+      route == "fonts-in-use" => "In Use",
       route
     ),
     "external": false
@@ -87,11 +94,18 @@ const { data: siteSettings } = await safeLoadQuery<{
         "external": false
       },
       _type == "builtInPage" => {
-        "href": "/" + route,
+        "href": select(
+          route == "blog" => "/blog",
+          route == "typefaces" => "/typefaces",
+          route == "in-use" => "/fonts-in-use",
+          route == "fonts-in-use" => "/fonts-in-use",
+          "/" + route
+        ),
         "label": select(
           route == "blog" => "Blog",
           route == "typefaces" => "Typefaces",
           route == "in-use" => "In Use",
+          route == "fonts-in-use" => "In Use",
           route
         ),
         "external": false
@@ -136,25 +150,18 @@ const footerLinks =
       ? mapNavItems(legacyFooterSettings?.links)
       : legacyFooterLinks.length > 0
         ? legacyFooterLinks
-        : legacyNavLinks.length > 0
-          ? legacyNavLinks
-          : [
-              { label: 'In Use', href: '/in-use', external: false },
-              { label: 'Projects', href: '/projects', external: false },
-              { label: 'Information', href: '/information', external: false },
-              { label: 'Blog', href: '/blog', external: false },
-            ];
+        : legacyNavLinks;
 
 const instagramUrl =
   footerContactSettings?.instagramUrl?.trim() ||
   legacyFooterSettings?.instagramUrl?.trim() ||
   siteSettings?.instagramUrl?.trim() ||
-  'https://www.instagram.com/haustype/';
+  '';
 const contactEmail =
   footerContactSettings?.contactEmail?.trim() ||
   legacyFooterSettings?.contactEmail?.trim() ||
   siteSettings?.contactEmail?.trim() ||
-  'hello@haustype.com';
+  '';
 
 const extraContactLinks =
   mapNavItems(footerContactSettings?.contactLinks).length > 0
@@ -162,27 +169,31 @@ const extraContactLinks =
     : mapNavItems(legacyFooterSettings?.contactLinks);
 
 const contactLinks = [
-  { label: 'Instagram', href: instagramUrl, external: true },
-  { label: contactEmail, href: `mailto:${contactEmail}`, external: false },
+  ...(instagramUrl
+    ? [{ label: 'Instagram', href: instagramUrl, external: true }]
+    : []),
+  ...(contactEmail
+    ? [{ label: contactEmail, href: `mailto:${contactEmail}`, external: false }]
+    : []),
   ...extraContactLinks,
 ];
 ---
 
-<footer class="site-footer text-white" data-reveal="fade">
-  <div class="site-grid site-footer__grid pt-[64px] pb-[160px]">
+<footer class="site-footer text-white">
+  <div class="site-grid site-footer__grid">
     <a
       href="/"
-      class="site-footer__brand-mark col-span-12 md:col-span-3 md:col-start-1 md:row-start-1 self-end justify-self-start text-white hover:text-haus-yellow"
+      class="site-footer__brand-mark col-span-12 md:col-span-3 md:col-start-1 md:row-start-1 justify-self-start text-white hover:text-haus-yellow"
       aria-label="Haus Type home"
     >
       <HausMark class="text-inherit" />
     </a>
 
     <div class="site-footer__column col-span-12 md:col-span-4 md:col-start-4 md:row-start-1 md:row-span-2">
-      <p class="site-footer__heading m-0 md:self-end">
+      <p class="site-footer__heading m-0">
         Typefaces
       </p>
-      <div class="site-footer__column-body mt-4 md:mt-0">
+      <div class="site-footer__column-body mt-8 md:mt-0">
         <div class="grid grid-cols-2 gap-x-6">
           <ul class="site-footer__list list-none m-0 p-0 flex flex-col">
             {typefacesLeft.map((typeface) => (
@@ -213,10 +224,10 @@ const contactLinks = [
     </div>
 
     <div class="site-footer__column col-span-12 md:col-span-2 md:col-start-8 md:row-start-1 md:row-span-2">
-      <p class="site-footer__heading m-0 md:self-end">
+      <p class="site-footer__heading m-0">
         Links
       </p>
-      <ul class="site-footer__column-body site-footer__list mt-4 md:mt-0 list-none m-0 p-0 flex flex-col">
+      <ul class="site-footer__column-body site-footer__list mt-8 md:mt-0 list-none m-0 p-0 flex flex-col">
         {footerLinks.map((link) => (
           <li>
             <a
@@ -234,10 +245,10 @@ const contactLinks = [
     </div>
 
     <div class="site-footer__column col-span-12 md:col-span-2 md:col-start-10 md:row-start-1 md:row-span-2">
-      <p class="site-footer__heading m-0 md:self-end">
+      <p class="site-footer__heading m-0">
         Contact
       </p>
-      <ul class="site-footer__column-body site-footer__list mt-4 md:mt-0 list-none m-0 p-0 flex flex-col">
+      <ul class="site-footer__column-body site-footer__list mt-8 md:mt-0 list-none m-0 p-0 flex flex-col">
         {contactLinks.map((link) => (
           <li>
             <a
@@ -267,7 +278,7 @@ const contactLinks = [
 
   @media (min-width: 768px) {
     .site-footer__grid {
-      grid-template-rows: auto auto;
+      grid-template-rows: min-content auto;
       row-gap: 0;
     }
 
@@ -275,7 +286,7 @@ const contactLinks = [
       display: grid;
       grid-row: span 2;
       grid-template-rows: subgrid;
-      row-gap: 1rem;
+      row-gap: 2rem;
     }
 
     .site-footer__column-body {
@@ -284,11 +295,15 @@ const contactLinks = [
   }
 
   .site-footer__brand-mark {
-    display: block;
+    display: flex;
+    align-items: center;
+    align-self: start;
     line-height: 0;
+    transform: translateY(-4px);
   }
 
   .site-footer__heading {
+    align-self: start;
     transform: translateY(2px);
     font-weight: 400;
     line-height: 1;
@@ -302,6 +317,6 @@ const contactLinks = [
   }
 
   .site-footer__link:hover {
-    opacity: 0.8;
+    opacity: 1;
   }
 </style>

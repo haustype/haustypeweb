@@ -1,0 +1,19 @@
+---
+interface Props {
+  html: string;
+}
+
+const { html } = Astro.props;
+const trimmed = html?.trim() ?? '';
+---
+
+{
+  trimmed && (
+    <div class="site-grid page-custom-embed page-custom-embed--form">
+      <div
+        class="page-custom-embed__inner col-span-12 md:col-span-5 md:col-start-4"
+        set:html={trimmed}
+      />
+    </div>
+  )
+}

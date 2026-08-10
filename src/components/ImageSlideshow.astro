@@ -18,7 +18,7 @@ interface Props {
 }
 
 const { items, stageClass = '', objectFit = 'contain', hoverOnly = false } = Astro.props;
-const slides = items.length ? items : [{ type: 'image' as const, src: '/hero-placeholder.jpg', alt: 'Image' }];
+const slides = items;
 const isSlideshow = slides.length > 1;
 const slideClass =
   objectFit === 'cover'
@@ -31,64 +31,68 @@ const defaultMediaClass =
 const mediaClass = Astro.props.mediaClass ?? defaultMediaClass;
 ---
 
-<style>
-  [data-slideshow] .slideshow__slide {
-    pointer-events: none;
-  }
+{slides.length > 0 && (
+  <>
+    <style>
+      [data-slideshow] .slideshow__slide {
+        pointer-events: none;
+      }
 
-  [data-slideshow] .slideshow__slide.is-active {
-    pointer-events: auto;
-  }
+      [data-slideshow] .slideshow__slide.is-active {
+        pointer-events: auto;
+      }
 
-  /* Transparent SVGs must not stack — only the active slide paints */
-  [data-slideshow] .slideshow__slide:not(.is-active) {
-    visibility: hidden;
-  }
+      /* Transparent SVGs must not stack — only the active slide paints */
+      [data-slideshow] .slideshow__slide:not(.is-active) {
+        visibility: hidden;
+      }
 
-  [data-slideshow] .slideshow__media {
-    will-change: opacity;
-    backface-visibility: hidden;
-    transform: translateZ(0);
-  }
-</style>
+      [data-slideshow] .slideshow__media {
+        will-change: opacity;
+        backface-visibility: hidden;
+        transform: translateZ(0);
+      }
+    </style>
 
-<div
-  class:list={['relative block min-h-0', stageClass]}
-  data-slideshow={isSlideshow ? '' : undefined}
-  data-slideshow-hover-only={hoverOnly && isSlideshow ? '' : undefined}
->
-  <div class="slideshow__stage relative w-full h-full">
-    {slides.map((item, i) => (
-      <div
-        class:list={[slideClass, isSlideshow && i === 0 && 'is-active']}
-        style={isSlideshow ? `z-index: ${i === 0 ? 1 : 0};` : undefined}
-        data-slide
-        data-index={i}
-      >
-        {item.type === 'video' ? (
-          <video
-            src={item.src}
-            autoplay
-            muted
-            loop
-            playsinline
-            class={mediaClass}
-            style={isSlideshow ? `opacity: ${i === 0 ? 1 : 0};` : undefined}
-          />
-        ) : (
-          <img
-            src={item.src}
-            alt={item.alt ?? ''}
-            width={item.width}
-            height={item.height}
-            class={mediaClass}
-            style={isSlideshow ? `opacity: ${i === 0 ? 1 : 0};` : undefined}
-            loading={isSlideshow ? 'eager' : 'lazy'}
-            decoding={isSlideshow ? 'sync' : 'async'}
-            fetchpriority={i === 0 ? 'high' : undefined}
-          />
-        )}
+    <div
+      class:list={['relative block min-h-0', stageClass]}
+      data-slideshow={isSlideshow ? '' : undefined}
+      data-slideshow-hover-only={hoverOnly && isSlideshow ? '' : undefined}
+    >
+      <div class="slideshow__stage relative w-full h-full">
+        {slides.map((item, i) => (
+          <div
+            class:list={[slideClass, isSlideshow && i === 0 && 'is-active']}
+            style={isSlideshow ? `z-index: ${i === 0 ? 1 : 0};` : undefined}
+            data-slide
+            data-index={i}
+          >
+            {item.type === 'video' ? (
+              <video
+                src={item.src}
+                autoplay
+                muted
+                loop
+                playsinline
+                class={mediaClass}
+                style={isSlideshow ? `opacity: ${i === 0 ? 1 : 0};` : undefined}
+              />
+            ) : (
+              <img
+                src={item.src}
+                alt={item.alt ?? ''}
+                width={item.width}
+                height={item.height}
+                class={mediaClass}
+                style={isSlideshow ? `opacity: ${i === 0 ? 1 : 0};` : undefined}
+                loading={isSlideshow ? 'eager' : 'lazy'}
+                decoding={isSlideshow ? 'sync' : 'async'}
+                fetchpriority={i === 0 ? 'high' : undefined}
+              />
+            )}
+          </div>
+        ))}
       </div>
-    ))}
-  </div>
-</div>
+    </div>
+  </>
+)}

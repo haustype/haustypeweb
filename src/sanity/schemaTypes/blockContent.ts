@@ -73,6 +73,20 @@ export const blockContentType = defineType({
                     return true;
                   }),
               },
+              {
+                title: 'Open in',
+                name: 'openInNewTab',
+                type: 'string',
+                options: {
+                  list: [
+                    { title: 'Same tab', value: 'same' },
+                    { title: 'New tab', value: 'new' },
+                  ],
+                  layout: 'radio',
+                },
+                initialValue: 'same',
+                hidden: ({ parent }) => parent?.linkType === 'email',
+              },
             ],
           },
         ],

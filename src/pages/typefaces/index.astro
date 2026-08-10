@@ -1,0 +1,83 @@
+---
+export const prerender = false;
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import TypefaceList from '../../components/TypefaceList.astro';
+import { safeLoadQuery } from '../../sanity/lib/safe-fetch';
+import { resolveVerticalPadding } from '../../lib/box-padding';
+import { typefaceSlug } from '../../lib/typeface';
+
+type TypefaceFromSanity = {
+  name: string;
+  slug?: { current: string };
+  collectionId?: string;
+  listPadding?: {
+    top?: number | null;
+    bottom?: number | null;
+  } | null;
+  specimen?: {
+    url?: string | null;
+    alt?: string | null;
+    listPadding?: {
+      top?: number | null;
+      bottom?: number | null;
+    } | null;
+  } | null;
+  specimenMobile?: { url?: string | null; alt?: string | null } | null;
+};
+
+const typefaceProjection = `{
+  orderRank,
+  name,
+  slug,
+  collectionId,
+  listPadding,
+  "specimen": coalesce(
+    specimen{
+      "url": asset->url,
+      "alt": alt,
+      listPadding
+    },
+    specimens[0]{
+      "url": asset->url,
+      "alt": alt
+    }
+  ),
+  "specimenMobile": specimenMobile{
+    "url": asset->url,
+    "alt": alt
+  }
+}`;
+
+const { data: typefacesData } = await safeLoadQuery<TypefaceFromSanity[]>({
+  query: `*[_type == "typeface"] | order(orderRank)${typefaceProjection}`,
+});
+
+const typefaces = (typefacesData ?? []).map((t) => {
+  const padding = resolveVerticalPadding(t.listPadding ?? t.specimen?.listPadding);
+
+  return {
+    name: t.name,
+    slug: typefaceSlug(t) ?? '',
+    collectionId: t.collectionId,
+    specimen: t.specimen?.url
+      ? { url: t.specimen.url, alt: t.specimen.alt ?? undefined }
+      : undefined,
+    specimenMobile: t.specimenMobile?.url
+      ? { url: t.specimenMobile.url, alt: t.specimenMobile.alt ?? undefined }
+      : undefined,
+    specimenPaddingTop: padding.top,
+    specimenPaddingBottom: padding.bottom,
+  };
+});
+---
+
+<BaseLayout title="Typefaces">
+  <Header />
+  <main class="bg-site flex-1">
+    <article class="site-page">
+      {typefaces.length > 0 && <TypefaceList typefaces={typefaces} />}
+    </article>
+  </main>
+</BaseLayout>

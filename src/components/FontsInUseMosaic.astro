@@ -1,5 +1,4 @@
 ---
-import MediaPlaceholder from './MediaPlaceholder.astro';
 import {
   inUseColSpan,
   inUseImageUrlWidth,
@@ -8,13 +7,19 @@ import {
 } from '../lib/fonts-in-use-mosaic';
 
 export interface FontsInUseMosaicItem {
+  mediaType?: 'image' | 'video';
   url: string;
   alt: string;
+  posterUrl?: string;
   caption?: string;
   width?: InUseImageWidth;
   typeface?: {
     name: string;
     slug: string;
+  };
+  designerLink?: {
+    label: string;
+    url: string;
   };
 }
 
@@ -22,69 +27,83 @@ interface Props {
   items?: FontsInUseMosaicItem[];
 }
 
-const PLACEHOLDER_COUNT = 8;
-const PLACEHOLDER_WIDTHS: InUseImageWidth[] = ['50', '25', '25', '25', '25', '50', '25', '25'];
-
 const { items: cmsItems = [] } = Astro.props;
-const items =
-  cmsItems.length > 0
-    ? cmsItems
-    : Array.from({ length: PLACEHOLDER_COUNT }, () => null);
+const items = cmsItems;
 ---
 
-<section class="fonts-in-use-mosaic bg-site w-full" data-reveal>
-  <div class="fonts-in-use-mosaic__grid">
-    {items.map((item, index) => {
-      const imageWidth = item?.width ?? PLACEHOLDER_WIDTHS[index % PLACEHOLDER_WIDTHS.length];
+{items.length > 0 && (
+<section class="fonts-in-use-mosaic bg-site w-full">
+  <div class="fonts-in-use-mosaic__grid" data-reveal-stagger="scroll">
+    {items.map((item) => {
+      const imageWidth = resolveInUseImageWidth(item.width);
       const colSpan = inUseColSpan(imageWidth);
       const urlWidth = inUseImageUrlWidth(imageWidth);
 
       return (
         <figure
-          class:list={[
-            'fonts-in-use-mosaic__tile',
-            colSpan === 6 && 'fonts-in-use-mosaic__tile--half',
-          ]}
+          class="fonts-in-use-mosaic__tile"
           style={`--in-use-col-span: ${colSpan}`}
+          data-reveal
         >
-          {item ? (
-            <>
-              <img
-                src={item.url}
-                alt={item.alt}
-                width={urlWidth}
-                class="fonts-in-use-mosaic__image w-full h-auto rounded-site"
-                data-media-placeholder
-                data-media-placeholder-class="media-placeholder rounded-site aspect-[4/5]"
-                loading="lazy"
-                decoding="async"
-              />
-              {(item.caption || item.typeface) && (
-                <figcaption class="fonts-in-use-mosaic__meta mt-2 flex flex-col gap-1">
-                  {item.caption && (
-                    <span class="fonts-in-use-mosaic__caption text-sm text-muted">
-                      {item.caption}
-                    </span>
-                  )}
-                  {item.typeface && (
-                    <a
-                      href={`/typefaces/${item.typeface.slug}`}
-                      class="fonts-in-use-mosaic__typeface text-sm text-site hover:opacity-80 transition-opacity"
-                    >
-                      {item.typeface.name} →
-                    </a>
-                  )}
-                </figcaption>
-              )}
-            </>
+          {item.mediaType === 'video' ? (
+            <video
+              src={item.url}
+              poster={item.posterUrl}
+              autoplay
+              muted
+              loop
+              playsinline
+              preload="metadata"
+              class="fonts-in-use-mosaic__image w-full h-auto rounded-site"
+              aria-label={item.alt}
+            />
           ) : (
-            <MediaPlaceholder label="Font in use" class="aspect-[4/5] rounded-site" />
+            <img
+              src={item.url}
+              alt={item.alt}
+              width={urlWidth}
+              class="fonts-in-use-mosaic__image w-full h-auto rounded-site"
+              data-media-placeholder
+              data-media-placeholder-class="media-placeholder rounded-site aspect-[4/5]"
+              loading="lazy"
+              decoding="async"
+            />
+          )}
+          {(item.caption || item.typeface || item.designerLink) && (
+            <figcaption class="fonts-in-use-mosaic__meta mt-2">
+              <div class="fonts-in-use-mosaic__meta-main flex flex-col gap-1 min-w-0">
+                {item.caption && (
+                  <span class="fonts-in-use-mosaic__caption text-sm text-muted">
+                    {item.caption}
+                  </span>
+                )}
+                {item.typeface && (
+                  <a
+                    href={`/typefaces/${item.typeface.slug}`}
+                    class="fonts-in-use-mosaic__typeface text-sm text-site hover:opacity-80 transition-opacity"
+                  >
+                    {item.typeface.name} →
+                  </a>
+                )}
+              </div>
+              {item.designerLink && (
+                <a
+                  href={item.designerLink.url}
+                  class="fonts-in-use-mosaic__designer-link text-sm no-underline shrink-0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {item.designerLink.label} ↗
+                </a>
+              )}
+            </figcaption>
           )}
         </figure>
       );
     })}
   </div>
 </section>
+)}
 
 <style>
   .fonts-in-use-mosaic__grid {
@@ -102,40 +121,77 @@ const items =
     margin: 0;
     min-width: 0;
     grid-column: span var(--in-use-col-span, 3);
+    position: relative;
+  }
+
+  .fonts-in-use-mosaic__meta {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    position: relative;
+  }
+
+  .fonts-in-use-mosaic__typeface {
+    text-decoration: none;
+  }
+
+  .fonts-in-use-mosaic__designer-link {
+    color: var(--site-fg-muted);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .fonts-in-use-mosaic__designer-link:hover,
+  .fonts-in-use-mosaic__designer-link:focus-visible {
+    color: var(--site-fg-muted);
+  }
+
+  .fonts-in-use-mosaic__tile:hover .fonts-in-use-mosaic__designer-link,
+  .fonts-in-use-mosaic__tile:focus-within .fonts-in-use-mosaic__designer-link {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @media (hover: none) {
+    .fonts-in-use-mosaic__designer-link {
+      opacity: 1;
+      pointer-events: auto;
+    }
   }
 
   .fonts-in-use-mosaic__image {
     display: block;
     vertical-align: top;
+    border-radius: var(--site-image-radius);
   }
 
-  @media (max-width: 768px) {
-    .fonts-in-use-mosaic__grid {
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-      padding-inline: 1.5rem;
-    }
-
-    .fonts-in-use-mosaic__tile {
-      grid-column: span 3;
-    }
-
-    .fonts-in-use-mosaic__tile--half {
-      grid-column: span 6;
-    }
+  .fonts-in-use-mosaic__image:not(img) {
+    max-width: 100%;
+    height: auto;
   }
 
-  @media (max-width: 480px) {
+  @media (min-width: 769px) and (max-width: 1024px) {
     .fonts-in-use-mosaic__grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.75rem;
+      padding-inline: 1.5rem;
     }
 
     .fonts-in-use-mosaic__tile {
       grid-column: span 1;
     }
+  }
 
-    .fonts-in-use-mosaic__tile--half {
-      grid-column: span 2;
+  @media (max-width: 768px) {
+    .fonts-in-use-mosaic__grid {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+      padding-inline: 1.5rem;
+      gap: 0.75rem;
+    }
+
+    .fonts-in-use-mosaic__tile {
+      grid-column: 1 / -1;
     }
   }
 </style>

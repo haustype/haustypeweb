@@ -15,13 +15,18 @@ const visible = segments.filter(isContentSegmentVisible);
 ---
 
 {visible.length > 0 && (
-  <div class:list={['content-segments w-full max-w-content mx-auto px-8', className ?? 'mb-16']} data-reveal>
-    {visible.map((segment, i) => (
-      <ContentSegmentRow
-        segment={segment}
-        headingLevel={i === 0 ? 'h1' : 'h2'}
-        borderBottom={i < visible.length - 1}
-      />
-    ))}
+  <div class:list={['content-segments w-full max-w-content mx-auto px-8', className ?? 'site-content-trail']} data-reveal>
+    {visible.map((segment, i) => {
+      const isLast = i === visible.length - 1;
+      const isLastOnMobile = visible.slice(i + 1).every((entry) => entry.hideOnMobile);
+      return (
+        <ContentSegmentRow
+          segment={segment}
+          headingLevel={i === 0 ? 'h1' : 'h2'}
+          borderBottom={!isLast}
+          borderBottomMobile={!isLastOnMobile}
+        />
+      );
+    })}
   </div>
 )}

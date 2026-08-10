@@ -1,4 +1,5 @@
 import { defineField } from 'sanity';
+import { contentImagePaddingField } from './boxPadding';
 
 export function imageDisplayFields(options?: {
   aspectDefault?: 'auto' | '2/1' | '4/3' | '16/9' | '4/5';
@@ -18,15 +19,36 @@ export function imageDisplayFields(options?: {
       type: 'string',
       title: 'Width on page',
       description:
-        'How many grid columns the image spans from column 4. Text stays 5 columns; images can extend to 6 or 9.',
+        'How many grid columns the image spans from column 4. Text stays 5 columns; images can extend to 6–9.',
       options: {
         list: [
           { title: '6 columns', value: '6' },
+          { title: '7 columns', value: '7' },
+          { title: '8 columns', value: '8' },
           { title: '9 columns (full bleed)', value: '9' },
         ],
         layout: 'radio',
       },
       initialValue: '6',
+    }),
+    contentImagePaddingField(
+      'Padding',
+      'Space around this image. Default is none — e.g. set top to 8px to nudge an SVG down.',
+    ),
+    defineField({
+      name: 'roundedCorners',
+      type: 'boolean',
+      title: 'Rounded corners',
+      description: 'Turn off for SVGs or images without a background.',
+      initialValue: true,
+    }),
+    defineField({
+      name: 'followSiteColor',
+      type: 'boolean',
+      title: 'Follow site text color',
+      description:
+        'For single-color SVG graphics. The artwork uses the site text color and updates when the background toggle changes.',
+      initialValue: false,
     }),
     defineField({
       name: 'aspectRatio',

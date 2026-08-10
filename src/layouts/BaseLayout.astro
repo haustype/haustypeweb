@@ -59,7 +59,8 @@ const gaId = siteIdentity.googleAnalyticsId;
 
 const isBlog =
   Astro.url.pathname === '/blog' || Astro.url.pathname.startsWith('/blog/');
-const screensaver = !isBlog ? await loadScreensaverOptions() : null;
+const is404Page = Astro.url.pathname === '/404';
+const screensaver = !isBlog && !is404Page ? await loadScreensaverOptions() : null;
 ---
 
 <!doctype html>
@@ -95,6 +96,7 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
     {shareImageUrl && <meta name="twitter:image" content={shareImageUrl} />}
     <link rel="preload" href="/fonts/Selandia-Regular.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="https://js.fontdue.com/fontdue.css" as="style" />
+    <link rel="modulepreload" href="https://js.fontdue.com/fontdue.esm.js" crossorigin />
     {shareImageUrl && <link rel="preload" as="image" href={shareImageUrl} />}
     {preloadImages.map((src) => (
       <link rel="preload" as="image" href={new URL(src, Astro.url).href} />
@@ -135,61 +137,20 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
         }
       } catch (_) {}
       document.documentElement.classList.add('reveal-pending');
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      window.scrollTo(0, 0);
     </script>
     <style is:inline>
       html.reveal-pending [data-reveal]:not(.is-revealed):not(.reveal-no-animation) {
         opacity: 0;
-        transform: translateY(14px);
-      }
-      html.reveal-pending [data-reveal='fade']:not(.is-revealed):not(.reveal-no-animation),
-      html.reveal-pending [data-reveal].reveal-on-scroll:not(.is-revealed):not(.reveal-no-animation) {
-        transform: none;
       }
     </style>
     {customHeadEnd && <Fragment set:html={customHeadEnd} />}
   </head>
   <body>
     <fontdue-store-modal></fontdue-store-modal>
-    <script type="module">
-      import fontdue from 'https://js.fontdue.com/fontdue.esm.js';
-
-      fontdue.initialize({
-        url: 'https://store.haustype.com',
-        config: {
-          storeModal: {
-            indexLayout: 'styled-font-names',
-          },
-          form: {
-            checkboxStyle: 'cross',
-          },
-          typeTester: {
-            selectable: true,
-            textInput: true,
-            groupEdit: false,
-            initialMode: 'local',
-            shy: true,
-            autofitOnChange: true,
-            selectButton: true,
-            selectButtonLabel: 'Buy →',
-            selectButtonStyle: 'inline',
-            priceText: false,
-            alignmentButtons: false,
-            initialAlignment: 'left',
-            bulletStyle: 'round',
-            variableAxesPosition: 'features-panel',
-            openTypeFeatures: {
-              interactionStyle: 'panel',
-            },
-            columns: false,
-            size: {
-              min: 12,
-              max: 512,
-              label: false,
-            },
-          },
-        },
-      });
-    </script>
     {screensaver && (
       <Screensaver
         slides={screensaver.slides}
@@ -203,7 +164,17 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
     </div>
     <Footer />
     <SiteFloatingControls buyCollectionId={buyCollectionId} trialFontsHref={trialFontsHref} />
+    <script is:inline>
+      window.addEventListener('pageshow', function (e) {
+        try {
+          var nav = performance.getEntriesByType('navigation')[0];
+          if (e.persisted || (nav && nav.type === 'back_forward')) return;
+        } catch (_) {}
+        window.scrollTo(0, 0);
+      });
+    </script>
     <script>
+      import { initFontdueApp } from '../lib/fontdue-init';
       import { initAllSlideshows } from '../lib/slideshow';
       import { initCharacterViewerStyles } from '../lib/fontdue-character-viewer';
       import { initStoreModalStyles } from '../lib/fontdue-store-modal';
@@ -218,19 +189,117 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
         initTypeTesterStyles();
       }
 
+      void initFontdueApp();
       initPageWidgets();
     </script>
     <script>
       function initRevealAnimations() {
-        const els = Array.from(document.querySelectorAll('[data-reveal]'));
-        if (!els.length) {
+        const STAGGER_MS = 100;
+        const STAGGER_CAP = 560;
+        const scrollRevealScanners = [];
+        const SCROLL_OBSERVER = {
+          threshold: 0.18,
+          rootMargin: '0px 0px -12% 0px',
+        };
+        const ROW_TOP_TOLERANCE_PX = 6;
+
+        function getRowGroups(elements) {
+          if (!elements.length) return [];
+
+          const sorted = [...elements].sort(
+            (a, b) => a.offsetTop - b.offsetTop || a.offsetLeft - b.offsetLeft,
+          );
+          const rows = [];
+          let currentRow = [];
+          let rowTop = null;
+
+          for (const el of sorted) {
+            const top = el.offsetTop;
+            if (rowTop === null || Math.abs(top - rowTop) <= ROW_TOP_TOLERANCE_PX) {
+              currentRow.push(el);
+              rowTop = rowTop ?? top;
+            } else {
+              rows.push(currentRow);
+              currentRow = [el];
+              rowTop = top;
+            }
+          }
+
+          if (currentRow.length) rows.push(currentRow);
+
+          rows.forEach((row) => {
+            row.sort((a, b) => a.offsetLeft - b.offsetLeft);
+          });
+
+          return rows;
+        }
+
+        function revealRowGroupsStaggered(rows, revealItem) {
+          rows.forEach((row) => {
+            row.forEach((el, i) => revealItem(el, i));
+          });
+        }
+
+        const staggerGroups = Array.from(document.querySelectorAll('[data-reveal-stagger]'));
+        const groupedEls = new Set();
+        staggerGroups.forEach((group) => {
+          group.querySelectorAll('[data-reveal]').forEach((el) => groupedEls.add(el));
+        });
+
+        const els = Array.from(document.querySelectorAll('[data-reveal]')).filter(
+          (el) => !groupedEls.has(el),
+        );
+
+        if (!els.length && !staggerGroups.length) {
           document.documentElement.classList.remove('reveal-pending');
           return;
         }
 
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        function revealInstant(el) {
+          if (el.classList.contains('is-revealed')) return;
+          el.style.transitionDelay = '';
+          el.classList.add('reveal-no-animation', 'is-revealed');
+        }
+
+        function revealAnimated(el, delayIndex = 0) {
+          if (el.classList.contains('is-revealed')) return;
+          const delayMs = Math.min(delayIndex * STAGGER_MS, STAGGER_CAP);
+          el.style.transitionDelay = delayMs + 'ms';
+          el.classList.add('is-revealed');
+          el.addEventListener(
+            'transitionend',
+            () => {
+              el.style.transitionDelay = '';
+            },
+            { once: true },
+          );
+        }
+
+        function getRowRevealState(anchor) {
+          const rect = anchor.getBoundingClientRect();
+          const bandBottom = window.innerHeight * 0.88;
+          if (rect.bottom <= 0) return 'passed';
+          if (rect.top >= bandBottom) return 'below';
+          return 'visible';
+        }
+
+        function applyRevealDelay(el, delayIndex, cap = true) {
+          revealAnimated(el, cap ? delayIndex : Math.min(delayIndex, STAGGER_CAP / STAGGER_MS));
+        }
+
+        function revealStaggered(children, startIndex = 0) {
+          children.forEach((el, i) => {
+            applyRevealDelay(el, startIndex + i);
+          });
+        }
+
         if (reduce) {
           els.forEach((el) => el.classList.add('is-revealed'));
+          staggerGroups.forEach((group) => {
+            group.querySelectorAll('[data-reveal]').forEach((el) => el.classList.add('is-revealed'));
+          });
           document.documentElement.classList.remove('reveal-pending');
           return;
         }
@@ -261,7 +330,7 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
             return;
           }
           if (el.hasAttribute('data-reveal-once')) animatedOnce = true;
-          el.style.transitionDelay = Math.min(staggerIndex * 70, 560) + 'ms';
+          el.style.transitionDelay = Math.min(staggerIndex * STAGGER_MS, STAGGER_CAP) + 'ms';
           staggerIndex += 1;
           el.addEventListener(
             'transitionend',
@@ -284,6 +353,13 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
         );
 
         if (belowFold.length) {
+          function scanPassedRevealEls() {
+            belowFold.forEach((el) => {
+              if (el.classList.contains('is-revealed')) return;
+              if (el.getBoundingClientRect().bottom <= 0) revealInstant(el);
+            });
+          }
+
           const observer = new IntersectionObserver(
             (entries) => {
               entries.forEach((e) => {
@@ -293,12 +369,115 @@ const screensaver = !isBlog ? await loadScreensaverOptions() : null;
                 }
               });
             },
-            { threshold: 0.08, rootMargin: '0px 0px 0px 0px' }
+            SCROLL_OBSERVER,
           );
           belowFold.forEach((el) => {
             el.classList.add('reveal-on-scroll');
             observer.observe(el);
           });
+          scrollRevealScanners.push(scanPassedRevealEls);
+        }
+
+        staggerGroups.forEach((group) => {
+          const children = Array.from(group.querySelectorAll('[data-reveal]'));
+          if (!children.length) return;
+
+          const scrollMode = group.getAttribute('data-reveal-stagger') === 'scroll';
+          const inViewChildren = [];
+          const belowFoldChildren = [];
+
+          children.forEach((el) => {
+            if (el.getBoundingClientRect().top < vh * 0.95) {
+              inViewChildren.push(el);
+            } else {
+              belowFoldChildren.push(el);
+            }
+          });
+
+          if (scrollMode) {
+            const allRows = getRowGroups(children);
+
+            if (inViewChildren.length) {
+              requestAnimationFrame(() =>
+                requestAnimationFrame(() => {
+                  revealRowGroupsStaggered(getRowGroups(inViewChildren), (el, i) =>
+                    revealAnimated(el, i),
+                  );
+                }),
+              );
+            }
+
+            belowFoldChildren.forEach((el) => el.classList.add('reveal-on-scroll'));
+
+            function scanScrollRows(fast = false) {
+              for (const row of allRows) {
+                const anchor = row[0];
+                if (anchor.classList.contains('is-revealed')) continue;
+
+                const state = getRowRevealState(anchor);
+                if (state === 'below') continue;
+
+                if (state === 'passed' || fast) {
+                  row.forEach(revealInstant);
+                  continue;
+                }
+
+                row.forEach((el, i) => revealAnimated(el, i));
+              }
+            }
+
+            let lastScrollY = window.scrollY;
+            scrollRevealScanners.push(() => {
+              const dy = Math.abs(window.scrollY - lastScrollY);
+              lastScrollY = window.scrollY;
+              const fast = dy > window.innerHeight * 0.35;
+              scanScrollRows(fast);
+            });
+
+            requestAnimationFrame(() => scanScrollRows(false));
+            return;
+          }
+
+          if (inViewChildren.length) {
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => {
+                inViewChildren.forEach((el) => {
+                  applyRevealDelay(el, children.indexOf(el));
+                });
+              }),
+            );
+          }
+
+          if (!inViewChildren.length && belowFoldChildren.length) {
+            children.forEach((el) => el.classList.add('reveal-on-scroll'));
+            const groupObserver = new IntersectionObserver(
+              (entries) => {
+                if (entries.some((e) => e.isIntersecting)) {
+                  requestAnimationFrame(() =>
+                    requestAnimationFrame(() => revealStaggered(children)),
+                  );
+                  groupObserver.disconnect();
+                }
+              },
+              SCROLL_OBSERVER,
+            );
+            groupObserver.observe(group);
+          }
+        });
+
+        if (scrollRevealScanners.length) {
+          let scrollRaf = 0;
+          window.addEventListener(
+            'scroll',
+            () => {
+              if (scrollRaf) return;
+              scrollRaf = window.requestAnimationFrame(() => {
+                scrollRaf = 0;
+                scrollRevealScanners.forEach((scan) => scan());
+              });
+            },
+            { passive: true },
+          );
         }
 
         document.documentElement.classList.remove('reveal-pending');

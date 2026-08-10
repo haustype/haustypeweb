@@ -22,6 +22,14 @@ export const contentSegmentType = defineType({
       initialValue: 'split',
     }),
     defineField({
+      name: 'hideOnMobile',
+      type: 'boolean',
+      title: 'Hide on mobile',
+      description:
+        'Hide this entire segment when the layout is a single column (below 768px). Still shown on tablet and desktop.',
+      initialValue: false,
+    }),
+    defineField({
       name: 'heading',
       type: 'string',
       title: 'Heading',
@@ -31,7 +39,7 @@ export const contentSegmentType = defineType({
       name: 'media',
       type: 'image',
       title: 'Image',
-      description: 'Feature layout only. Spans columns 4–11 by default; choose 6 or 9 columns per image in the image settings.',
+      description: 'Feature layout only. Spans columns 4–11 by default; choose 6–9 columns per image in the image settings.',
       options: { hotspot: true },
       fields: imageDisplayFields({ aspectDefault: '2/1', fitDefault: 'contain' }),
       hidden: ({ parent }) => parent?.layout !== 'feature',
@@ -40,7 +48,7 @@ export const contentSegmentType = defineType({
       name: 'body',
       type: 'blockContent',
       title: 'Body',
-      description: 'Split: text in columns 4–8; images span 6 or 9 columns from column 4 (set per image). Feature: columns 4–8 below the image.',
+      description: 'Split: text in columns 4–8; images span 6–9 columns from column 4 (set per image). Feature: columns 4–8 below the image.',
     }),
     defineField({
       name: 'aside',
@@ -51,10 +59,14 @@ export const contentSegmentType = defineType({
     }),
   ],
   preview: {
-    select: { title: 'heading', layout: 'layout' },
-    prepare: ({ title, layout }) => ({
-      title: title || 'Content segment',
-      subtitle: layout === 'feature' ? 'Feature layout' : 'Split layout',
-    }),
+    select: { title: 'heading', layout: 'layout', hideOnMobile: 'hideOnMobile' },
+    prepare: ({ title, layout, hideOnMobile }) => {
+      const parts = [layout === 'feature' ? 'Feature layout' : 'Split layout'];
+      if (hideOnMobile) parts.push('Hidden on mobile');
+      return {
+        title: title || 'Content segment',
+        subtitle: parts.join(' · '),
+      };
+    },
   },
 });

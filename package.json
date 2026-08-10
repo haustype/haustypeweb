@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "postinstall": "node scripts/patch-sanity-sidebar-min-width.mjs",
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
@@ -14,7 +15,9 @@
     "migrate:footer": "node scripts/migrate-footer-from-siteSettings.mjs",
     "migrate:screensaver": "node scripts/migrate-screensaver-to-siteSettings.mjs",
     "migrate:card-images": "sanity exec scripts/migrate-card-images.mjs --with-user-token",
-    "ensure:typeface-drafts": "sanity exec scripts/ensure-typeface-drafts.mjs --with-user-token"
+    "ensure:typeface-drafts": "sanity exec scripts/ensure-typeface-drafts.mjs --with-user-token",
+    "migrate:gallery-layout": "sanity exec scripts/set-gallery-page-layout.mjs --with-user-token",
+    "populate:orders-illustration": "sanity exec scripts/populate-orders-illustration.mjs --with-user-token"
   },
   "dependencies": {
     "@astrojs/netlify": "^6.6.5",

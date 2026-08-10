@@ -1,0 +1,331 @@
+---
+import {
+  inUseColSpan,
+  resolveInUseImageWidth,
+} from '../lib/fonts-in-use-mosaic';
+import type { HomeMosaicTile } from '../lib/homepage-grid';
+
+interface Props {
+  tiles?: HomeMosaicTile[];
+}
+
+const { tiles = [] } = Astro.props;
+---
+
+{tiles.length > 0 && (
+  <section class="home-mosaic bg-site w-full pb-6 md:pb-12">
+    <div class="home-mosaic__grid pt-4 md:pt-8">
+      {tiles.map((tile) => {
+        const width = resolveInUseImageWidth(tile.width);
+        const colSpan = inUseColSpan(width);
+
+        if (tile.kind === 'about') {
+          return (
+            <div
+              class:list={[
+                'home-mosaic__tile home-mosaic__tile--about',
+                colSpan === 6 && 'home-mosaic__tile--half',
+              ]}
+              style={`--home-col-span: ${colSpan}`}
+              data-reveal
+            >
+              <div class="home-mosaic__about-box" style={`padding: ${tile.paddingStyle}`}>
+                <h1 class="home-mosaic__about-text">{tile.text}</h1>
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <figure
+            class:list={[
+              'home-mosaic__tile home-mosaic__tile--image',
+              colSpan === 6 && 'home-mosaic__tile--half',
+            ]}
+            style={`--home-col-span: ${colSpan}`}
+          >
+            <div class="home-mosaic__tile-inner" data-reveal>
+              <a
+                href={`/typefaces/${tile.typeface.slug}`}
+                class="home-mosaic__image-link block text-inherit no-underline"
+                aria-label={`View ${tile.typeface.name}`}
+              >
+                <div class="home-mosaic__image-box" style={`padding: ${tile.paddingStyle}`}>
+                  <img
+                    src={tile.url}
+                    alt={tile.alt}
+                    class="home-mosaic__image w-full h-auto"
+                    data-media-placeholder
+                    data-media-placeholder-class="media-placeholder aspect-[4/5]"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+              </a>
+              <figcaption class="home-mosaic__meta mt-2 flex flex-col gap-1">
+                <a
+                  href={`/typefaces/${tile.typeface.slug}`}
+                  class="home-mosaic__typeface text-sm text-site hover:opacity-80 transition-opacity"
+                >
+                  {tile.typeface.name} →
+                </a>
+              </figcaption>
+            </div>
+          </figure>
+        );
+      })}
+    </div>
+  </section>
+)}
+
+<style>
+  .home-mosaic__grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    align-items: start;
+    gap: 1rem;
+    width: 100%;
+    max-width: 1512px;
+    margin-inline: auto;
+    padding-inline: 2rem;
+  }
+
+  .home-mosaic__tile {
+    margin: 0;
+    min-width: 0;
+    grid-column: span var(--home-col-span, 3);
+  }
+
+  .home-mosaic__about-box {
+    border-radius: var(--site-image-radius);
+    overflow: hidden;
+    background-color: var(--site-yellow);
+    color: #000000;
+    min-height: 100%;
+    display: flex;
+    align-items: flex-start;
+    transition: background-color 0.25s ease;
+  }
+
+  :global(html.site-bg-yellow) .home-mosaic__about-box,
+  :global(html.site-bg-alt) .home-mosaic__about-box {
+    background-color: #ffffff;
+  }
+
+  /* Card hover shadow — ambient halo (wraps full card).
+     Revert option: ground ellipse — see comment block at end of this file section. */
+
+  .home-mosaic__image-link {
+    position: relative;
+    isolation: isolate;
+    color: inherit;
+    border-radius: var(--site-image-radius);
+    --home-card-shadow-color: rgb(0 0 0 / 0.14);
+    transform: translateY(0);
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .home-mosaic__image-link::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: 0;
+    right: 0;
+    top: 22%;
+    bottom: -20px;
+    border-radius: inherit;
+    background: var(--home-card-shadow-color);
+    filter: blur(32px);
+    opacity: 0;
+    transform-origin: 50% 85%;
+    transform: scale(0.96) translateY(4px) translateZ(0);
+    transition:
+      opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+
+  :global(html.site-bg-yellow) .home-mosaic__image-link,
+  :global(html.site-bg-alt) .home-mosaic__image-link {
+    --home-card-shadow-color: rgb(105 68 0 / 0.28);
+  }
+
+  .home-mosaic__tile--image:hover .home-mosaic__image-link,
+  .home-mosaic__tile--image.is-pointer-hover .home-mosaic__image-link {
+    transform: translateY(-2px);
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .home-mosaic__tile--image:hover .home-mosaic__image-link::after,
+  .home-mosaic__tile--image.is-pointer-hover .home-mosaic__image-link::after {
+    opacity: 1;
+    transform: scale(1.04) translateY(12px) translateZ(0);
+    transition:
+      opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /*
+    Ground shadow revert (bottom-center ellipse):
+    .home-mosaic__image-link { --home-card-shadow-color: rgb(0 0 0 / 0.18); }
+    .home-mosaic__image-link::after {
+      inset: auto;
+      left: 8%; right: 8%; top: 62%; bottom: -28px;
+      border-radius: 50%;
+      filter: blur(36px);
+      transform: translateZ(0);
+      transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    :global(html.site-bg-yellow) .home-mosaic__image-link,
+    :global(html.site-bg-alt) .home-mosaic__image-link {
+      --home-card-shadow-color: rgb(105 68 0 / 0.34);
+    }
+    :hover ::after { opacity: 1; }  (no scale transform)
+  */
+
+  .home-mosaic__image-box {
+    background-color: #ffffff;
+    border-radius: var(--site-image-radius);
+    overflow: hidden;
+  }
+
+  .home-mosaic__image {
+    display: block;
+    vertical-align: top;
+    border-radius: 0;
+  }
+
+  .home-mosaic__about-text {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: var(--site-line-height);
+  }
+
+  .home-mosaic__typeface {
+    text-decoration: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .home-mosaic__image-link {
+      transition: none;
+    }
+
+    .home-mosaic__image-link::after {
+      transition: none;
+    }
+
+    .home-mosaic__tile--image:hover .home-mosaic__image-link,
+    .home-mosaic__tile--image.is-pointer-hover .home-mosaic__image-link {
+      transform: translateY(0);
+    }
+
+    .home-mosaic__tile--image:hover .home-mosaic__image-link::after,
+    .home-mosaic__tile--image.is-pointer-hover .home-mosaic__image-link::after {
+      opacity: 0;
+      transform: scale(0.96) translateY(4px) translateZ(0);
+    }
+  }
+
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .home-mosaic__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      padding-inline: 1.5rem;
+    }
+
+    .home-mosaic__tile {
+      grid-column: span 1;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .home-mosaic__grid {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+      padding-inline: 1.5rem;
+      gap: 0.75rem;
+    }
+
+    .home-mosaic__tile {
+      grid-column: 1 / -1;
+    }
+  }
+</style>
+
+<script>
+  function initHomeMosaicPointerHover() {
+    const mosaic = document.querySelector('.home-mosaic');
+    if (!mosaic || mosaic.dataset.pointerHoverReady === '1') return;
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+
+    mosaic.dataset.pointerHoverReady = '1';
+
+    const tileSelector = '.home-mosaic__tile--image';
+    let pointerX = -1;
+    let pointerY = -1;
+    let scrollRaf = 0;
+    let activeTile = null;
+
+    function clearHover() {
+      if (!activeTile) return;
+      activeTile.classList.remove('is-pointer-hover');
+      activeTile = null;
+    }
+
+    function setHover(tile) {
+      if (tile === activeTile) return;
+      clearHover();
+      if (!tile) return;
+      tile.classList.add('is-pointer-hover');
+      activeTile = tile;
+    }
+
+    function updateHoverFromPointer() {
+      if (pointerX < 0 || pointerY < 0) {
+        clearHover();
+        return;
+      }
+
+      const target = document.elementFromPoint(pointerX, pointerY);
+      if (!target || !mosaic.contains(target)) {
+        clearHover();
+        return;
+      }
+
+      setHover(target.closest(tileSelector));
+    }
+
+    mosaic.addEventListener(
+      'pointermove',
+      (event) => {
+        pointerX = event.clientX;
+        pointerY = event.clientY;
+        updateHoverFromPointer();
+      },
+      { passive: true },
+    );
+
+    mosaic.addEventListener('pointerleave', () => {
+      pointerX = -1;
+      pointerY = -1;
+      clearHover();
+    });
+
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (scrollRaf) return;
+        scrollRaf = window.requestAnimationFrame(() => {
+          scrollRaf = 0;
+          updateHoverFromPointer();
+        });
+      },
+      { passive: true },
+    );
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHomeMosaicPointerHover);
+  } else {
+    initHomeMosaicPointerHover();
+  }
+</script>

@@ -1,0 +1,25 @@
+---
+import markup from '../../public/images/page-went-poof.svg?raw';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<div class:list={['page-went-poof', className]} aria-hidden="true" set:html={markup} />
+
+<style>
+  .page-went-poof :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+    color: var(--site-fg);
+    border-radius: 0;
+  }
+
+  .page-went-poof :global(path) {
+    fill: currentColor;
+  }
+</style>

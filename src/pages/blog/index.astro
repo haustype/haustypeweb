@@ -5,13 +5,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import ContentSegmentRow from '../../components/ContentSegmentRow.astro';
 import { safeLoadQuery } from '../../sanity/lib/safe-fetch';
-import { getCollection } from 'astro:content';
 
 const { data: siteSettings } = await safeLoadQuery<{ blogPageTitle?: string | null } | null>({
   query: `*[_type == "siteSettings"][0]{ blogPageTitle }`,
 });
 
-const blogTitle = siteSettings?.blogPageTitle?.trim() || 'Blog';
+const blogTitle = siteSettings?.blogPageTitle?.trim() ?? '';
 
 const { data: sanityPosts } = await safeLoadQuery<Array<{
   title: string;
@@ -22,26 +21,22 @@ const { data: sanityPosts } = await safeLoadQuery<Array<{
   query: `*[_type == "post" && !draft] | order(publishedAt desc){ title, slug, publishedAt, description }`,
 });
 
-const posts = sanityPosts?.length
-  ? sanityPosts.map((p) => ({
-      slug: p.slug?.current ?? p.title.toLowerCase().replace(/\s+/g, '-'),
-      data: {
-        title: p.title,
-        description: p.description,
-        pubDate: p.publishedAt ? new Date(p.publishedAt) : new Date(),
-      },
-    }))
-  : (await getCollection('blog', ({ data }) => !data.draft))
-      .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-      .map((p) => ({ slug: p.slug, data: p.data }));
+const posts = (sanityPosts ?? []).map((p) => ({
+  slug: p.slug?.current ?? p.title.toLowerCase().replace(/\s+/g, '-'),
+  data: {
+    title: p.title,
+    description: p.description,
+    pubDate: p.publishedAt ? new Date(p.publishedAt) : new Date(),
+  },
+}));
 ---
 
 <BaseLayout title={blogTitle}>
   <Header />
   <main class="bg-site flex-1">
-    <article class="w-full pt-24 pb-20">
-      <div class="content-segments w-full max-w-content mx-auto px-8 mb-16" data-reveal>
-        <ContentSegmentRow segment={{ heading: blogTitle }} headingLevel="h1">
+    <article class="site-page">
+      <div class="content-segments w-full max-w-content mx-auto px-8 site-content-trail" data-reveal>
+        <ContentSegmentRow segment={blogTitle ? { heading: blogTitle } : {}} headingLevel="h1">
           <div slot="body" class="not-prose flex flex-col gap-8">
             {posts.map((post) => (
               <article>

@@ -1,6 +1,7 @@
 import { orderableDocumentListDeskItem } from '@sanity/orderable-document-list';
-import { defineConfig } from 'sanity';
+import { defineConfig, type NumberInputProps } from 'sanity';
 import { structureTool } from 'sanity/structure';
+import { ArrowStepNumberInput } from './src/sanity/components/ArrowStepNumberInput';
 import { schema } from './src/sanity/schemaTypes';
 import './src/sanity/studio.css';
 
@@ -64,4 +65,14 @@ export default defineConfig({
     }),
   ],
   schema,
+  form: {
+    components: {
+      input: (props) => {
+        if (props.schemaType.name === 'number') {
+          return ArrowStepNumberInput(props as NumberInputProps);
+        }
+        return props.renderDefault(props);
+      },
+    },
+  },
 });

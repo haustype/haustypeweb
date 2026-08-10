@@ -7,10 +7,18 @@ interface Props {
   segment: ContentSegment;
   headingLevel?: 'h1' | 'h2';
   borderBottom?: boolean;
+  /** When false, omit the bottom border below the md breakpoint (e.g. last mobile-visible segment). */
+  borderBottomMobile?: boolean;
   class?: string;
 }
 
-const { segment, headingLevel = 'h2', borderBottom = false, class: className } = Astro.props;
+const {
+  segment,
+  headingLevel = 'h2',
+  borderBottom = false,
+  borderBottomMobile = borderBottom,
+  class: className,
+} = Astro.props;
 const HeadingTag = headingLevel;
 const layout = segment.layout === 'feature' ? 'feature' : 'split';
 const hasBodySlot = Astro.slots.has('body');
@@ -20,8 +28,10 @@ const hasHeadingExtra = Astro.slots.has('heading-extra');
 
 <div
   class:list={[
-    'content-segment grid grid-cols-12 gap-4 items-start py-10',
-    borderBottom && 'border-b border-site',
+    'content-segment grid grid-cols-12 gap-4 items-start site-content-inset',
+    borderBottom && borderBottomMobile && 'border-b border-site',
+    borderBottom && !borderBottomMobile && 'md:border-b border-site',
+    segment.hideOnMobile && 'hidden md:grid',
     className,
   ]}
 >
@@ -78,27 +88,28 @@ const hasHeadingExtra = Astro.slots.has('heading-extra');
   .content-segment__aside {
     font-size: 12px;
     line-height: var(--site-line-height);
-    color: rgb(0 0 0 / 0.45);
+    color: var(--site-fg-muted);
     padding-top: 4px;
   }
 
-  .content-segment__aside :where(p, li, blockquote) {
+  .content-segment__aside :global(:where(p, li, blockquote)) {
     margin: 0;
     line-height: var(--site-line-height);
     color: inherit;
   }
 
-  .content-segment__aside :where(p + p) {
+  .content-segment__aside :global(:where(p + p)) {
     margin-top: 0.75em;
   }
 
-  .content-segment__aside :where(a) {
-    color: var(--site-fg-muted);
+  .content-segment__aside :global(:where(a)) {
+    color: var(--site-fg);
+    opacity: 0.45;
     text-decoration: none;
-    transition: color 0.25s ease;
+    transition: opacity 0.25s ease;
   }
 
-  .content-segment__aside :where(a:hover) {
-    color: var(--site-fg);
+  .content-segment__aside :global(:where(a:hover)) {
+    opacity: 1;
   }
 </style>

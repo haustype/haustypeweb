@@ -8,7 +8,7 @@ interface Props {
 }
 
 const { buyCollectionId, trialFontsHref } = Astro.props;
-const hideUntilScroll = Boolean(trialFontsHref);
+const hideUntilScroll = Boolean(trialFontsHref && buyCollectionId);
 ---
 
 <div
@@ -20,7 +20,7 @@ const hideUntilScroll = Boolean(trialFontsHref);
 >
   {trialFontsHref && (
     <a href={trialFontsHref} class="haus-buy-button haus-buy-button--floating">
-      Trial Fonts ↓
+      Trial fonts ↓
     </a>
   )}
   {buyCollectionId && (

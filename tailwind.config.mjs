@@ -22,7 +22,7 @@ export default {
         'content': '1512px',
       },
       borderRadius: {
-        site: '10px',
+        site: '5px',
       },
       fontSize: {
         base: ['1rem', { lineHeight: '1.6' }],

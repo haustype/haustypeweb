@@ -1,3 +1,9 @@
+/* Narrow left structure sidebars (Sanity defaults to 320px min) */
+[data-ui='ListPane'],
+[data-ui='DocumentListPane'] {
+  min-width: 240px !important;
+}
+
 /* Light preview behind SVG/image uploads so dark assets stay visible in dark Studio */
 .light-bg-image-input [data-ui='Card'] {
   background-color: var(--light-bg-image-preview, #eeeeee) !important;
@@ -6,4 +12,50 @@
 .light-bg-image-input img,
 .light-bg-image-input svg {
   background-color: var(--light-bg-image-preview, #eeeeee);
+}
+
+/* Homepage image tile preview — mirrors live white boxes on site */
+.homepage-image-preview__toolbar:not(.homepage-image-preview__toolbar--empty) [data-testid='image-input'] [data-ui='Card'] {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  width: auto !important;
+}
+
+.homepage-image-preview__toolbar:not(.homepage-image-preview__toolbar--empty) [data-testid='hotspot-image-container'],
+.homepage-image-preview__toolbar:not(.homepage-image-preview__toolbar--empty) [data-testid='image-input'] figure,
+.homepage-image-preview__toolbar:not(.homepage-image-preview__toolbar--empty) [data-testid='image-input'] img {
+  display: none !important;
+}
+
+.homepage-image-preview__toolbar:not(.homepage-image-preview__toolbar--empty) [data-testid='options-menu-edit-details'] {
+  display: none !important;
+}
+
+.homepage-image-preview__toolbar:not(.homepage-image-preview__toolbar--empty) [data-buttons] {
+  position: static !important;
+  padding: 0 !important;
+}
+
+.homepage-image-preview__toolbar--empty [data-ui='Card'] {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  min-height: 0 !important;
+}
+
+.homepage-image-preview__toolbar--empty [data-testid='hotspot-image-container'] {
+  display: none !important;
+}
+
+.homepage-image-preview__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  vertical-align: top;
+}
+
+.homepage-image-preview__empty {
+  min-height: 4rem;
 }

@@ -7,6 +7,7 @@ import ContentSegments from '../../components/ContentSegments.astro';
 import FontdueSection from '../../components/FontdueSection.astro';
 import PortableText from '../../components/PortableText.astro';
 import TypefaceHero from '../../components/TypefaceHero.astro';
+import { resolveHeaderSvgBottomPadding } from '../../lib/box-padding';
 import { sanityImageProjection } from '../../lib/sanity-image';
 import { typefaceSlug } from '../../lib/typeface';
 import { safeLoadQuery } from '../../sanity/lib/safe-fetch';
@@ -40,6 +41,7 @@ const { data: typefacesData } = await safeLoadQuery<Array<{
   contentSegments?: Array<{ heading?: string; body?: unknown }> | null;
   pageSections?: PageSection[] | null;
   headerSvg?: { url?: string | null; alt?: string | null } | null;
+  headerSvgPadding?: { bottom?: number | null } | null;
 }>>({
   query: `*[_type == "typeface"]{
     name,
@@ -49,6 +51,7 @@ const { data: typefacesData } = await safeLoadQuery<Array<{
     detailPageTitle,
     contentSegments[]{
       layout,
+      hideOnMobile,
       heading,
       media ${sanityImageProjection},
       body,
@@ -58,7 +61,8 @@ const { data: typefacesData } = await safeLoadQuery<Array<{
     "headerSvg": headerSvg{
       "url": asset->url,
       "alt": alt
-    }
+    },
+    headerSvgPadding
   }`,
 });
 
@@ -95,6 +99,7 @@ const pageTitle =
 
 const introSegment = font.contentSegments[0];
 const extraSegments = font.contentSegments.slice(1);
+const headerSvgBottomPadding = resolveHeaderSvgBottomPadding(matched.headerSvgPadding);
 
 const sections: PageSection[] = (
   font.pageSections?.length ? font.pageSections : defaultPageSections
@@ -107,7 +112,7 @@ const preloadImages = font.headerSvg?.url ? [font.headerSvg.url] : [];
   title={pageTitle}
   description={`${pageTitle} - Explore and purchase from Haus Type foundry.`}
   buyCollectionId={font.collectionId}
-  trialFontsHref="#"
+  trialFontsHref="/trial-fonts"
   preloadImages={preloadImages}
 >
   <Header />
@@ -116,9 +121,10 @@ const preloadImages = font.headerSvg?.url ? [font.headerSvg.url] : [];
       segment={introSegment}
       headerSvg={font.headerSvg}
       typefaceName={font.name}
+      bottomPadding={headerSvgBottomPadding}
     />
 
-    <div class="typeface-page__body bg-site pb-20 pt-16" data-reveal>
+    <div class="typeface-page__body bg-site site-page-body">
       {extraSegments.length > 0 && (
         <ContentSegments segments={extraSegments} />
       )}

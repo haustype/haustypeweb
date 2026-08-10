@@ -150,7 +150,7 @@ export const siteSettingsType = defineType({
                 list: [
                   { title: 'Blog', value: 'blog' },
                   { title: 'Typefaces', value: 'typefaces' },
-                  { title: 'In Use', value: 'in-use' },
+                  { title: 'In Use', value: 'fonts-in-use' },
                 ],
                 layout: 'dropdown',
               },
@@ -160,7 +160,7 @@ export const siteSettingsType = defineType({
           preview: {
             select: { route: 'route' },
             prepare: ({ route }) => ({
-              title: route === 'blog' ? 'Blog' : route === 'typefaces' ? 'Typefaces' : route === 'in-use' ? 'In Use' : route || 'Select',
+              title: route === 'blog' ? 'Blog' : route === 'typefaces' ? 'Typefaces' : route === 'in-use' || route === 'fonts-in-use' ? 'In Use' : route || 'Select',
             }),
           },
         },
