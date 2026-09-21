@@ -10,7 +10,7 @@ export const FONTDUE_UI_FONT_FAMILY = 'Aros Gothic';
 
 export const FONTDUE_UI_FONT_PRELOAD =
   import.meta.env.PUBLIC_FONTDUE_UI_FONT_PRELOAD ??
-  'https://fonts.fontdue.com/bech-type/fonts/6c2da023c0ff219326b4c41ea2453702fc4bce41.woff2';
+  'https://fonts.fontdue.com/bech-type/fonts/db49fa7eb5660cc65b71d5b79042cf22ede56121.woff2';
 
 export const FONTDUE_INIT_CONFIG = {
   storeModal: {
