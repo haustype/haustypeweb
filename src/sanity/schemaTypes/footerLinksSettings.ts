@@ -3,18 +3,18 @@ import { footerLinkItems } from './footerLinkItems';
 
 export const footerLinksSettingsType = defineType({
   name: 'footerLinksSettings',
-  title: 'Footer Links',
+  title: 'Footer Info',
   type: 'document',
   preview: {
-    prepare: () => ({ title: 'Links' }),
+    prepare: () => ({ title: 'Info' }),
   },
   fields: [
     defineField({
       name: 'links',
       type: 'array',
-      title: 'Links',
+      title: 'Info links',
       description:
-        'Links shown in the footer Links column. Pick pages, built-in routes, or add URL / email links. Drag to reorder.',
+        'Links shown in the footer Info column. Pick pages, built-in routes, or add URL / email links. Drag to reorder.',
       of: footerLinkItems,
     }),
   ],

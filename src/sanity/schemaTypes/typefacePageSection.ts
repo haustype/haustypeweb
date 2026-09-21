@@ -1,4 +1,5 @@
 import { defineField, defineType } from 'sanity';
+import { customTypeTesterFields } from './customTypeTesterFields';
 
 export const typefacePageSectionType = defineType({
   name: 'typefacePageSection',
@@ -11,7 +12,8 @@ export const typefacePageSectionType = defineType({
       title: 'Section type',
       options: {
         list: [
-          { title: 'Type tester', value: 'typeTester' },
+          { title: 'Type testers (from Fontdue)', value: 'typeTester' },
+          { title: 'Custom type tester', value: 'customTypeTester' },
           { title: 'Character viewer', value: 'characterViewer' },
           { title: 'Buy button', value: 'buyButton' },
           { title: 'Custom content', value: 'content' },
@@ -20,6 +22,7 @@ export const typefacePageSectionType = defineType({
       },
       validation: (Rule) => Rule.required(),
     }),
+    ...customTypeTesterFields,
     defineField({
       name: 'content',
       type: 'blockContent',
@@ -29,15 +32,24 @@ export const typefacePageSectionType = defineType({
     }),
   ],
   preview: {
-    select: { sectionType: 'sectionType' },
-    prepare({ sectionType }) {
+    select: {
+      sectionType: 'sectionType',
+      testerStyleName: 'testerStyleName',
+      testerColumns: 'testerColumns',
+    },
+    prepare({ sectionType, testerStyleName, testerColumns }) {
       const labels: Record<string, string> = {
-        typeTester: 'Type tester',
+        typeTester: 'Type testers (Fontdue)',
+        customTypeTester: 'Custom type tester',
         characterViewer: 'Character viewer',
         buyButton: 'Buy button',
         content: 'Custom content',
       };
-      return { title: labels[sectionType] ?? sectionType };
+      const title = labels[sectionType] ?? sectionType;
+      if (sectionType !== 'customTypeTester') return { title };
+      const style = testerStyleName?.trim() || 'Style?';
+      const cols = testerColumns === '3' ? '3 cols' : '2 cols';
+      return { title, subtitle: `${style} · ${cols}` };
     },
   },
 });

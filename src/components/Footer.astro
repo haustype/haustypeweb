@@ -51,13 +51,15 @@ const { data: footerLinksSettings } = await safeLoadQuery<{
 });
 
 const { data: footerContactSettings } = await safeLoadQuery<{
+  links?: Array<{ label?: string; href?: string; external?: boolean }>;
+  contactLinks?: Array<{ label?: string; href?: string; external?: boolean }>;
   instagramUrl?: string | null;
   contactEmail?: string | null;
-  contactLinks?: Array<{ label?: string; href?: string; external?: boolean }>;
 } | null>({
   query: `*[_type == "footerContactSettings"][0]{
     instagramUrl,
     contactEmail,
+    "links": links[]${footerLinkProjection},
     "contactLinks": contactLinks[]${footerLinkProjection}
   }`,
 });
@@ -163,20 +165,24 @@ const contactEmail =
   siteSettings?.contactEmail?.trim() ||
   '';
 
-const extraContactLinks =
-  mapNavItems(footerContactSettings?.contactLinks).length > 0
-    ? mapNavItems(footerContactSettings?.contactLinks)
-    : mapNavItems(legacyFooterSettings?.contactLinks);
+const contactLinksFromCms =
+  mapNavItems(footerContactSettings?.links).length > 0
+    ? mapNavItems(footerContactSettings?.links)
+    : mapNavItems(footerContactSettings?.contactLinks).length > 0
+      ? mapNavItems(footerContactSettings?.contactLinks)
+      : mapNavItems(legacyFooterSettings?.contactLinks);
 
-const contactLinks = [
-  ...(instagramUrl
-    ? [{ label: 'Instagram', href: instagramUrl, external: true }]
-    : []),
-  ...(contactEmail
-    ? [{ label: contactEmail, href: `mailto:${contactEmail}`, external: false }]
-    : []),
-  ...extraContactLinks,
-];
+const contactLinks =
+  contactLinksFromCms.length > 0
+    ? contactLinksFromCms
+    : [
+        ...(instagramUrl
+          ? [{ label: 'Instagram', href: instagramUrl, external: true }]
+          : []),
+        ...(contactEmail
+          ? [{ label: contactEmail, href: `mailto:${contactEmail}`, external: false }]
+          : []),
+      ];
 ---
 
 <footer class="site-footer text-white">
@@ -225,7 +231,7 @@ const contactLinks = [
 
     <div class="site-footer__column col-span-12 md:col-span-2 md:col-start-8 md:row-start-1 md:row-span-2">
       <p class="site-footer__heading m-0">
-        Links
+        Info
       </p>
       <ul class="site-footer__column-body site-footer__list mt-8 md:mt-0 list-none m-0 p-0 flex flex-col">
         {footerLinks.map((link) => (
@@ -312,7 +318,7 @@ const contactLinks = [
 
   .site-footer__link {
     color: #fff;
-    opacity: 0.45;
+    opacity: 0.5;
     transition: opacity 0.25s ease;
   }
 

@@ -13,6 +13,7 @@ import {
   type HomepageTileOrderItem,
   type TypefaceHomepageSource,
 } from './homepage-tile-order';
+import { sanityAssetDimensions } from './sanity-image';
 import { urlForImage } from '../sanity/lib/url-for-image';
 
 export type HomeMosaicAboutTile = {
@@ -28,6 +29,9 @@ export type HomeMosaicImageTile = {
   url: string;
   alt: string;
   width: InUseImageWidth;
+  /** Intrinsic pixel size after crop — reserves layout before the image loads. */
+  intrinsicWidth?: number;
+  intrinsicHeight?: number;
   padding: ResolvedBoxPadding;
   paddingStyle: string;
   typeface: {
@@ -44,11 +48,28 @@ type RawHomepageImage = {
   width?: string;
   padding?: BoxPaddingValue | null;
   image?: {
-    asset?: { _ref?: string };
-    crop?: unknown;
+    asset?: { _ref?: string; url?: string };
+    crop?: { top?: number; bottom?: number; left?: number; right?: number };
     hotspot?: unknown;
   };
 };
+
+function croppedIntrinsicSize(
+  image: NonNullable<RawHomepageImage['image']>,
+): { width: number; height: number } | null {
+  const dims = sanityAssetDimensions(image.asset);
+  if (!dims) return null;
+
+  const left = image.crop?.left ?? 0;
+  const right = image.crop?.right ?? 0;
+  const top = image.crop?.top ?? 0;
+  const bottom = image.crop?.bottom ?? 0;
+
+  return {
+    width: Math.max(1, Math.round(dims.width * (1 - left - right))),
+    height: Math.max(1, Math.round(dims.height * (1 - top - bottom))),
+  };
+}
 
 type RawTileOrder = HomepageTileOrderItem & {
   typeface?: {
@@ -74,6 +95,7 @@ function mapImageTile(item: RawTileOrder): HomeMosaicImageTile | null {
 
   const width = resolveInUseImageWidth(image.width);
   const padding = resolveBoxPadding(image.padding);
+  const intrinsic = croppedIntrinsicSize(image.image);
 
   return {
     kind: 'image',
@@ -84,6 +106,8 @@ function mapImageTile(item: RawTileOrder): HomeMosaicImageTile | null {
       .url(),
     alt: image.alt?.trim() || name,
     width,
+    intrinsicWidth: intrinsic?.width,
+    intrinsicHeight: intrinsic?.height,
     padding,
     paddingStyle: boxPaddingStyle(padding),
     typeface: { name, slug },

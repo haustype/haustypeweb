@@ -37,22 +37,60 @@ export const blockContentType = defineType({
                 type: 'string',
                 options: {
                   list: [
+                    { title: 'Page', value: 'page' },
+                    { title: 'Built-in page', value: 'builtIn' },
                     { title: 'URL', value: 'url' },
                     { title: 'Email', value: 'email' },
                   ],
                   layout: 'radio',
                 },
-                initialValue: 'url',
+                initialValue: 'page',
+              },
+              {
+                title: 'Page',
+                name: 'page',
+                type: 'reference',
+                to: [{ type: 'page' }, { type: 'typeface' }],
+                description: 'CMS page or typeface detail page.',
+                hidden: ({ parent }) => parent?.linkType !== 'page',
+                validation: (Rule) =>
+                  Rule.custom((page, context) => {
+                    const linkType = (context.parent as { linkType?: string })?.linkType;
+                    if (linkType !== 'page') return true;
+                    if (!page) return 'Select a page';
+                    return true;
+                  }),
+              },
+              {
+                title: 'Built-in page',
+                name: 'route',
+                type: 'string',
+                options: {
+                  list: [
+                    { title: 'Blog', value: 'blog' },
+                    { title: 'Typefaces', value: 'typefaces' },
+                    { title: 'In Use', value: 'fonts-in-use' },
+                  ],
+                  layout: 'dropdown',
+                },
+                hidden: ({ parent }) => parent?.linkType !== 'builtIn',
+                validation: (Rule) =>
+                  Rule.custom((route, context) => {
+                    const linkType = (context.parent as { linkType?: string })?.linkType;
+                    if (linkType !== 'builtIn') return true;
+                    if (!route) return 'Select a page';
+                    return true;
+                  }),
               },
               {
                 title: 'URL',
                 name: 'href',
                 type: 'url',
-                hidden: ({ parent }) => parent?.linkType === 'email',
+                hidden: ({ parent }) => parent?.linkType !== 'url',
                 validation: (Rule) =>
                   Rule.custom((href, context) => {
                     const linkType = (context.parent as { linkType?: string })?.linkType ?? 'url';
-                    if (linkType === 'email') return true;
+                    if (linkType !== 'url') return true;
                     if (!href) return 'URL is required';
                     return true;
                   }),
@@ -85,6 +123,7 @@ export const blockContentType = defineType({
                   layout: 'radio',
                 },
                 initialValue: 'same',
+                description: 'Same tab is the default. Choose New tab for external or secondary destinations.',
                 hidden: ({ parent }) => parent?.linkType === 'email',
               },
             ],

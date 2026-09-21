@@ -9,6 +9,10 @@ import {
   faviconMimeType,
   loadSiteSettings,
 } from '../lib/site-identity';
+import {
+  FONTDUE_UI_FONT_CSS,
+  FONTDUE_UI_FONT_PRELOAD,
+} from '../lib/fontdue-config';
 
 interface Props {
   /** Page-specific title; combined with the CMS title suffix unless fullTitle is set. */
@@ -94,14 +98,19 @@ const screensaver = !isBlog && !is404Page ? await loadScreensaverOptions() : nul
     <meta name="twitter:title" content={documentTitle} />
     <meta name="twitter:description" content={description} />
     {shareImageUrl && <meta name="twitter:image" content={shareImageUrl} />}
-    <link rel="preload" href="/fonts/Selandia-Regular.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="https://js.fontdue.com/fontdue.css" as="style" />
-    <link rel="modulepreload" href="https://js.fontdue.com/fontdue.esm.js" crossorigin />
-    {shareImageUrl && <link rel="preload" as="image" href={shareImageUrl} />}
+    <link
+      rel="preload"
+      href={FONTDUE_UI_FONT_PRELOAD}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="preload" href={FONTDUE_UI_FONT_CSS} as="style" />
+    <link rel="stylesheet" href={FONTDUE_UI_FONT_CSS} />
+    <link rel="stylesheet" href="https://js.fontdue.com/fontdue.css" />
     {preloadImages.map((src) => (
       <link rel="preload" as="image" href={new URL(src, Astro.url).href} />
     ))}
-    <link rel="stylesheet" href="https://js.fontdue.com/fontdue.css" />
     {gaId && (
       <>
         <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></script>
@@ -146,10 +155,22 @@ const screensaver = !isBlog && !is404Page ? await loadScreensaverOptions() : nul
       html.reveal-pending [data-reveal]:not(.is-revealed):not(.reveal-no-animation) {
         opacity: 0;
       }
+      html.reveal-pending [data-reveal='up']:not(.is-revealed):not(.reveal-no-animation) {
+        transform: translateY(14px);
+      }
     </style>
+    <noscript>
+      <style>
+        [data-reveal] {
+          opacity: 1 !important;
+          transform: none !important;
+        }
+      </style>
+    </noscript>
     {customHeadEnd && <Fragment set:html={customHeadEnd} />}
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <fontdue-store-modal></fontdue-store-modal>
     {screensaver && (
       <Screensaver
@@ -159,7 +180,7 @@ const screensaver = !isBlog && !is404Page ? await loadScreensaverOptions() : nul
         fadeSeconds={screensaver.fadeSeconds}
       />
     )}
-    <div class="site-shell flex flex-1 flex-col w-full">
+    <div class="site-shell flex flex-1 flex-col w-full" id="main-content">
       <slot />
     </div>
     <Footer />
@@ -174,7 +195,7 @@ const screensaver = !isBlog && !is404Page ? await loadScreensaverOptions() : nul
       });
     </script>
     <script>
-      import { initFontdueApp } from '../lib/fontdue-init';
+      import { scheduleFontdueInit } from '../lib/fontdue-init';
       import { initAllSlideshows } from '../lib/slideshow';
       import { initCharacterViewerStyles } from '../lib/fontdue-character-viewer';
       import { initStoreModalStyles } from '../lib/fontdue-store-modal';
@@ -189,7 +210,7 @@ const screensaver = !isBlog && !is404Page ? await loadScreensaverOptions() : nul
         initTypeTesterStyles();
       }
 
-      void initFontdueApp();
+      scheduleFontdueInit();
       initPageWidgets();
     </script>
     <script>
@@ -257,13 +278,49 @@ const screensaver = !isBlog && !is404Page ? await loadScreensaverOptions() : nul
 
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        function revealInstant(el) {
+        function getRowRevealState(anchor) {
+          const rect = anchor.getBoundingClientRect();
+          const bandBottom = window.innerHeight * 0.88;
+          if (rect.bottom <= 0) return 'passed';
+          if (rect.top >= bandBottom) return 'below';
+          return 'visible';
+        }
+
+        /** Hold reveal until imgs inside [data-reveal-wait-images] are ready. */
+        const IMAGE_WAIT_MS = 6000;
+        const revealScheduled = new WeakSet();
+
+        function waitForRevealImages(el) {
+          if (!el.hasAttribute('data-reveal-wait-images')) return Promise.resolve();
+
+          const images = Array.from(el.querySelectorAll('img'));
+          if (!images.length) return Promise.resolve();
+
+          return Promise.all(
+            images.map((img) => {
+              if (img.loading === 'lazy') img.loading = 'eager';
+              if (img.complete && img.naturalHeight > 0) return Promise.resolve();
+              return new Promise((resolve) => {
+                const done = () => resolve();
+                img.addEventListener('load', done, { once: true });
+                img.addEventListener('error', done, { once: true });
+                setTimeout(done, IMAGE_WAIT_MS);
+              });
+            }),
+          );
+        }
+
+        function waitForRevealImagesAll(elements) {
+          return Promise.all(elements.map((el) => waitForRevealImages(el)));
+        }
+
+        function paintRevealInstant(el) {
           if (el.classList.contains('is-revealed')) return;
           el.style.transitionDelay = '';
           el.classList.add('reveal-no-animation', 'is-revealed');
         }
 
-        function revealAnimated(el, delayIndex = 0) {
+        function paintRevealAnimated(el, delayIndex = 0) {
           if (el.classList.contains('is-revealed')) return;
           const delayMs = Math.min(delayIndex * STAGGER_MS, STAGGER_CAP);
           el.style.transitionDelay = delayMs + 'ms';
@@ -277,12 +334,38 @@ const screensaver = !isBlog && !is404Page ? await loadScreensaverOptions() : nul
           );
         }
 
-        function getRowRevealState(anchor) {
-          const rect = anchor.getBoundingClientRect();
-          const bandBottom = window.innerHeight * 0.88;
-          if (rect.bottom <= 0) return 'passed';
-          if (rect.top >= bandBottom) return 'below';
-          return 'visible';
+        function revealInstant(el) {
+          if (el.classList.contains('is-revealed') || revealScheduled.has(el)) return;
+          revealScheduled.add(el);
+          waitForRevealImages(el).then(() => paintRevealInstant(el));
+        }
+
+        function revealAnimated(el, delayIndex = 0) {
+          if (el.classList.contains('is-revealed') || revealScheduled.has(el)) return;
+          revealScheduled.add(el);
+          waitForRevealImages(el).then(() => paintRevealAnimated(el, delayIndex));
+        }
+
+        function revealBatchAnimated(elements, delayForIndex) {
+          const pending = elements.filter(
+            (el) => !el.classList.contains('is-revealed') && !revealScheduled.has(el),
+          );
+          if (!pending.length) return;
+          pending.forEach((el) => revealScheduled.add(el));
+          waitForRevealImagesAll(pending).then(() => {
+            pending.forEach((el, i) => paintRevealAnimated(el, delayForIndex(el, i)));
+          });
+        }
+
+        function revealBatchInstant(elements) {
+          const pending = elements.filter(
+            (el) => !el.classList.contains('is-revealed') && !revealScheduled.has(el),
+          );
+          if (!pending.length) return;
+          pending.forEach((el) => revealScheduled.add(el));
+          waitForRevealImagesAll(pending).then(() => {
+            pending.forEach((el) => paintRevealInstant(el));
+          });
         }
 
         function applyRevealDelay(el, delayIndex, cap = true) {
@@ -290,17 +373,22 @@ const screensaver = !isBlog && !is404Page ? await loadScreensaverOptions() : nul
         }
 
         function revealStaggered(children, startIndex = 0) {
-          children.forEach((el, i) => {
-            applyRevealDelay(el, startIndex + i);
-          });
+          revealBatchAnimated(children, (_el, i) => startIndex + i);
         }
 
         if (reduce) {
-          els.forEach((el) => el.classList.add('is-revealed'));
-          staggerGroups.forEach((group) => {
-            group.querySelectorAll('[data-reveal]').forEach((el) => el.classList.add('is-revealed'));
+          waitForRevealImagesAll([
+            ...els,
+            ...staggerGroups.flatMap((group) =>
+              Array.from(group.querySelectorAll('[data-reveal]')),
+            ),
+          ]).then(() => {
+            els.forEach((el) => el.classList.add('is-revealed'));
+            staggerGroups.forEach((group) => {
+              group.querySelectorAll('[data-reveal]').forEach((el) => el.classList.add('is-revealed'));
+            });
+            document.documentElement.classList.remove('reveal-pending');
           });
-          document.documentElement.classList.remove('reveal-pending');
           return;
         }
 
@@ -398,13 +486,12 @@ const screensaver = !isBlog && !is404Page ? await loadScreensaverOptions() : nul
             const allRows = getRowGroups(children);
 
             if (inViewChildren.length) {
-              requestAnimationFrame(() =>
-                requestAnimationFrame(() => {
-                  revealRowGroupsStaggered(getRowGroups(inViewChildren), (el, i) =>
-                    revealAnimated(el, i),
-                  );
-                }),
-              );
+              const rows = getRowGroups(inViewChildren);
+              const delayByEl = new Map();
+              rows.forEach((row) => {
+                row.forEach((el, i) => delayByEl.set(el, i));
+              });
+              revealBatchAnimated(inViewChildren, (el) => delayByEl.get(el) ?? 0);
             }
 
             belowFoldChildren.forEach((el) => el.classList.add('reveal-on-scroll'));
@@ -412,17 +499,19 @@ const screensaver = !isBlog && !is404Page ? await loadScreensaverOptions() : nul
             function scanScrollRows(fast = false) {
               for (const row of allRows) {
                 const anchor = row[0];
-                if (anchor.classList.contains('is-revealed')) continue;
+                if (anchor.classList.contains('is-revealed') || revealScheduled.has(anchor)) {
+                  continue;
+                }
 
                 const state = getRowRevealState(anchor);
                 if (state === 'below') continue;
 
                 if (state === 'passed' || fast) {
-                  row.forEach(revealInstant);
+                  revealBatchInstant(row);
                   continue;
                 }
 
-                row.forEach((el, i) => revealAnimated(el, i));
+                revealBatchAnimated(row, (_el, i) => i);
               }
             }
 
@@ -485,8 +574,8 @@ const screensaver = !isBlog && !is404Page ? await loadScreensaverOptions() : nul
 
       initRevealAnimations();
     </script>
-    <script type="module">
-      import { initMediaPlaceholders } from '../lib/media-placeholder.ts';
+    <script>
+      import { initMediaPlaceholders } from '../lib/media-placeholder';
       initMediaPlaceholders();
     </script>
     {customBodyEnd && <Fragment set:html={customBodyEnd} />}

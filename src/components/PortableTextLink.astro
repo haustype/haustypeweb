@@ -5,10 +5,34 @@ export type Props = MarkProps<Mark>;
 
 type LinkMarkDef = {
   href?: string;
-  linkType?: 'url' | 'email';
+  linkType?: 'url' | 'email' | 'page' | 'builtIn';
   email?: string;
+  route?: string;
+  pageSlug?: string | null;
+  pageType?: string | null;
   openInNewTab?: 'same' | 'new';
 };
+
+function builtInHref(route?: string) {
+  switch (route) {
+    case 'blog':
+      return '/blog';
+    case 'typefaces':
+      return '/typefaces';
+    case 'fonts-in-use':
+    case 'in-use':
+      return '/fonts-in-use';
+    default:
+      return route ? `/${route}` : '';
+  }
+}
+
+function pageHref(pageType?: string | null, pageSlug?: string | null) {
+  const slug = pageSlug?.trim();
+  if (!slug) return '';
+  if (pageType === 'typeface') return `/typefaces/${slug}`;
+  return `/${slug}`;
+}
 
 const { node, ...attrs } = Astro.props;
 const markDef = (node as Mark<LinkMarkDef>).markDef;
@@ -16,16 +40,24 @@ const markDef = (node as Mark<LinkMarkDef>).markDef;
 const href =
   markDef.linkType === 'email' && markDef.email
     ? `mailto:${markDef.email.trim()}`
-    : markDef.href ?? '';
+    : markDef.linkType === 'page'
+      ? pageHref(markDef.pageType, markDef.pageSlug)
+      : markDef.linkType === 'builtIn'
+        ? builtInHref(markDef.route)
+        : markDef.href ?? '';
 
 const openInNewTab = markDef.openInNewTab === 'new';
+const { target: _ignoredTarget, rel: _ignoredRel, ...safeAttrs } = attrs as Record<
+  string,
+  unknown
+>;
 const linkAttrs = openInNewTab
-  ? { target: '_blank', rel: 'noopener noreferrer' }
+  ? { target: '_blank' as const, rel: 'noopener noreferrer' }
   : {};
 ---
 
 {href ? (
-  <a href={href} {...linkAttrs} {...attrs}>
+  <a href={href} {...safeAttrs} {...linkAttrs}>
     <slot />
   </a>
 ) : (

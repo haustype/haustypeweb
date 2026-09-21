@@ -4,13 +4,15 @@ export const prerender = false;
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import ContentSegmentRow from '../../components/ContentSegmentRow.astro';
+import { portableTextProjection } from '../../lib/portable-text';
 import { safeLoadQuery } from '../../sanity/lib/safe-fetch';
 
 const slugParam = Astro.params.slug;
 const slug = Array.isArray(slugParam) ? slugParam.join('/') : slugParam;
 
 if (!slug) {
-  return Astro.redirect('/404');
+  Astro.response.status = 404;
+  return Astro.rewrite('/404');
 }
 
 const { data: post } = await safeLoadQuery<{
@@ -28,14 +30,15 @@ const { data: post } = await safeLoadQuery<{
     publishedAt,
     author,
     mainImage,
-    body,
-    aside
+    body ${portableTextProjection},
+    aside ${portableTextProjection}
   }`,
   params: { slug },
 });
 
 if (!post) {
-  return Astro.redirect('/404');
+  Astro.response.status = 404;
+  return Astro.rewrite('/404');
 }
 
 const title = post.title;

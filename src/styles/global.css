@@ -2,14 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: 'Selandia';
-  src: url('/fonts/Selandia-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
 @property --site-bg {
   syntax: '<color>';
   inherits: true;
@@ -17,11 +9,13 @@
 }
 
 :root {
+  --site-font: 'Aros Gothic', system-ui, sans-serif;
   --site-bg: #eeeeee;
   --site-yellow: #ffcc01;
   --site-yellow-hover: #f2ba00;
   --site-fg: #000000;
-  --site-fg-muted: rgb(0 0 0 / 0.45);
+  /* ~4.6:1 on #eee — meets WCAG AA for body text */
+  --site-fg-muted: rgb(0 0 0 / 0.62);
   --site-border: rgb(0 0 0 / 0.2);
   /* Sticky header: 16px padding + 60px bar + 16px padding */
   --site-header-height: 5.75rem;
@@ -30,7 +24,7 @@
   --site-grid-gap: 1rem;
   --site-grid-cols: 12;
   --site-edge-padding: 1rem;
-  --site-line-height: 1.6;
+  --site-line-height: 1.5;
 }
 
 html.site-bg-yellow,
@@ -41,7 +35,7 @@ html.site-bg-alt {
 html.site-bg-dark {
   --site-bg: #000000;
   --site-fg: #ffffff;
-  --site-fg-muted: rgb(255 255 255 / 0.45);
+  --site-fg-muted: rgb(255 255 255 / 0.72);
   --site-border: rgb(255 255 255 / 0.2);
 }
 
@@ -65,11 +59,47 @@ body {
   @apply antialiased text-base;
   color: var(--site-fg);
   background-color: var(--site-bg);
-  font-family: 'Selandia', system-ui, sans-serif;
+  font-family: var(--site-font);
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   overscroll-behavior: none;
+}
+
+.skip-link {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link:focus-visible {
+  position: fixed;
+  left: var(--site-edge-padding);
+  top: var(--site-edge-padding);
+  z-index: 100;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  overflow: visible;
+  clip: auto;
+  background: #ffffff;
+  color: #000000;
+  text-decoration: none;
+  border-radius: var(--site-image-radius);
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
 /* Site-wide 12-column content grid (32px padding, 16px gap) */
@@ -124,7 +154,7 @@ body {
   }
 
   .site-footer__grid {
-    @apply pt-[64px] pb-[72px] md:pb-[144px];
+    @apply pt-[48px] pb-[72px] md:pb-[144px];
   }
 
   .bg-site {
@@ -173,7 +203,7 @@ body {
   /* Header chrome — never follows the background toggle */
   .site-header {
     --site-fg: #000000;
-    --site-fg-muted: rgb(0 0 0 / 0.45);
+    --site-fg-muted: rgb(0 0 0 / 0.62);
     --site-border: rgb(0 0 0 / 0.2);
     color: #000000;
     padding: var(--site-edge-padding);
@@ -191,7 +221,7 @@ body {
   /* Fixed surfaces (e.g. typeface hero yellow) — own bg, always black text */
   .site-surface-fixed {
     --site-fg: #000000;
-    --site-fg-muted: rgb(0 0 0 / 0.45);
+    --site-fg-muted: rgb(0 0 0 / 0.62);
     --site-border: rgb(0 0 0 / 0.2);
     color: #000000;
   }
@@ -255,14 +285,30 @@ body {
   }
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1, h2, h3, h4, h5, h6,
+.prose :where(h1, h2, h3, h4, h5, h6) {
   font-weight: 400;
   line-height: var(--site-line-height);
+  color: var(--site-fg);
 }
 
-/* H1 and H2 (20px) */
-h1, h2, .prose h1, .prose h2 {
+/* H1 and H2 share the same size; H3 is a step smaller. Never bold. */
+h1, h2,
+.prose :where(h1, h2) {
   font-size: 20px;
+  font-weight: 400;
+}
+
+h3,
+.prose :where(h3) {
+  font-size: 18px;
+  font-weight: 400;
+}
+
+h4, h5, h6,
+.prose :where(h4, h5, h6) {
+  font-size: 16px;
+  font-weight: 400;
 }
 
 /* Side-by-side title + body: align first-line baselines */
@@ -270,17 +316,42 @@ h1, h2, .prose h1, .prose h2 {
   align-items: baseline;
 }
 
-/* Body copy — line-height 1.6 (overrides typography plugin 1.65) */
+/* Body copy — line-height from --site-line-height (overrides typography plugin) */
 .prose {
+  line-height: var(--site-line-height);
+  color: var(--site-fg);
+  --tw-prose-body: var(--site-fg);
+  --tw-prose-bullets: var(--site-fg);
+  --tw-prose-counters: var(--site-fg);
+  --tw-prose-bold: var(--site-fg);
+  --tw-prose-quotes: var(--site-fg);
+  --tw-prose-captions: var(--site-fg);
+  --tw-prose-links: var(--site-fg-muted);
+}
+
+.prose :where(p, li, ul, ol, blockquote, dd, dt, figcaption, .lead, td, th) {
   line-height: var(--site-line-height);
   color: var(--site-fg);
 }
 
-.prose :where(p, li, blockquote, dd, dt, figcaption, .lead, td, th) {
-  line-height: var(--site-line-height);
+.prose :where(ul > li, ol > li)::marker {
+  color: var(--site-fg);
 }
 
 .prose p {
+  color: var(--site-fg);
+}
+
+/* Muted is reserved for links (and similar chrome), not body copy */
+.prose :where(a) {
+  color: var(--site-fg-muted);
+  font-weight: 400;
+  text-decoration: none;
+  transition: color 0.25s ease, opacity 0.25s ease;
+}
+
+.prose :where(a:hover),
+.prose :where(a:focus-visible) {
   color: var(--site-fg);
 }
 
@@ -409,6 +480,15 @@ h1, h2, .prose h1, .prose h2 {
 }
 
 html.site-bg-dark .site-shell .prose :where(a, strong, code, h1, h2, h3, h4, h5, h6) {
+  color: inherit;
+}
+
+html.site-bg-dark .site-shell .prose :where(a) {
+  color: var(--site-fg-muted);
+}
+
+html.site-bg-dark .site-shell .prose :where(a:hover),
+html.site-bg-dark .site-shell .prose :where(a:focus-visible) {
   color: var(--site-fg);
 }
 
@@ -430,14 +510,14 @@ html.site-bg-dark .media-placeholder {
   background-color: rgb(255 255 255 / 0.08);
 }
 
-/* Premium fade reveal (on load for in-view, fade-only on scroll) */
+/* Reveal animations — progressive enhancement.
+   Content is visible by default. JS adds html.reveal-pending to hide
+   until elements are revealed (avoids blank page when JS is blocked). */
 [data-reveal] {
-  opacity: 0;
   transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 [data-reveal='up'] {
-  transform: translateY(14px);
   transition:
     opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
@@ -445,6 +525,14 @@ html.site-bg-dark .media-placeholder {
 
 [data-reveal='fade'] {
   transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html.reveal-pending [data-reveal]:not(.is-revealed):not(.reveal-no-animation) {
+  opacity: 0;
+}
+
+html.reveal-pending [data-reveal='up']:not(.is-revealed):not(.reveal-no-animation) {
+  transform: translateY(14px);
 }
 
 [data-reveal].reveal-on-scroll {
@@ -476,7 +564,8 @@ html.reveal-once-done [data-reveal-once] {
 
 @media (prefers-reduced-motion: reduce) {
   [data-reveal],
-  [data-reveal].is-revealed {
+  [data-reveal].is-revealed,
+  html.reveal-pending [data-reveal]:not(.is-revealed):not(.reveal-no-animation) {
     opacity: 1;
     transform: none;
     transition: none;
@@ -485,6 +574,7 @@ html.reveal-once-done [data-reveal-once] {
 
 /* Fontdue widgets: stay within site content margins */
 .fontdue-section__inner fontdue-type-testers,
+.fontdue-section__inner fontdue-type-tester,
 .fontdue-section__inner fontdue-character-viewer {
   display: block;
   width: 100%;
@@ -492,13 +582,10 @@ html.reveal-once-done [data-reveal-once] {
   box-sizing: border-box;
 }
 
-/* Reserve space while Fontdue hydrates so the footer doesn’t jump up */
-.fontdue-section__inner:has(> fontdue-type-testers) {
-  min-height: 45dvh;
-}
-
-.fontdue-section__inner:has(> fontdue-character-viewer) {
-  min-height: 55dvh;
+/* Override Fontdue’s fixed 20px gap between stacked testers */
+fontdue-type-testers .type-tester,
+fontdue-type-tester .type-tester {
+  margin-bottom: 2em;
 }
 
 /* Haus buy button (Fontdue attribute API) */
@@ -608,8 +695,8 @@ fontdue-test-fonts-form {
   --button_hover_border_color: var(--site-fg);
   --horizontal_rule_color: var(--site-border);
   --border-color: var(--site-border);
-  --font-family: 'Selandia', system-ui, sans-serif;
-  font-family: 'Selandia', system-ui, sans-serif;
+  --font-family: var(--site-font);
+  font-family: var(--site-font);
   color: var(--site-fg);
 }
 
@@ -681,7 +768,8 @@ html.site-bg-dark fontdue-test-fonts-form .text-field__input {
 }
 
 /* Fontdue type testers — match Haus Type UI */
-fontdue-type-testers {
+fontdue-type-testers,
+fontdue-type-tester {
   --primary_text_color: var(--site-fg);
   --primary_background_color: var(--site-fg);
   --link_color: var(--site-fg);
@@ -697,14 +785,15 @@ fontdue-type-testers {
   --button_selected_border_color: transparent;
   --horizontal_rule_color: var(--site-border);
   --border-color: var(--site-border);
-  --font-family: 'Selandia', system-ui, sans-serif;
-  font-family: 'Selandia', system-ui, sans-serif;
+  --font-family: var(--site-font);
+  font-family: var(--site-font);
   color: var(--site-fg);
 }
 
 /* Fontdue character viewer */
 fontdue-character-viewer {
-  --character_viewer_sticky_top: 108px;
+  /* Fixed sticky offset for the glyph monitor (same on every typeface page). */
+  --character_viewer_sticky_top: 9em;
   --primary_text_color: var(--site-fg);
   --primary_background_color: var(--site-bg);
   --character_viewer_selected_background_color: var(--site-fg);
@@ -714,8 +803,8 @@ fontdue-character-viewer {
   --link_hover_color: var(--site-fg);
   --horizontal_rule_color: var(--site-border);
   --border-color: var(--site-border);
-  --font-family: 'Selandia', system-ui, sans-serif;
-  font-family: 'Selandia', system-ui, sans-serif;
+  --font-family: var(--site-font);
+  font-family: var(--site-font);
   color: var(--site-fg);
 }
 
@@ -733,7 +822,7 @@ fontdue-store-modal {
   --link_hover_color: #000000;
   --horizontal_rule_color: rgb(0 0 0 / 0.2);
   --border-color: rgb(0 0 0 / 0.2);
-  --font-family: 'Selandia', system-ui, sans-serif;
+  --font-family: var(--site-font);
   color: #000000;
 }
 

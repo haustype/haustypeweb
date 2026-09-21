@@ -41,7 +41,7 @@ export const typefaceType = defineType({
       name: 'pageSections',
       type: 'array',
       title: 'Fontdue sections',
-      description: 'Order of sections below the content segments. Add, remove, or reorder: type tester, character viewer, custom content.',
+      description: 'Order of sections below the content segments. Add, remove, or reorder: type testers, custom type tester, character viewer, custom content.',
       of: [{ type: 'typefacePageSection' }],
       initialValue: [
         { sectionType: 'typeTester' },

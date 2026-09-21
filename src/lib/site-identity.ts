@@ -16,11 +16,11 @@ export type SiteIdentity = {
 };
 
 const DEFAULTS: SiteIdentity = {
-  siteName: '',
-  titleSuffix: '',
-  defaultDescription: '',
-  homeTitle: '',
-  homeDescription: '',
+  siteName: 'Haus Type',
+  titleSuffix: ' | Haus Type',
+  defaultDescription: 'Type foundry by Haus Type.',
+  homeTitle: 'Haus Type',
+  homeDescription: 'Type foundry by Haus Type.',
   faviconUrl: null,
   appleTouchIconUrl: null,
   defaultShareImageUrl: null,
@@ -121,9 +121,16 @@ export async function loadSiteSettings() {
 }
 
 export function buildDocumentTitle(pageTitle: string, identity: SiteIdentity) {
-  const suffix = identity.titleSuffix;
-  if (suffix && pageTitle.endsWith(suffix.trim())) return pageTitle;
-  return `${pageTitle}${suffix}`;
+  const page = pageTitle.trim();
+  const suffix = identity.titleSuffix?.trim();
+  if (!page) return suffix || identity.siteName;
+  if (!suffix) return page;
+  if (page === suffix || page.endsWith(suffix)) return page;
+  // CMS may already include a leading separator in titleSuffix
+  if (/^[|–—·-]/.test(suffix)) {
+    return `${page} ${suffix}`.replace(/\s+/g, ' ').trim();
+  }
+  return `${page} | ${suffix}`;
 }
 
 export function faviconMimeType(url: string) {

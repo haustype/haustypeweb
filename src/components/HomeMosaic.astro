@@ -15,9 +15,10 @@ const { tiles = [] } = Astro.props;
 {tiles.length > 0 && (
   <section class="home-mosaic bg-site w-full pb-6 md:pb-12">
     <div class="home-mosaic__grid pt-4 md:pt-8">
-      {tiles.map((tile) => {
+      {tiles.map((tile, index) => {
         const width = resolveInUseImageWidth(tile.width);
         const colSpan = inUseColSpan(width);
+        const eager = index < 6;
 
         if (tile.kind === 'about') {
           return (
@@ -36,6 +37,11 @@ const { tiles = [] } = Astro.props;
           );
         }
 
+        const aspectStyle =
+          tile.intrinsicWidth && tile.intrinsicHeight
+            ? `aspect-ratio: ${tile.intrinsicWidth} / ${tile.intrinsicHeight}`
+            : undefined;
+
         return (
           <figure
             class:list={[
@@ -44,7 +50,7 @@ const { tiles = [] } = Astro.props;
             ]}
             style={`--home-col-span: ${colSpan}`}
           >
-            <div class="home-mosaic__tile-inner" data-reveal>
+            <div class="home-mosaic__tile-inner" data-reveal data-reveal-wait-images>
               <a
                 href={`/typefaces/${tile.typeface.slug}`}
                 class="home-mosaic__image-link block text-inherit no-underline"
@@ -54,10 +60,14 @@ const { tiles = [] } = Astro.props;
                   <img
                     src={tile.url}
                     alt={tile.alt}
+                    width={tile.intrinsicWidth}
+                    height={tile.intrinsicHeight}
+                    style={aspectStyle}
                     class="home-mosaic__image w-full h-auto"
                     data-media-placeholder
                     data-media-placeholder-class="media-placeholder aspect-[4/5]"
-                    loading="lazy"
+                    loading={eager ? 'eager' : 'lazy'}
+                    fetchpriority={index < 2 ? 'high' : undefined}
                     decoding="async"
                   />
                 </div>
@@ -200,6 +210,7 @@ const { tiles = [] } = Astro.props;
     font-size: 1rem;
     font-weight: 400;
     line-height: var(--site-line-height);
+    color: #000000;
   }
 
   .home-mosaic__typeface {

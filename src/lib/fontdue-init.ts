@@ -2,7 +2,7 @@ import { FONTDUE_INIT_CONFIG, FONTDUE_STORE_URL } from './fontdue-config';
 
 const FONTDUE_MODULE_URL = 'https://js.fontdue.com/fontdue.esm.js';
 const WIDGET_SELECTOR =
-  'fontdue-type-testers, fontdue-character-viewer, fontdue-customer-login-form, fontdue-test-fonts-form';
+  'fontdue-type-testers, fontdue-type-tester, fontdue-character-viewer, fontdue-customer-login-form, fontdue-test-fonts-form';
 
 const HEALTH_CHECK_MS = 2500;
 const MAX_INIT_ATTEMPTS = 3;
@@ -106,6 +106,44 @@ export async function initFontdueApp(isRetry = false) {
   })();
 
   return initPromise;
+}
+
+/** Eager when widgets are on the page; otherwise idle / first store interaction. */
+export function scheduleFontdueInit() {
+  if (hasFontdueWidgets()) {
+    void initFontdueApp();
+    return;
+  }
+
+  let started = false;
+  const start = () => {
+    if (started) return;
+    started = true;
+    void initFontdueApp();
+  };
+
+  const idle = window.requestIdleCallback?.bind(window);
+  if (idle) {
+    idle(start, { timeout: 2500 });
+  } else {
+    window.setTimeout(start, 1200);
+  }
+
+  document.addEventListener(
+    'pointerdown',
+    (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (
+        target.closest(
+          '[fontdue-click], .haus-buy-button, fontdue-store-modal',
+        )
+      ) {
+        start();
+      }
+    },
+    { capture: true, passive: true },
+  );
 }
 
 function handlePersistedPageShow() {

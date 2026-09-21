@@ -35,7 +35,7 @@ export default defineConfig({
                   .title('Footer Settings')
                   .items([
                     S.listItem()
-                      .title('Links')
+                      .title('Info')
                       .child(
                         S.document()
                           .schemaType('footerLinksSettings')

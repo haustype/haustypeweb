@@ -8,14 +8,21 @@ import FontdueSection from '../../components/FontdueSection.astro';
 import PortableText from '../../components/PortableText.astro';
 import TypefaceHero from '../../components/TypefaceHero.astro';
 import { resolveHeaderSvgBottomPadding } from '../../lib/box-padding';
+import { portableTextProjection } from '../../lib/portable-text';
 import { sanityImageProjection } from '../../lib/sanity-image';
 import { typefaceSlug } from '../../lib/typeface';
 import { safeLoadQuery } from '../../sanity/lib/safe-fetch';
 
 type PageSection = {
   _key?: string;
-  sectionType: 'typeTester' | 'characterViewer' | 'buyButton' | 'content';
+  sectionType: 'typeTester' | 'customTypeTester' | 'characterViewer' | 'buyButton' | 'content';
   content?: unknown;
+  testerStyleName?: string | null;
+  testerContent?: string | null;
+  testerColumns?: string | null;
+  testerColumnGap?: string | null;
+  testerFontSize?: number | null;
+  testerLineHeight?: number | null;
 };
 
 const defaultPageSections: PageSection[] = [
@@ -47,17 +54,27 @@ const { data: typefacesData } = await safeLoadQuery<Array<{
     name,
     slug,
     collectionId,
-    body,
+    body ${portableTextProjection},
     detailPageTitle,
     contentSegments[]{
       layout,
       hideOnMobile,
       heading,
       media ${sanityImageProjection},
-      body,
-      aside
+      body ${portableTextProjection},
+      aside ${portableTextProjection}
     },
-    pageSections,
+    pageSections[]{
+      _key,
+      sectionType,
+      testerStyleName,
+      testerContent,
+      testerColumns,
+      testerColumnGap,
+      testerFontSize,
+      testerLineHeight,
+      content ${portableTextProjection}
+    },
     "headerSvg": headerSvg{
       "url": asset->url,
       "alt": alt
@@ -69,7 +86,8 @@ const { data: typefacesData } = await safeLoadQuery<Array<{
 const matched = typefacesData?.find((t) => typefaceSlug(t) === slug);
 
 if (!matched) {
-  return Astro.redirect('/404');
+  Astro.response.status = 404;
+  return Astro.rewrite('/404');
 }
 
 const font = {
@@ -135,6 +153,33 @@ const preloadImages = font.headerSvg?.url ? [font.headerSvg.url] : [];
             return (
               <FontdueSection>
                 <fontdue-type-testers collection-slug={slug} />
+              </FontdueSection>
+            );
+          }
+          if (
+            section.sectionType === 'customTypeTester' &&
+            section.testerStyleName?.trim() &&
+            section.testerContent?.trim()
+          ) {
+            const columns = section.testerColumns === '3' ? '3' : '2';
+            const lineHeight =
+              typeof section.testerLineHeight === 'number' &&
+              section.testerLineHeight > 0
+                ? section.testerLineHeight
+                : 1.5;
+            return (
+              <FontdueSection>
+                <fontdue-type-tester
+                  family-name={font.name}
+                  style-name={section.testerStyleName.trim()}
+                  content={section.testerContent}
+                  line-height={String(lineHeight)}
+                  {...(section.testerFontSize
+                    ? { 'font-size': String(section.testerFontSize) }
+                    : {})}
+                  data-tester-columns={columns}
+                  data-tester-column-gap={section.testerColumnGap ?? '1em'}
+                />
               </FontdueSection>
             );
           }

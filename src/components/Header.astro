@@ -352,7 +352,7 @@ const navItems = [
   const toggle = document.getElementById('nav-toggle');
   const menu = document.getElementById('nav-menu');
   const header = document.querySelector('[data-site-header]');
-  const scrollThreshold = 32;
+  const scrollThreshold = 40;
   let lastScrollY = window.scrollY;
 
   function setMenuOpen(open: boolean) {
@@ -367,6 +367,14 @@ const navItems = [
   toggle?.addEventListener('click', () => {
     const isOpen = header?.classList.contains('is-menu-open') ?? false;
     setMenuOpen(!isOpen);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    if (!header?.classList.contains('is-menu-open')) return;
+    event.preventDefault();
+    setMenuOpen(false);
+    toggle?.focus();
   });
 
   document.querySelector('[data-mobile-cart]')?.addEventListener('click', () => {

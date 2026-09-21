@@ -1,7 +1,11 @@
 ---
+export const prerender = false;
+
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import PageWentPoof from '../components/PageWentPoof.astro';
+
+Astro.response.status = 404;
 ---
 
 <BaseLayout fullTitle="404 — Haus Type" description="Page not found">
@@ -12,7 +16,9 @@ import PageWentPoof from '../components/PageWentPoof.astro';
         <span class="sr-only">Page went poof.</span>
         <PageWentPoof class="not-found-page__title-art" />
       </h1>
-      <p class="not-found-page__redirect m-0">Redirecting you to the homepage...</p>
+      <p class="not-found-page__redirect m-0">
+        <a href="/" class="not-found-page__home-link">Go to the homepage →</a>
+      </p>
     </div>
   </main>
 </BaseLayout>
@@ -52,12 +58,15 @@ import PageWentPoof from '../components/PageWentPoof.astro';
     margin-top: 2.5rem;
     font-size: 1rem;
     line-height: var(--site-line-height);
-    color: var(--site-fg-muted);
+  }
+
+  .not-found-page__home-link {
+    color: var(--site-fg);
+    text-decoration: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .not-found-page__home-link:hover {
+    opacity: 0.8;
   }
 </style>
-
-<script is:inline>
-  window.setTimeout(function () {
-    window.location.replace('/');
-  }, 5000);
-</script>

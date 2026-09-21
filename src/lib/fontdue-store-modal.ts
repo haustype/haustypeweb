@@ -1,4 +1,4 @@
-const MODAL_MAX_WIDTH = '800px';
+const MODAL_MAX_WIDTH = '1024px';
 
 const STORE_MODAL_LAYOUT_CSS = `
   .store-modal__container__container {

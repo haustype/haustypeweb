@@ -57,7 +57,9 @@ Output in `dist/`
 
 3. **Add CORS origins** in [sanity.io/manage](https://sanity.io/manage) → your project → API → CORS origins:
    - `http://localhost:4321` (development)
-   - `https://haustypeweb.netlify.app` (production)
+   - `https://www.haustype.com` (production — apex redirects here)
+   - `https://haustype.com`
+   - `https://haustypeweb.netlify.app` (Netlify preview / interim)
 
 4. **Netlify env vars**: Add `PUBLIC_SANITY_PROJECT_ID` and `PUBLIC_SANITY_DATASET` to your Netlify site settings.
 

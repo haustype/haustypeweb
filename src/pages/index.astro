@@ -67,9 +67,14 @@ const fontsInUseItems = rawFontsInUse
     };
   })
   .filter((item): item is { url: string; alt: string } => Boolean(item));
+
+const preloadImages = tiles
+  .filter((tile): tile is Extract<(typeof tiles)[number], { kind: 'image' }> => tile.kind === 'image')
+  .slice(0, 3)
+  .map((tile) => tile.url);
 ---
 
-<BaseLayout description={aboutText}>
+<BaseLayout description={aboutText} preloadImages={preloadImages}>
   <Header />
   <main class="bg-site flex-1">
     <article class="site-page-top" data-reveal-stagger="scroll">

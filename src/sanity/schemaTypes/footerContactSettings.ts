@@ -10,22 +10,11 @@ export const footerContactSettingsType = defineType({
   },
   fields: [
     defineField({
-      name: 'instagramUrl',
-      type: 'url',
-      title: 'Instagram URL',
-      description: 'Shown in the footer Contact column.',
-    }),
-    defineField({
-      name: 'contactEmail',
-      type: 'string',
-      title: 'Contact email',
-      description: 'Shown in the footer Contact column.',
-    }),
-    defineField({
-      name: 'contactLinks',
+      name: 'links',
       type: 'array',
-      title: 'Additional contact links',
-      description: 'Optional extra links below Instagram and email in the Contact column.',
+      title: 'Contact links',
+      description:
+        'Links shown in the footer Contact column. Pick pages, built-in routes, or add URL / email links. Drag to reorder.',
       of: footerLinkItems,
     }),
   ],

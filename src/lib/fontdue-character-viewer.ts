@@ -1,6 +1,13 @@
 import { isSiteBgDark, siteBorderColor, siteFgColor } from './fontdue-theme';
 
-function patchStyle(viewer: Element) {
+/** Sticky offset for the glyph monitor — fixed from the top of the viewport. */
+const STICKY_TOP = '9em';
+
+function updateStickyTop(viewer: HTMLElement) {
+  viewer.style.setProperty('--character_viewer_sticky_top', STICKY_TOP);
+}
+
+function patchShadowColors(viewer: Element) {
   const root = viewer.shadowRoot;
   if (!root) return;
 
@@ -32,11 +39,18 @@ function patchStyle(viewer: Element) {
   `;
 }
 
+function patchViewer(viewer: Element) {
+  updateStickyTop(viewer as HTMLElement);
+  patchShadowColors(viewer);
+}
+
 let observerStarted = false;
 
 export function initCharacterViewerStyles() {
   const patchAll = () => {
-    document.querySelectorAll('fontdue-character-viewer').forEach(patchStyle);
+    document.querySelectorAll('fontdue-character-viewer').forEach((viewer) => {
+      patchViewer(viewer);
+    });
   };
 
   patchAll();

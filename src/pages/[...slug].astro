@@ -5,6 +5,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import ContentSegments, { type ContentSegment } from '../components/ContentSegments.astro';
 import { sanityImageProjection } from '../lib/sanity-image';
+import { portableTextProjection } from '../lib/portable-text';
 import FontdueSection from '../components/FontdueSection.astro';
 import HausBuyButton from '../components/HausBuyButton.astro';
 import PortableText from '../components/PortableText.astro';
@@ -20,7 +21,8 @@ const slugParam = Astro.params.slug;
 const slug = Array.isArray(slugParam) ? slugParam.join('/') : slugParam;
 
 if (!slug) {
-  return Astro.redirect('/404');
+  Astro.response.status = 404;
+  return Astro.rewrite('/404');
 }
 
 let title = '';
@@ -31,15 +33,21 @@ const contentSegmentProjection = `{
   hideOnMobile,
   heading,
   media ${sanityImageProjection},
-  body,
-  aside
+  body ${portableTextProjection},
+  aside ${portableTextProjection}
 }`;
 
 type PageSection = {
   _key?: string;
-  sectionType: 'typeTester' | 'characterViewer' | 'buyButton' | 'content';
+  sectionType: 'typeTester' | 'customTypeTester' | 'characterViewer' | 'buyButton' | 'content';
   typeface?: { slug?: { current: string }; name?: string; collectionId?: string };
   content?: unknown;
+  testerStyleName?: string | null;
+  testerContent?: string | null;
+  testerColumns?: string | null;
+  testerColumnGap?: string | null;
+  testerFontSize?: number | null;
+  testerLineHeight?: number | null;
 };
 
 let contentSegments: ContentSegment[] = [];
@@ -63,7 +71,7 @@ const { data: page } = await safeLoadQuery<{
   query: `*[_type == "page" && slug.current == $slug][0]{
     title,
     description,
-    body,
+    body ${portableTextProjection},
     pageLayout,
     customEmbed,
     ordersIllustration ${sanityImageProjection},
@@ -71,7 +79,13 @@ const { data: page } = await safeLoadQuery<{
     pageSections[]{
       _key,
       sectionType,
-      content,
+      testerStyleName,
+      testerContent,
+      testerColumns,
+      testerColumnGap,
+      testerFontSize,
+      testerLineHeight,
+      content ${portableTextProjection},
       typeface->{ slug, name, collectionId }
     },
     inUseGallery[]${galleryItemProjection}
@@ -99,7 +113,8 @@ if (page) {
       .url();
   }
 } else {
-  return Astro.redirect('/404');
+  Astro.response.status = 404;
+  return Astro.rewrite('/404');
 }
 const isGalleryPage = pageLayout === 'gallery';
 const isOrdersPage = slug === 'orders';
@@ -146,6 +161,34 @@ const ordersIllustrationSrc = isOrdersPage
               return (
                 <FontdueSection>
                   <fontdue-type-testers collection-slug={collectionSlug} />
+                </FontdueSection>
+              );
+            }
+            if (
+              section.sectionType === 'customTypeTester' &&
+              typefaceName?.trim() &&
+              section.testerStyleName?.trim() &&
+              section.testerContent?.trim()
+            ) {
+              const columns = section.testerColumns === '3' ? '3' : '2';
+              const lineHeight =
+                typeof section.testerLineHeight === 'number' &&
+                section.testerLineHeight > 0
+                  ? section.testerLineHeight
+                  : 1.5;
+              return (
+                <FontdueSection>
+                  <fontdue-type-tester
+                    family-name={typefaceName.trim()}
+                    style-name={section.testerStyleName.trim()}
+                    content={section.testerContent}
+                    line-height={String(lineHeight)}
+                    {...(section.testerFontSize
+                      ? { 'font-size': String(section.testerFontSize) }
+                      : {})}
+                    data-tester-columns={columns}
+                    data-tester-column-gap={section.testerColumnGap ?? '1em'}
+                  />
                 </FontdueSection>
               );
             }

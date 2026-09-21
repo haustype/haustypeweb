@@ -11,8 +11,8 @@ interface Props {
 const { items: cmsItems = [] } = Astro.props;
 const items = cmsItems;
 const gridId = `fonts-in-use-${Math.random().toString(36).slice(2)}`;
-/** Extra slide copies for swipe runway; middle copy is where we start and normalize. */
-const LOOP_COPY_COUNT = 17;
+/** Odd count so a middle band exists; 9 gives swipe runway without the old 17× DOM cost. */
+const LOOP_COPY_COUNT = 9;
 const middleCopy = Math.floor(LOOP_COPY_COUNT / 2);
 const loopItems = items.length > 0
   ? Array.from({ length: LOOP_COPY_COUNT }, () => items).flat()
@@ -49,7 +49,10 @@ const loopItems = items.length > 0
 
   <div class="fonts-in-use__viewport" id={`${gridId}-viewport`} data-reveal>
     <div class="fonts-in-use__track flex" id={`${gridId}-track`}>
-      {loopItems.map((item, loopIndex) => (
+      {loopItems.map((item, loopIndex) => {
+        const copyIndex = Math.floor(loopIndex / items.length);
+        const eager = copyIndex === middleCopy;
+        return (
         <div class="fonts-in-use__slide shrink-0" data-slide-index={loopIndex}>
           <img
             src={item.url}
@@ -59,12 +62,13 @@ const loopItems = items.length > 0
             class="fonts-in-use__image aspect-[4/5] w-full rounded-site object-cover"
             data-media-placeholder
             data-media-placeholder-class="media-placeholder aspect-[4/5] rounded-site"
-            loading="lazy"
+            loading={eager ? 'eager' : 'lazy'}
             decoding="async"
             draggable="false"
           />
         </div>
-      ))}
+        );
+      })}
     </div>
   </div>
 
@@ -173,6 +177,7 @@ const loopItems = items.length > 0
     let dragStartX = 0;
     let dragStartScrollLeft = 0;
     let dragActive = false;
+    let loopFrame = 0;
 
     const SCROLL_MS = 420;
     const SCROLL_MIN_MS = 220;
@@ -189,6 +194,20 @@ const loopItems = items.length > 0
         animFrame = 0;
       }
       animating = false;
+    }
+
+    function scheduleLoopNormalize() {
+      if (loopFrame) return;
+      loopFrame = requestAnimationFrame(() => {
+        loopFrame = 0;
+        const before = viewport.scrollLeft;
+        maintainInfiniteScroll();
+        const delta = viewport.scrollLeft - before;
+        if (delta !== 0 && dragActive) {
+          // Keep drag math continuous across seamless wrap jumps
+          dragStartScrollLeft += delta;
+        }
+      });
     }
 
     function snapToMiddleIndex(index) {
@@ -409,9 +428,13 @@ const loopItems = items.length > 0
 
       lastScrollAt = performance.now();
 
-      if (!userInteracting) {
-        scheduleScrollEnd();
+      // Re-center the loop while swiping so wraps happen before the runway runs out
+      if (userInteracting) {
+        scheduleLoopNormalize();
+        return;
       }
+
+      scheduleScrollEnd();
     }
 
     function scheduleScrollEnd() {
@@ -493,6 +516,7 @@ const loopItems = items.length > 0
       e.preventDefault();
       viewport.scrollLeft = dragStartScrollLeft - deltaX;
       lastScrollAt = performance.now();
+      scheduleLoopNormalize();
     }
 
     function onPointerUpOrCancel(e) {
@@ -556,12 +580,6 @@ const loopItems = items.length > 0
 
     lastWidth = window.innerWidth;
     layout();
-
-    track.querySelectorAll('img').forEach((img) => {
-      if (!img.complete) {
-        img.addEventListener('load', () => layout(true), { once: true });
-      }
-    });
 
     window.addEventListener('resize', onResize, { passive: true });
   }
