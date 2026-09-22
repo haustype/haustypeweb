@@ -13,6 +13,12 @@ import {
   FONTDUE_UI_FONT_CSS,
   FONTDUE_UI_FONT_PRELOAD,
 } from '../lib/fontdue-config';
+import {
+  jsonLdScript,
+  organizationJsonLd,
+  webSiteJsonLd,
+  type JsonLd,
+} from '../lib/json-ld';
 
 interface Props {
   /** Page-specific title; combined with the CMS title suffix unless fullTitle is set. */
@@ -21,6 +27,8 @@ interface Props {
   fullTitle?: string;
   description?: string;
   image?: string;
+  /** Optional extra JSON-LD nodes merged into the page graph. */
+  jsonLd?: JsonLd;
   preloadImages?: string[];
   buyCollectionId?: string;
   trialFontsHref?: string;
@@ -31,6 +39,7 @@ const {
   fullTitle,
   description: descriptionProp,
   image: imageProp,
+  jsonLd: extraJsonLd,
   preloadImages = [],
   buyCollectionId,
   trialFontsHref,
@@ -61,6 +70,27 @@ const twitterHandle = siteIdentity.twitterHandle
   : null;
 const gaId = siteIdentity.googleAnalyticsId;
 
+const siteOrigin = Astro.site?.origin ?? 'https://www.haustype.com';
+const orgNode = organizationJsonLd({
+  name: siteIdentity.siteName,
+  url: siteOrigin,
+  description: siteIdentity.defaultDescription,
+  logoUrl: siteIdentity.faviconUrl
+    ? new URL(siteIdentity.faviconUrl, Astro.url).href
+    : null,
+});
+const websiteNode = webSiteJsonLd({
+  name: siteIdentity.siteName,
+  url: siteOrigin,
+  description: siteIdentity.defaultDescription,
+});
+const extraNodes = extraJsonLd
+  ? Array.isArray(extraJsonLd)
+    ? extraJsonLd
+    : [extraJsonLd]
+  : [];
+const structuredData = jsonLdScript([orgNode, websiteNode, ...extraNodes]);
+
 const isBlog =
   Astro.url.pathname === '/blog' || Astro.url.pathname.startsWith('/blog/');
 const is404Page = Astro.url.pathname === '/404';
@@ -88,6 +118,7 @@ const screensaver = !isBlog && !is404Page ? await loadScreensaverOptions() : nul
       <link rel="apple-touch-icon" href={siteIdentity.appleTouchIconUrl} />
     )}
     <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en" />
     <meta property="og:site_name" content={siteIdentity.siteName} />
     <meta property="og:title" content={documentTitle} />
     <meta property="og:description" content={description} />
@@ -98,6 +129,7 @@ const screensaver = !isBlog && !is404Page ? await loadScreensaverOptions() : nul
     <meta name="twitter:title" content={documentTitle} />
     <meta name="twitter:description" content={description} />
     {shareImageUrl && <meta name="twitter:image" content={shareImageUrl} />}
+    <script type="application/ld+json" set:html={structuredData} />
     <link
       rel="preload"
       href={FONTDUE_UI_FONT_PRELOAD}

@@ -62,7 +62,7 @@ export const pageType = defineType({
       title: 'Custom embed code',
       rows: 8,
       description:
-        'Optional HTML shown below page content — e.g. Fontdue web components such as <fontdue-customer-login-form></fontdue-customer-login-form>.',
+        'Optional HTML below page content (e.g. <fontdue-customer-login-form>). Scripts and event handlers are stripped on the site; prefer Fontdue web components.',
     }),
     defineField({
       name: 'ordersIllustration',

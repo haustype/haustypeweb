@@ -8,10 +8,12 @@ import FontdueSection from '../../components/FontdueSection.astro';
 import PortableText from '../../components/PortableText.astro';
 import TypefaceHero from '../../components/TypefaceHero.astro';
 import { resolveHeaderSvgBottomPadding } from '../../lib/box-padding';
+import { typefaceJsonLd } from '../../lib/json-ld';
 import { portableTextProjection } from '../../lib/portable-text';
 import { sanityImageProjection } from '../../lib/sanity-image';
 import { typefaceSlug } from '../../lib/typeface';
 import { safeLoadQuery } from '../../sanity/lib/safe-fetch';
+import { urlForImage } from '../../sanity/lib/url-for-image';
 
 type PageSection = {
   _key?: string;
@@ -49,6 +51,7 @@ const { data: typefacesData } = await safeLoadQuery<Array<{
   pageSections?: PageSection[] | null;
   headerSvg?: { url?: string | null; alt?: string | null } | null;
   headerSvgPadding?: { bottom?: number | null } | null;
+  homepageImages?: Array<{ image?: unknown }> | null;
 }>>({
   query: `*[_type == "typeface"]{
     name,
@@ -79,7 +82,8 @@ const { data: typefacesData } = await safeLoadQuery<Array<{
       "url": asset->url,
       "alt": alt
     },
-    headerSvgPadding
+    headerSvgPadding,
+    homepageImages[]{ image }
   }`,
 });
 
@@ -114,6 +118,7 @@ const font = {
 
 const pageTitle =
   font.contentSegments[0]?.heading?.trim() || font.name;
+const pageDescription = `${pageTitle} — explore and purchase from Haus Type.`;
 
 const introSegment = font.contentSegments[0];
 const extraSegments = font.contentSegments.slice(1);
@@ -124,11 +129,34 @@ const sections: PageSection[] = (
 ).filter((section) => section.sectionType !== 'buyButton');
 
 const preloadImages = font.headerSvg?.url ? [font.headerSvg.url] : [];
+
+const firstHomepageImage = matched.homepageImages?.find((entry) => entry.image);
+const shareImage = firstHomepageImage?.image
+  ? urlForImage(firstHomepageImage.image as Parameters<typeof urlForImage>[0])
+      .width(1200)
+      .height(630)
+      .fit('crop')
+      .auto('format')
+      .quality(85)
+      .url()
+  : undefined;
+
+const canonicalPath = `/typefaces/${slug}`;
+const siteOrigin = Astro.site?.origin ?? 'https://www.haustype.com';
+const typefaceLd = typefaceJsonLd({
+  name: font.name,
+  description: pageDescription,
+  url: new URL(canonicalPath, siteOrigin).href,
+  imageUrl: shareImage ?? null,
+  siteUrl: siteOrigin,
+});
 ---
 
 <BaseLayout
   title={pageTitle}
-  description={`${pageTitle} - Explore and purchase from Haus Type foundry.`}
+  description={pageDescription}
+  image={shareImage}
+  jsonLd={typefaceLd}
   buyCollectionId={font.collectionId}
   trialFontsHref="/trial-fonts"
   preloadImages={preloadImages}

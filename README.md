@@ -1,130 +1,56 @@
 # Haus Type Website
 
-A modern, responsive website for the Haus Type foundry. Built with Astro for speed and SEO, with Sanity.io for content management.
-
-## Features
-
-- **6-column grid layout** – Clean, typography-focused design
-- **Hero display** – Showcase images/videos of your fonts
-- **Fonts In Use carousel** – Client work with arrow navigation
-- **Blog & pages** – Managed via Sanity CMS
-- **SEO** – Sitemap, meta tags, semantic HTML
-- **No smooth scrolling** – Instant scroll behavior
-- **fontdue.js** – Ready for integration after Netlify deployment
+Astro + Sanity + Fontdue site for the Haus Type foundry. Live at [www.haustype.com](https://www.haustype.com).
 
 ## Development
 
 ```bash
 npm install
-npm run dev
+npm run dev      # site → http://localhost:4321
+npm run studio   # Sanity Studio → http://localhost:3334
 ```
 
-Visit `http://localhost:4321`
+## Content (Sanity)
 
-## Build
+Edit at [https://haustypeweb.sanity.studio/](https://haustypeweb.sanity.studio/) or via [sanity.io/manage](https://sanity.io/manage).
+
+- **Homepage Settings** — mosaic, about, fonts in use
+- **Site Settings** — identity, SEO defaults, screensaver, nav, custom code
+- **Typefaces / Pages / Blog** — catalog and editorial content
+- **Footer Settings** — Info + Contact link lists
+
+Publishing in Studio triggers a Netlify rebuild (webhook → build hook). Use **Publish**, not just Save.
+
+After schema changes in this repo: restart local Studio, and run `npx sanity deploy` so the hosted Studio matches.
+
+## Build & deploy
 
 ```bash
 npm run build
+# or push to main — Netlify builds automatically
 ```
 
-Output in `dist/`
+Env (local `.env` + Netlify):
 
-## Sanity CMS Setup
+- `PUBLIC_SANITY_PROJECT_ID` / `PUBLIC_SANITY_DATASET`
+- `PUBLIC_SITE_URL=https://www.haustype.com` (production)
 
-1. **Create a Sanity project** (one-time setup):
-
-   ```bash
-   npx sanity@latest init --env
-   ```
-
-   Follow the prompts to create a project. This writes `PUBLIC_SANITY_PROJECT_ID` and `PUBLIC_SANITY_DATASET` to `.env`.
-
-2. **Edit content** at [sanity.io/manage](https://sanity.io/manage) → select your project. Or run `npm run studio` to open the studio locally.
-
-   **Homepage** (hero, about text, typefaces grid order, fonts in use) lives under **Homepage Settings**. **Site Settings** is header/footer navigation only.
-
-   If Studio shows **Unknown fields** on Site Settings (leftover `aboutText` / `heroItems` / etc.), run once:
-
-   ```bash
-   SANITY_API_TOKEN="your-token" npm run migrate:homepage
-   ```
-
-   Or: `npx sanity exec scripts/migrate-homepage-from-siteSettings.mjs --with-user-token`
-
-   Then redeploy the Studio (`npx sanity deploy`) so the cloud editor matches this repo.
-
-   **If Studio shows “Unknown fields” for things like Blog page title or Footer navigation**, the hosted Studio is outdated — run `npx sanity deploy` from this repo (Studio URL is typically `https://haustypeweb.sanity.studio/`).
-
-3. **Add CORS origins** in [sanity.io/manage](https://sanity.io/manage) → your project → API → CORS origins:
-   - `http://localhost:4321` (development)
-   - `https://www.haustype.com` (production — apex redirects here)
-   - `https://haustype.com`
-   - `https://haustypeweb.netlify.app` (Netlify preview / interim)
-
-4. **Netlify env vars**: Add `PUBLIC_SANITY_PROJECT_ID` and `PUBLIC_SANITY_DATASET` to your Netlify site settings.
-
-5. **Webhook for live updates** – when you publish in Sanity, trigger a Netlify rebuild:
-
-   **Create the Netlify build hook:**
-   1. Go to [app.netlify.com](https://app.netlify.com) and sign in
-   2. Click your site (e.g. haustypeweb)
-   3. Left sidebar → **Site configuration** → **Build & deploy**
-   4. Scroll down to the **Build hooks** section
-   5. Click **Add build hook** / **Create build hook**
-   7. **Name:** e.g. `Sanity`
-   8. **Branch to build:** `main` (or your production branch)
-   9. Click **Save**
-   10. Copy the generated URL (looks like `https://api.netlify.com/build_hooks/abc123...`)
-
-   *If you don’t see Build hooks:* Use the search bar at the top of Netlify and search for “build hooks”, or check under **Continuous deployment** within Build & deploy.
-
-   **Run the setup script:**
-   ```bash
-   NETLIFY_BUILD_HOOK_URL="https://api.netlify.com/build_hooks/YOUR_ID" \
-   SANITY_API_TOKEN="your-sanity-token" \
-   node scripts/setup-sanity-webhook.mjs
-   ```
-   (Create the Sanity token at [sanity.io/manage](https://sanity.io/manage) → your project → **API** → **Tokens** → **Add API token**)
-
-**Localhost**: Run `npm run dev` (not `npm run preview`). The dev server fetches from Sanity on each request, so changes appear after a refresh. Use **Publish** in Sanity, not just Save—drafts don’t appear on the site.
-
-## Pausing automatic deploys
-
-To work locally and deploy manually (e.g. once a day):
-
-1. **Disable the Sanity webhook** – stops Sanity publishes from triggering builds:
-   ```bash
-   SANITY_API_TOKEN="your-token" node scripts/pause-auto-deploys.mjs
-   ```
-
-2. **Stop Netlify builds** – [Netlify docs](https://docs.netlify.com/build/configure-builds/stop-or-activate-builds): Site configuration → Build & deploy → Continuous deployment → **Stop builds**. Git pushes and build hooks will no longer trigger deploys. You can still deploy manually with `npm run deploy` or via the Netlify UI.
-
-To re-enable: Run `setup-sanity-webhook.mjs` again (delete the disabled webhook in Sanity first if needed), and turn builds back on in Netlify.
-
-## Netlify Deployment
-
-1. Push to GitHub and connect the repo to Netlify
-2. Build command: `npm run build`
-3. Publish directory: `dist`
-4. Add env vars: `PUBLIC_SANITY_PROJECT_ID`, `PUBLIC_SANITY_DATASET`
-5. Add fontdue.js for font sales (integrate after deployment)
-
-## CMS
-
-Edit content at [sanity.io/manage](https://sanity.io/manage) or run `npm run studio` (or `npx sanity dev`) locally. Content types: **Blog posts**, **Pages**, **Typefaces**, **Site Settings** (hero, about text, fonts in use). Typefaces include **Detail page layout** (order of type tester, character viewer, buy button, custom content) and **Detail page title** (optional heading override). **After changing schema files**, restart the Studio so new fields appear: stop it (Ctrl+C) and run `npm run studio` again; if you use the deployed Studio, run `npx sanity deploy` to publish the updated schema.
-
-If the homepage typefaces don’t match what you see in Sanity Studio, the site is likely using fallback data: set `PUBLIC_SANITY_PROJECT_ID` and `PUBLIC_SANITY_DATASET` in `.env` (local) and in Netlify env vars (production), then rebuild. Order the homepage list in **Homepage Settings → Our Typefaces**; add a **Homepage specimen** SVG on each typeface (otherwise the typeface name is shown as fallback text).
-
-## Project Structure
+## Project structure
 
 ```
 src/
-├── components/     # Header, Hero, Footer, Carousel, etc.
-├── content/        # Fallback blog/pages (Astro content, used when Sanity empty)
-├── layouts/        # Base layout with SEO
-├── pages/          # Routes
-├── sanity/         # Sanity schemas and lib
-└── styles/         # Global CSS
-public/
-└── uploads/        # CMS media uploads (legacy)
+├── components/
+├── layouts/        # BaseLayout (SEO, JSON-LD, fonts)
+├── lib/
+├── pages/          # Routes + robots.txt / sitemap.xml
+├── sanity/         # Schemas + clients
+└── styles/
 ```
+
+## Pausing auto-deploys
+
+```bash
+SANITY_API_TOKEN="your-token" node scripts/pause-auto-deploys.mjs
+```
+
+Also stop builds in Netlify if needed. Re-enable the Sanity webhook when ready again.

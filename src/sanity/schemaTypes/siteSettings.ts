@@ -248,7 +248,8 @@ export const siteSettingsType = defineType({
       name: 'customCode',
       type: 'object',
       title: 'Custom Code',
-      description: 'Inject custom HTML on every page — useful for overriding Fontdue plugin styles.',
+      description:
+        'Trusted Studio users only — injected as raw HTML on every page (e.g. Fontdue style overrides). Do not paste untrusted third-party snippets.',
       options: { collapsible: true, collapsed: true },
       fields: [
         defineField({

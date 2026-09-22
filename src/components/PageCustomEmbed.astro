@@ -1,10 +1,12 @@
 ---
+import { sanitizeCmsHtml } from '../lib/sanitize-cms-html';
+
 interface Props {
   html: string;
 }
 
 const { html } = Astro.props;
-const trimmed = html?.trim() ?? '';
+const trimmed = sanitizeCmsHtml(html);
 ---
 
 {
