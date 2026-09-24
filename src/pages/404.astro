@@ -6,9 +6,10 @@ import Header from '../components/Header.astro';
 import PageWentPoof from '../components/PageWentPoof.astro';
 
 Astro.response.status = 404;
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
 ---
 
-<BaseLayout fullTitle="404 — Haus Type" description="Page not found">
+<BaseLayout fullTitle="404 — Haus Type" description="Page not found" noindex>
   <Header />
   <main class="not-found-page bg-site flex-1">
     <div class="not-found-page__content px-8 text-center">

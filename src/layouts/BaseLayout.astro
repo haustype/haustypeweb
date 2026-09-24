@@ -29,6 +29,8 @@ interface Props {
   image?: string;
   /** Optional extra JSON-LD nodes merged into the page graph. */
   jsonLd?: JsonLd;
+  /** When true, emit robots noindex (e.g. 404). */
+  noindex?: boolean;
   preloadImages?: string[];
   buyCollectionId?: string;
   trialFontsHref?: string;
@@ -40,6 +42,7 @@ const {
   description: descriptionProp,
   image: imageProp,
   jsonLd: extraJsonLd,
+  noindex = false,
   preloadImages = [],
   buyCollectionId,
   trialFontsHref,
@@ -106,6 +109,7 @@ const screensaver = !isBlog && !is404Page ? await loadScreensaverOptions() : nul
     <meta name="theme-color" content={siteIdentity.themeColor} />
     <title>{documentTitle}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <link rel="canonical" href={canonicalURL} />
     {siteIdentity.faviconUrl && (
       <link
