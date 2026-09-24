@@ -8,6 +8,7 @@ import FontdueSection from '../../components/FontdueSection.astro';
 import PortableText from '../../components/PortableText.astro';
 import TypefaceHero from '../../components/TypefaceHero.astro';
 import { resolveHeaderSvgBottomPadding } from '../../lib/box-padding';
+import { fetchFontdueCollectionOffer } from '../../lib/fontdue-offer';
 import { typefaceJsonLd } from '../../lib/json-ld';
 import { portableTextProjection } from '../../lib/portable-text';
 import { sanityImageProjection } from '../../lib/sanity-image';
@@ -143,12 +144,14 @@ const shareImage = firstHomepageImage?.image
 
 const canonicalPath = `/typefaces/${slug}`;
 const siteOrigin = Astro.site?.origin ?? 'https://www.haustype.com';
+const offer = slug ? await fetchFontdueCollectionOffer(slug) : null;
 const typefaceLd = typefaceJsonLd({
   name: font.name,
   description: pageDescription,
   url: new URL(canonicalPath, siteOrigin).href,
   imageUrl: shareImage ?? null,
   siteUrl: siteOrigin,
+  offer,
 });
 ---
 

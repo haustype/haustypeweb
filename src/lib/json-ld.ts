@@ -43,8 +43,13 @@ export function typefaceJsonLd(opts: {
   url: string;
   imageUrl?: string | null;
   siteUrl: string;
+  offer?: {
+    price: string;
+    priceCurrency: string;
+    url: string;
+  } | null;
 }): Record<string, unknown> {
-  return {
+  const product: Record<string, unknown> = {
     '@type': 'Product',
     name: opts.name,
     description: opts.description,
@@ -57,6 +62,22 @@ export function typefaceJsonLd(opts: {
     category: 'Fonts',
     isPartOf: { '@id': `${opts.siteUrl}#website` },
   };
+
+  if (opts.offer) {
+    product.offers = {
+      '@type': 'Offer',
+      url: opts.offer.url,
+      priceCurrency: opts.offer.priceCurrency,
+      price: opts.offer.price,
+      availability: 'https://schema.org/InStock',
+      seller: {
+        '@type': 'Organization',
+        name: 'Haus Type',
+      },
+    };
+  }
+
+  return product;
 }
 
 /** Build a JSON-LD graph for <script type="application/ld+json">. */
