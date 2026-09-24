@@ -9,6 +9,9 @@ export type FontdueCollectionOffer = {
 type FontCollectionNode = {
   name?: string | null;
   slug?: { name?: string | null } | null;
+  /** Discounted full-family / collection SKU price (what “buy the family” costs). */
+  sku?: { price?: { amount?: number | null; currency?: string | null } | null } | null;
+  /** Sum of individual style prices — usually higher than the family deal. */
   totalStylesPrice?: { amount?: number | null; currency?: string | null } | null;
   url?: string | null;
 };
@@ -31,6 +34,7 @@ async function loadOfferCache(): Promise<OfferCache | null> {
           node {
             name
             slug { name }
+            sku { price { amount currency } }
             totalStylesPrice { amount currency }
             url
           }
@@ -63,8 +67,10 @@ async function loadOfferCache(): Promise<OfferCache | null> {
     for (const edge of json.data?.viewer?.fontCollections?.edges ?? []) {
       const node = edge.node;
       const slug = node?.slug?.name?.trim();
-      const amount = node?.totalStylesPrice?.amount;
-      const currency = node?.totalStylesPrice?.currency?.trim();
+      // Prefer collection SKU (family discount) over sum-of-styles.
+      const money = node?.sku?.price ?? node?.totalStylesPrice;
+      const amount = money?.amount;
+      const currency = money?.currency?.trim();
       if (!slug || amount == null || !currency || amount < 0) continue;
       bySlug.set(slug, {
         price: (amount / 100).toFixed(2),
@@ -82,8 +88,9 @@ async function loadOfferCache(): Promise<OfferCache | null> {
 }
 
 /**
- * Fetch the full-family price for a Fontdue collection by slug.
- * Amounts from Fontdue Money are minor units (e.g. 29000 → 290.00 EUR).
+ * Fetch the buy-the-family price for a Fontdue collection by slug.
+ * Uses collection SKU price (discounted family deal). Amounts are minor units
+ * (e.g. 9900 → 99.00 EUR). Falls back to sum-of-styles if SKU price is missing.
  */
 export async function fetchFontdueCollectionOffer(
   slug: string,
