@@ -36,12 +36,12 @@ if (!showFacts && !hasCustomOverride) {
 {
   showFacts && (
     <>
-      <div class="typeface-hero-meta typeface-hero-meta--labels col-span-6 md:col-span-1 md:col-start-10">
+      <div class="typeface-hero-meta typeface-hero-meta--labels hidden md:block md:col-span-1 md:col-start-10">
         {factRows.map((row) => (
           <div class="typeface-hero-meta__line">{row.label}:</div>
         ))}
       </div>
-      <div class="typeface-hero-meta typeface-hero-meta--values col-span-6 md:col-span-2 md:col-start-11">
+      <div class="typeface-hero-meta typeface-hero-meta--values hidden md:block md:col-span-2 md:col-start-11">
         {factRows.map((row) => (
           <div class="typeface-hero-meta__line">{row.value}</div>
         ))}
@@ -54,12 +54,12 @@ if (!showFacts && !hasCustomOverride) {
   hasCustomOverride && (
     <>
       {columnOne && (
-        <div class="typeface-hero-meta col-span-12 md:col-span-1 md:col-start-10">
+        <div class="typeface-hero-meta hidden md:block md:col-span-1 md:col-start-10">
           <PortableText value={columnOne} />
         </div>
       )}
       {columnTwo && (
-        <div class="typeface-hero-meta col-span-12 md:col-span-2 md:col-start-11">
+        <div class="typeface-hero-meta hidden md:block md:col-span-2 md:col-start-11">
           <PortableText value={columnTwo} />
         </div>
       )}
@@ -70,16 +70,15 @@ if (!showFacts && !hasCustomOverride) {
 <style>
   .typeface-hero-meta {
     font-family: var(--site-font);
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 400;
     line-height: var(--site-line-height);
     color: #000;
-    padding-top: 4px;
   }
 
   .typeface-hero-meta__line {
     margin: 0;
-    font-weight: 500;
+    font-weight: 400;
     color: #000;
   }
 
@@ -87,7 +86,7 @@ if (!showFacts && !hasCustomOverride) {
     margin: 0;
     line-height: var(--site-line-height);
     color: inherit;
-    font-weight: 500;
+    font-weight: 400;
   }
 
   .typeface-hero-meta :global(:where(p + p)) {
