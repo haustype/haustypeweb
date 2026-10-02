@@ -84,7 +84,8 @@ export const typefaceType = defineType({
       name: 'releaseYear',
       type: 'number',
       title: 'Release year',
-      description: 'Shown in the yellow hero (right column) when no custom hero meta is set.',
+      description:
+        'Shown with Styles and Designer as labels in the yellow hero’s first right column (1 grid column); values sit in the adjacent 2-column slot.',
       validation: (Rule) =>
         Rule.integer().min(1900).max(2100).warning('Use a four-digit year'),
     }),
@@ -92,25 +93,28 @@ export const typefaceType = defineType({
       name: 'designer',
       type: 'string',
       title: 'Designer',
-      description: 'Shown in the yellow hero (right column) when no custom hero meta is set.',
+      description:
+        'Shown with Styles and Release as labels in the yellow hero’s first right column (1 grid column); values sit in the adjacent 2-column slot.',
     }),
     defineField({
       name: 'heroMeta',
       type: 'object',
       title: 'Hero metadata (right columns)',
       description:
-        'Optional rich text for the two right columns in the yellow hero (1 + 2 grid columns). When empty, Category/Styles and Release/Designer are used.',
+        'Optional rich text overrides for the two right columns (1 + 2 grid columns). When empty, Styles / Release / Designer fill those columns (labels | values).',
       options: { collapsible: true, collapsed: true },
       fields: [
         defineField({
           name: 'columnOne',
           type: 'blockContent',
           title: 'Right column (1 grid column)',
+          description: 'Normally holds Styles: / Release: / Designer: labels. Set this to override.',
         }),
         defineField({
           name: 'columnTwo',
           type: 'blockContent',
           title: 'Right column (2 grid columns)',
+          description: 'Normally holds the values (10, year, designer name). Set this to override.',
         }),
       ],
     }),

@@ -5,116 +5,89 @@ interface Props {
   styles?: number | null;
   releaseYear?: number | null;
   designer?: string | null;
-  category?: string | null;
   columnOne?: unknown;
   columnTwo?: unknown;
 }
 
-const { styles, releaseYear, designer, category, columnOne, columnTwo } = Astro.props;
+const { styles, releaseYear, designer, columnOne, columnTwo } = Astro.props;
 
-const hasColumnOneBlocks = Boolean(columnOne);
-const hasColumnTwoBlocks = Boolean(columnTwo);
+const hasCustomOverride = Boolean(columnOne) || Boolean(columnTwo);
 
-const showFactsColumnOne =
-  !hasColumnOneBlocks && (category?.trim() || (styles != null && styles > 0));
-const showFactsColumnTwo =
-  !hasColumnTwoBlocks && (releaseYear != null || Boolean(designer?.trim()));
+const factRows: Array<{ label: string; value: string }> = [];
+if (!hasCustomOverride) {
+  if (styles != null && styles > 0) {
+    factRows.push({ label: 'Styles', value: String(styles) });
+  }
+  if (releaseYear != null) {
+    factRows.push({ label: 'Release', value: String(releaseYear) });
+  }
+  if (designer?.trim()) {
+    factRows.push({ label: 'Designer', value: designer.trim() });
+  }
+}
 
-const showColumnOne = hasColumnOneBlocks || showFactsColumnOne;
-const showColumnTwo = hasColumnTwoBlocks || showFactsColumnTwo;
+const showFacts = factRows.length > 0;
 
-if (!showColumnOne && !showColumnTwo) {
+if (!showFacts && !hasCustomOverride) {
   return null;
 }
 ---
 
 {
-  showColumnOne && (
-    <div class="typeface-hero-meta col-span-12 md:col-span-1 md:col-start-10">
-      {hasColumnOneBlocks ? (
-        <PortableText value={columnOne} />
-      ) : (
-        <dl class="typeface-hero-meta__list">
-          {category?.trim() && (
-            <div class="typeface-hero-meta__row">
-              <dt>Category</dt>
-              <dd>{category.trim()}</dd>
-            </div>
-          )}
-          {styles != null && styles > 0 && (
-            <div class="typeface-hero-meta__row">
-              <dt>Styles</dt>
-              <dd>{styles}</dd>
-            </div>
-          )}
-        </dl>
-      )}
-    </div>
+  showFacts && (
+    <>
+      <div class="typeface-hero-meta typeface-hero-meta--labels col-span-6 md:col-span-1 md:col-start-10">
+        {factRows.map((row) => (
+          <div class="typeface-hero-meta__line">{row.label}:</div>
+        ))}
+      </div>
+      <div class="typeface-hero-meta typeface-hero-meta--values col-span-6 md:col-span-2 md:col-start-11">
+        {factRows.map((row) => (
+          <div class="typeface-hero-meta__line">{row.value}</div>
+        ))}
+      </div>
+    </>
   )
 }
 
 {
-  showColumnTwo && (
-    <div class="typeface-hero-meta col-span-12 md:col-span-2 md:col-start-11">
-      {hasColumnTwoBlocks ? (
-        <PortableText value={columnTwo} />
-      ) : (
-        <dl class="typeface-hero-meta__list">
-          {releaseYear != null && (
-            <div class="typeface-hero-meta__row">
-              <dt>Release</dt>
-              <dd>{releaseYear}</dd>
-            </div>
-          )}
-          {designer?.trim() && (
-            <div class="typeface-hero-meta__row">
-              <dt>Designer</dt>
-              <dd>{designer.trim()}</dd>
-            </div>
-          )}
-        </dl>
+  hasCustomOverride && (
+    <>
+      {columnOne && (
+        <div class="typeface-hero-meta col-span-12 md:col-span-1 md:col-start-10">
+          <PortableText value={columnOne} />
+        </div>
       )}
-    </div>
+      {columnTwo && (
+        <div class="typeface-hero-meta col-span-12 md:col-span-2 md:col-start-11">
+          <PortableText value={columnTwo} />
+        </div>
+      )}
+    </>
   )
 }
 
 <style>
   .typeface-hero-meta {
+    font-family: var(--site-font);
     font-size: 12px;
+    font-weight: 500;
     line-height: var(--site-line-height);
-    color: var(--site-fg-muted);
+    color: #000;
     padding-top: 4px;
   }
 
-  .typeface-hero-meta__list {
+  .typeface-hero-meta__line {
     margin: 0;
-  }
-
-  .typeface-hero-meta__row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-    gap: 0.75rem;
-    align-items: baseline;
-  }
-
-  .typeface-hero-meta__row + .typeface-hero-meta__row {
-    margin-top: 0.75em;
-  }
-
-  .typeface-hero-meta__row dt {
-    margin: 0;
-    font-weight: 400;
-  }
-
-  .typeface-hero-meta__row dd {
-    margin: 0;
-    color: var(--site-fg);
+    font-weight: 500;
+    color: #000;
   }
 
   .typeface-hero-meta :global(:where(p, li, blockquote)) {
     margin: 0;
     line-height: var(--site-line-height);
     color: inherit;
+    font-weight: 500;
   }
 
   .typeface-hero-meta :global(:where(p + p)) {
@@ -122,13 +95,12 @@ if (!showColumnOne && !showColumnTwo) {
   }
 
   .typeface-hero-meta :global(:where(a)) {
-    color: var(--site-fg);
-    opacity: 0.72;
+    color: #000;
     text-decoration: none;
     transition: opacity 0.25s ease;
   }
 
   .typeface-hero-meta :global(:where(a:hover)) {
-    opacity: 1;
+    opacity: 0.72;
   }
 </style>

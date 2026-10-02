@@ -54,7 +54,8 @@ export const contentSegmentType = defineType({
       name: 'aside',
       type: 'blockContent',
       title: 'Aside',
-      description: 'Optional notes or CTA in column 10 (split layout only).',
+      description:
+        'Optional notes or CTA in column 10 (split layout only). On typeface pages, the yellow hero hides Aside when Styles / Release / Designer (or custom hero metadata) are set — use those typeface fields instead for the intro.',
       hidden: ({ parent }) => parent?.layout === 'feature',
     }),
   ],

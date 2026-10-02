@@ -48,7 +48,6 @@ const { data: typefacesData } = await safeLoadQuery<Array<{
   slug?: { current: string };
   collectionId?: string;
   metaDescription?: string | null;
-  category?: string | null;
   styles?: number | null;
   releaseYear?: number | null;
   designer?: string | null;
@@ -67,7 +66,6 @@ const { data: typefacesData } = await safeLoadQuery<Array<{
     slug,
     collectionId,
     metaDescription,
-    category,
     styles,
     releaseYear,
     designer,
@@ -201,7 +199,6 @@ const typefaceLd = typefaceJsonLd({
         styles: matched.styles,
         releaseYear: matched.releaseYear,
         designer: matched.designer,
-        category: matched.category,
         columnOne: matched.heroMeta?.columnOne,
         columnTwo: matched.heroMeta?.columnTwo,
       }}
