@@ -3,7 +3,7 @@ import PortableText from './PortableText.astro';
 
 interface Props {
   styles?: number | null;
-  releaseYear?: number | null;
+  releaseYear?: string | number | null;
   designer?: string | null;
   columnOne?: unknown;
   columnTwo?: unknown;
@@ -18,8 +18,9 @@ if (!hasCustomOverride) {
   if (styles != null && styles > 0) {
     factRows.push({ label: 'Styles', value: String(styles) });
   }
-  if (releaseYear != null) {
-    factRows.push({ label: 'Release', value: String(releaseYear) });
+  const year = releaseYear != null ? String(releaseYear).trim() : '';
+  if (year) {
+    factRows.push({ label: 'Release', value: year });
   }
   if (designer?.trim()) {
     factRows.push({ label: 'Designer', value: designer.trim() });

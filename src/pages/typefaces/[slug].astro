@@ -8,7 +8,7 @@ import FontdueSection from '../../components/FontdueSection.astro';
 import PortableText from '../../components/PortableText.astro';
 import TypefaceHero from '../../components/TypefaceHero.astro';
 import { resolveHeaderSvgBottomPadding } from '../../lib/box-padding';
-import { fetchFontdueCollectionOffer } from '../../lib/fontdue-offer';
+import { fetchFontdueCollectionInfo } from '../../lib/fontdue-offer';
 import { typefaceJsonLd } from '../../lib/json-ld';
 import { portableTextProjection } from '../../lib/portable-text';
 import { sanityImageProjection, type SanityImageValue } from '../../lib/sanity-image';
@@ -48,9 +48,6 @@ const { data: typefacesData } = await safeLoadQuery<Array<{
   slug?: { current: string };
   collectionId?: string;
   metaDescription?: string | null;
-  styles?: number | null;
-  releaseYear?: number | null;
-  designer?: string | null;
   heroMeta?: { columnOne?: unknown; columnTwo?: unknown } | null;
   body?: unknown;
   detailPageTitle?: string | null;
@@ -66,9 +63,6 @@ const { data: typefacesData } = await safeLoadQuery<Array<{
     slug,
     collectionId,
     metaDescription,
-    styles,
-    releaseYear,
-    designer,
     heroMeta {
       columnOne ${portableTextProjection},
       columnTwo ${portableTextProjection}
@@ -168,7 +162,8 @@ const shareImage = shareSource
 
 const canonicalPath = `/typefaces/${slug}`;
 const siteOrigin = Astro.site?.origin ?? 'https://www.haustype.com';
-const offer = slug ? await fetchFontdueCollectionOffer(slug) : null;
+const fontdue = slug ? await fetchFontdueCollectionInfo(slug) : null;
+const offer = fontdue?.offer ?? null;
 const typefaceLd = typefaceJsonLd({
   name: font.name,
   description: pageDescription,
@@ -196,9 +191,9 @@ const typefaceLd = typefaceJsonLd({
       typefaceName={font.name}
       bottomPadding={headerSvgBottomPadding}
       heroMeta={{
-        styles: matched.styles,
-        releaseYear: matched.releaseYear,
-        designer: matched.designer,
+        styles: fontdue?.totalStyles ?? null,
+        releaseYear: fontdue?.designYear ?? null,
+        designer: fontdue?.designers ?? null,
         columnOne: matched.heroMeta?.columnOne,
         columnTwo: matched.heroMeta?.columnTwo,
       }}

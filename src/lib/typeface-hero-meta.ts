@@ -1,6 +1,6 @@
 export type TypefaceHeroMetaInput = {
   styles?: number | null;
-  releaseYear?: number | null;
+  releaseYear?: string | number | null;
   designer?: string | null;
   columnOne?: unknown;
   columnTwo?: unknown;
@@ -10,7 +10,7 @@ export function hasTypefaceHeroMeta(meta?: TypefaceHeroMetaInput | null): boolea
   if (!meta) return false;
   if (meta.columnOne || meta.columnTwo) return true;
   if (meta.designer?.trim()) return true;
-  if (meta.releaseYear != null) return true;
+  if (meta.releaseYear != null && String(meta.releaseYear).trim() !== '') return true;
   if (meta.styles != null && meta.styles > 0) return true;
   return false;
 }

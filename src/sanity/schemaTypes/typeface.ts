@@ -79,29 +79,12 @@ export const typefaceType = defineType({
       description: 'For the floating buy button on the font detail page. Leave empty if not for sale.',
     }),
     defineField({ name: 'category', type: 'string', title: 'Category' }),
-    defineField({ name: 'styles', type: 'number', title: 'Styles', initialValue: 0 }),
-    defineField({
-      name: 'releaseYear',
-      type: 'number',
-      title: 'Release year',
-      description:
-        'Shown with Styles and Designer as labels in the yellow hero’s first right column (1 grid column); values sit in the adjacent 2-column slot.',
-      validation: (Rule) =>
-        Rule.integer().min(1900).max(2100).warning('Use a four-digit year'),
-    }),
-    defineField({
-      name: 'designer',
-      type: 'string',
-      title: 'Designer',
-      description:
-        'Shown with Styles and Release as labels in the yellow hero’s first right column (1 grid column); values sit in the adjacent 2-column slot.',
-    }),
     defineField({
       name: 'heroMeta',
       type: 'object',
       title: 'Hero metadata (right columns)',
       description:
-        'Optional rich text overrides for the two right columns (1 + 2 grid columns). When empty, Styles / Release / Designer fill those columns (labels | values).',
+        'Optional rich text overrides for the two right columns (1 + 2 grid columns). When empty, Styles / Release / Designer are filled from Fontdue.',
       options: { collapsible: true, collapsed: true },
       fields: [
         defineField({
@@ -114,7 +97,7 @@ export const typefaceType = defineType({
           name: 'columnTwo',
           type: 'blockContent',
           title: 'Right column (2 grid columns)',
-          description: 'Normally holds the values (10, year, designer name). Set this to override.',
+          description: 'Normally holds the Fontdue values. Set this to override.',
         }),
       ],
     }),
