@@ -1,0 +1,134 @@
+---
+import PortableText from './PortableText.astro';
+
+interface Props {
+  styles?: number | null;
+  releaseYear?: number | null;
+  designer?: string | null;
+  category?: string | null;
+  columnOne?: unknown;
+  columnTwo?: unknown;
+}
+
+const { styles, releaseYear, designer, category, columnOne, columnTwo } = Astro.props;
+
+const hasColumnOneBlocks = Boolean(columnOne);
+const hasColumnTwoBlocks = Boolean(columnTwo);
+
+const showFactsColumnOne =
+  !hasColumnOneBlocks && (category?.trim() || (styles != null && styles > 0));
+const showFactsColumnTwo =
+  !hasColumnTwoBlocks && (releaseYear != null || Boolean(designer?.trim()));
+
+const showColumnOne = hasColumnOneBlocks || showFactsColumnOne;
+const showColumnTwo = hasColumnTwoBlocks || showFactsColumnTwo;
+
+if (!showColumnOne && !showColumnTwo) {
+  return null;
+}
+---
+
+{
+  showColumnOne && (
+    <div class="typeface-hero-meta col-span-12 md:col-span-1 md:col-start-10">
+      {hasColumnOneBlocks ? (
+        <PortableText value={columnOne} />
+      ) : (
+        <dl class="typeface-hero-meta__list">
+          {category?.trim() && (
+            <div class="typeface-hero-meta__row">
+              <dt>Category</dt>
+              <dd>{category.trim()}</dd>
+            </div>
+          )}
+          {styles != null && styles > 0 && (
+            <div class="typeface-hero-meta__row">
+              <dt>Styles</dt>
+              <dd>{styles}</dd>
+            </div>
+          )}
+        </dl>
+      )}
+    </div>
+  )
+}
+
+{
+  showColumnTwo && (
+    <div class="typeface-hero-meta col-span-12 md:col-span-2 md:col-start-11">
+      {hasColumnTwoBlocks ? (
+        <PortableText value={columnTwo} />
+      ) : (
+        <dl class="typeface-hero-meta__list">
+          {releaseYear != null && (
+            <div class="typeface-hero-meta__row">
+              <dt>Release</dt>
+              <dd>{releaseYear}</dd>
+            </div>
+          )}
+          {designer?.trim() && (
+            <div class="typeface-hero-meta__row">
+              <dt>Designer</dt>
+              <dd>{designer.trim()}</dd>
+            </div>
+          )}
+        </dl>
+      )}
+    </div>
+  )
+}
+
+<style>
+  .typeface-hero-meta {
+    font-size: 12px;
+    line-height: var(--site-line-height);
+    color: var(--site-fg-muted);
+    padding-top: 4px;
+  }
+
+  .typeface-hero-meta__list {
+    margin: 0;
+  }
+
+  .typeface-hero-meta__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 0.75rem;
+    align-items: baseline;
+  }
+
+  .typeface-hero-meta__row + .typeface-hero-meta__row {
+    margin-top: 0.75em;
+  }
+
+  .typeface-hero-meta__row dt {
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .typeface-hero-meta__row dd {
+    margin: 0;
+    color: var(--site-fg);
+  }
+
+  .typeface-hero-meta :global(:where(p, li, blockquote)) {
+    margin: 0;
+    line-height: var(--site-line-height);
+    color: inherit;
+  }
+
+  .typeface-hero-meta :global(:where(p + p)) {
+    margin-top: 0.75em;
+  }
+
+  .typeface-hero-meta :global(:where(a)) {
+    color: var(--site-fg);
+    opacity: 0.72;
+    text-decoration: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .typeface-hero-meta :global(:where(a:hover)) {
+    opacity: 1;
+  }
+</style>

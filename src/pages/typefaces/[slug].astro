@@ -11,7 +11,8 @@ import { resolveHeaderSvgBottomPadding } from '../../lib/box-padding';
 import { fetchFontdueCollectionOffer } from '../../lib/fontdue-offer';
 import { typefaceJsonLd } from '../../lib/json-ld';
 import { portableTextProjection } from '../../lib/portable-text';
-import { sanityImageProjection } from '../../lib/sanity-image';
+import { sanityImageProjection, type SanityImageValue } from '../../lib/sanity-image';
+import { isSvgImage } from '../../lib/sanity-svg';
 import { typefaceSlug } from '../../lib/typeface';
 import { safeLoadQuery } from '../../sanity/lib/safe-fetch';
 import { urlForImage } from '../../sanity/lib/url-for-image';
@@ -46,18 +47,34 @@ const { data: typefacesData } = await safeLoadQuery<Array<{
   name: string;
   slug?: { current: string };
   collectionId?: string;
+  metaDescription?: string | null;
+  category?: string | null;
+  styles?: number | null;
+  releaseYear?: number | null;
+  designer?: string | null;
+  heroMeta?: { columnOne?: unknown; columnTwo?: unknown } | null;
   body?: unknown;
   detailPageTitle?: string | null;
   contentSegments?: Array<{ heading?: string; body?: unknown }> | null;
   pageSections?: PageSection[] | null;
   headerSvg?: { url?: string | null; alt?: string | null } | null;
   headerSvgPadding?: { bottom?: number | null } | null;
-  homepageImages?: Array<{ image?: unknown }> | null;
+  shareImage?: SanityImageValue | null;
+  homepageImages?: Array<{ image?: SanityImageValue | null }> | null;
 }>>({
   query: `*[_type == "typeface"]{
     name,
     slug,
     collectionId,
+    metaDescription,
+    category,
+    styles,
+    releaseYear,
+    designer,
+    heroMeta {
+      columnOne ${portableTextProjection},
+      columnTwo ${portableTextProjection}
+    },
     body ${portableTextProjection},
     detailPageTitle,
     contentSegments[]{
@@ -84,7 +101,8 @@ const { data: typefacesData } = await safeLoadQuery<Array<{
       "alt": alt
     },
     headerSvgPadding,
-    homepageImages[]{ image }
+    shareImage ${sanityImageProjection},
+    homepageImages[]{ image ${sanityImageProjection} }
   }`,
 });
 
@@ -119,7 +137,9 @@ const font = {
 
 const pageTitle =
   font.contentSegments[0]?.heading?.trim() || font.name;
-const pageDescription = `${pageTitle} — explore and purchase from Haus Type.`;
+const pageDescription =
+  matched.metaDescription?.trim() ||
+  `${pageTitle} — explore and purchase from Haus Type.`;
 
 const introSegment = font.contentSegments[0];
 const extraSegments = font.contentSegments.slice(1);
@@ -131,13 +151,19 @@ const sections: PageSection[] = (
 
 const preloadImages = font.headerSvg?.url ? [font.headerSvg.url] : [];
 
-const firstHomepageImage = matched.homepageImages?.find((entry) => entry.image);
-const shareImage = firstHomepageImage?.image
-  ? urlForImage(firstHomepageImage.image as Parameters<typeof urlForImage>[0])
+const firstRasterHomepageImage = matched.homepageImages?.find(
+  (entry) => entry.image && !isSvgImage(entry.image),
+)?.image;
+const shareSource =
+  matched.shareImage && !isSvgImage(matched.shareImage)
+    ? matched.shareImage
+    : firstRasterHomepageImage;
+const shareImage = shareSource
+  ? urlForImage(shareSource as Parameters<typeof urlForImage>[0])
       .width(1200)
       .height(630)
       .fit('crop')
-      .auto('format')
+      .format('jpg')
       .quality(85)
       .url()
   : undefined;
@@ -171,6 +197,14 @@ const typefaceLd = typefaceJsonLd({
       headerSvg={font.headerSvg}
       typefaceName={font.name}
       bottomPadding={headerSvgBottomPadding}
+      heroMeta={{
+        styles: matched.styles,
+        releaseYear: matched.releaseYear,
+        designer: matched.designer,
+        category: matched.category,
+        columnOne: matched.heroMeta?.columnOne,
+        columnTwo: matched.heroMeta?.columnTwo,
+      }}
     />
 
     <div class="typeface-page__body bg-site site-page-body">

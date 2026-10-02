@@ -23,6 +23,8 @@ const HeadingTag = headingLevel;
 const layout = segment.layout === 'feature' ? 'feature' : 'split';
 const hasBodySlot = Astro.slots.has('body');
 const hasHeadingExtra = Astro.slots.has('heading-extra');
+const hasHeroMeta = Astro.slots.has('hero-meta');
+const showAside = Boolean(segment.aside) && !hasHeroMeta;
 
 ---
 
@@ -54,7 +56,9 @@ const hasHeadingExtra = Astro.slots.has('heading-extra');
         </div>
       )}
 
-      {segment.aside && (
+      {hasHeroMeta && <slot name="hero-meta" />}
+
+      {showAside && (
         <aside class="content-segment__aside col-span-12 md:col-span-1 md:col-start-10">
           <PortableText value={segment.aside} />
         </aside>

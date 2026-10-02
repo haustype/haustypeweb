@@ -15,7 +15,16 @@ export const pageType = defineType({
       title: 'Slug',
       options: { source: 'title', maxLength: 96 },
     }),
-    defineField({ name: 'description', type: 'string', title: 'Description' }),
+    defineField({
+      name: 'description',
+      type: 'text',
+      title: 'Meta description',
+      rows: 3,
+      description:
+        'Search / social snippet for this page (~150–160 characters). When empty, the site-wide default from Site Settings is used.',
+      validation: (Rule) =>
+        Rule.max(320).warning('Keep meta descriptions under ~160 characters when possible.'),
+    }),
     defineField({
       name: 'pageLayout',
       type: 'string',

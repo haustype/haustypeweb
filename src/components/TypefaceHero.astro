@@ -1,7 +1,9 @@
 ---
 import ContentSegmentRow from './ContentSegmentRow.astro';
+import TypefaceHeroMeta from './TypefaceHeroMeta.astro';
 import type { ContentSegment } from '../lib/content-segment';
 import { isContentSegmentVisible } from '../lib/content-segment';
+import { hasTypefaceHeroMeta, type TypefaceHeroMetaInput } from '../lib/typeface-hero-meta';
 
 interface HeaderSvg {
   url: string;
@@ -15,13 +17,22 @@ interface Props {
   headerSvg?: HeaderSvg | null;
   typefaceName: string;
   bottomPadding?: number;
+  heroMeta?: TypefaceHeroMetaInput | null;
 }
 
-const { segment, headerSvg, typefaceName, bottomPadding = 36 } = Astro.props;
+const { segment, headerSvg, typefaceName, bottomPadding = 36, heroMeta } = Astro.props;
 
 const headerSrc = headerSvg?.url;
 const headerAlt = headerSvg?.alt ?? typefaceName;
-const showIntro = segment ? isContentSegmentVisible(segment) : false;
+const showHeroMeta = hasTypefaceHeroMeta(heroMeta);
+const showIntro =
+  (segment ? isContentSegmentVisible(segment) : false) || showHeroMeta;
+const introSegment: ContentSegment | null =
+  segment && isContentSegmentVisible(segment)
+    ? segment
+    : showHeroMeta
+      ? { heading: typefaceName, layout: 'split' }
+      : null;
 ---
 
 <section class="typeface-hero site-surface-fixed">
@@ -30,9 +41,21 @@ const showIntro = segment ? isContentSegmentVisible(segment) : false;
     class="typeface-hero__inner w-full max-w-content mx-auto px-8"
     style={`--typeface-hero-padding-bottom: ${bottomPadding}px;`}
   >
-    {showIntro && segment && (
+    {showIntro && introSegment && (
       <div class="typeface-hero__intro" data-reveal>
-        <ContentSegmentRow segment={segment} headingLevel="h1" class="site-content-inset" />
+        <ContentSegmentRow segment={introSegment} headingLevel="h1" class="site-content-inset">
+          {showHeroMeta && heroMeta && (
+            <TypefaceHeroMeta
+              slot="hero-meta"
+              styles={heroMeta.styles}
+              releaseYear={heroMeta.releaseYear}
+              designer={heroMeta.designer}
+              category={heroMeta.category}
+              columnOne={heroMeta.columnOne}
+              columnTwo={heroMeta.columnTwo}
+            />
+          )}
+        </ContentSegmentRow>
       </div>
     )}
 

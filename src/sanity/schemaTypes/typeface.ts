@@ -15,6 +15,24 @@ export const typefaceType = defineType({
     orderRankField({ type: 'typeface' }),
     defineField({ name: 'name', type: 'string', title: 'Name' }),
     defineField({
+      name: 'metaDescription',
+      type: 'text',
+      title: 'Meta description',
+      rows: 3,
+      description:
+        'Search / social snippet for this typeface page (~150–160 characters). When empty, the site uses a short fallback.',
+      validation: (Rule) =>
+        Rule.max(320).warning('Keep meta descriptions under ~160 characters when possible.'),
+    }),
+    defineField({
+      name: 'shareImage',
+      type: 'image',
+      title: 'Share image',
+      description:
+        'Open Graph / social preview (1200×630 PNG or JPEG recommended). When empty, the first homepage mosaic image is used — SVGs preview poorly on social apps.',
+      options: { hotspot: true, accept: 'image/png,image/jpeg,image/webp' },
+    }),
+    defineField({
       name: 'contentSegments',
       type: 'array',
       title: 'Content',
@@ -62,6 +80,40 @@ export const typefaceType = defineType({
     }),
     defineField({ name: 'category', type: 'string', title: 'Category' }),
     defineField({ name: 'styles', type: 'number', title: 'Styles', initialValue: 0 }),
+    defineField({
+      name: 'releaseYear',
+      type: 'number',
+      title: 'Release year',
+      description: 'Shown in the yellow hero (right column) when no custom hero meta is set.',
+      validation: (Rule) =>
+        Rule.integer().min(1900).max(2100).warning('Use a four-digit year'),
+    }),
+    defineField({
+      name: 'designer',
+      type: 'string',
+      title: 'Designer',
+      description: 'Shown in the yellow hero (right column) when no custom hero meta is set.',
+    }),
+    defineField({
+      name: 'heroMeta',
+      type: 'object',
+      title: 'Hero metadata (right columns)',
+      description:
+        'Optional rich text for the two right columns in the yellow hero (1 + 2 grid columns). When empty, Category/Styles and Release/Designer are used.',
+      options: { collapsible: true, collapsed: true },
+      fields: [
+        defineField({
+          name: 'columnOne',
+          type: 'blockContent',
+          title: 'Right column (1 grid column)',
+        }),
+        defineField({
+          name: 'columnTwo',
+          type: 'blockContent',
+          title: 'Right column (2 grid columns)',
+        }),
+      ],
+    }),
     defineField({
       name: 'homepageImages',
       type: 'array',
