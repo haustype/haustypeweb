@@ -10,9 +10,9 @@ export async function loadQuery<QueryResponse>({
 }) {
   const { result } = await sanityClient.fetch<QueryResponse>(query, params ?? {}, {
     filterResponse: false,
-    // CDN is fast but can lag after Studio publishes (~tens of seconds).
-    // Use the API in dev so local edits show immediately.
-    useCdn: import.meta.env.PROD,
+    // Live API so Studio publishes show on the next request (CDN can lag minutes).
+    // Fine for this site’s traffic; revisit CDN only if Sanity API rate limits become an issue.
+    useCdn: false,
   });
 
   return { data: result };
