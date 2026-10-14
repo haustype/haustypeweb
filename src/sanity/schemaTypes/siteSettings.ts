@@ -54,6 +54,16 @@ export const siteSettingsType = defineType({
           description: 'Optional. When empty, the homepage uses the about text.',
         }),
         defineField({
+          name: 'typefacesDescription',
+          type: 'text',
+          title: 'Typefaces page meta description',
+          rows: 3,
+          description:
+            'Meta description for /typefaces (the full catalog). When empty, the default meta description is used.',
+          validation: (Rule) =>
+            Rule.max(320).warning('Keep meta descriptions under ~160 characters when possible.'),
+        }),
+        defineField({
           name: 'favicon',
           type: 'image',
           title: 'Favicon',

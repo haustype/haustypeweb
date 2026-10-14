@@ -6,6 +6,7 @@ import Header from '../../components/Header.astro';
 import TypefaceList from '../../components/TypefaceList.astro';
 import { safeLoadQuery } from '../../sanity/lib/safe-fetch';
 import { resolveVerticalPadding } from '../../lib/box-padding';
+import { loadSiteSettings } from '../../lib/site-identity';
 import { typefaceSlug } from '../../lib/typeface';
 
 type TypefaceFromSanity = {
@@ -71,9 +72,12 @@ const typefaces = (typefacesData ?? []).map((t) => {
     specimenPaddingBottom: padding.bottom,
   };
 });
+
+const { siteIdentity } = await loadSiteSettings();
+const typefacesDescription = siteIdentity.typefacesDescription || undefined;
 ---
 
-<BaseLayout title="Typefaces">
+<BaseLayout title="Typefaces" description={typefacesDescription}>
   <Header />
   <main class="bg-site flex-1">
     <article class="site-page">

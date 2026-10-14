@@ -7,6 +7,7 @@ export type SiteIdentity = {
   defaultDescription: string;
   homeTitle: string;
   homeDescription: string;
+  typefacesDescription: string;
   faviconUrl: string | null;
   appleTouchIconUrl: string | null;
   defaultShareImageUrl: string | null;
@@ -21,6 +22,7 @@ const DEFAULTS: SiteIdentity = {
   defaultDescription: 'Type foundry by Haus Type.',
   homeTitle: 'Haus Type',
   homeDescription: 'Type foundry by Haus Type.',
+  typefacesDescription: '',
   faviconUrl: null,
   appleTouchIconUrl: null,
   defaultShareImageUrl: null,
@@ -36,6 +38,7 @@ type SiteIdentitySource = {
     defaultDescription?: string | null;
     homeTitle?: string | null;
     homeDescription?: string | null;
+    typefacesDescription?: string | null;
     favicon?: unknown;
     appleTouchIcon?: unknown;
     defaultShareImage?: unknown;
@@ -56,6 +59,7 @@ const siteIdentityQuery = `*[_type == "siteSettings"][0]{
     defaultDescription,
     homeTitle,
     homeDescription,
+    typefacesDescription,
     themeColor,
     twitterHandle,
     googleAnalyticsId,
@@ -102,6 +106,7 @@ export async function loadSiteSettings() {
     defaultDescription: trim(identity?.defaultDescription) || DEFAULTS.defaultDescription,
     homeTitle: trim(identity?.homeTitle) || DEFAULTS.homeTitle,
     homeDescription: trim(identity?.homeDescription),
+    typefacesDescription: trim(identity?.typefacesDescription),
     faviconUrl: identity?.faviconUrl ?? imageUrl(identity?.favicon as unknown),
     appleTouchIconUrl:
       identity?.appleTouchIconUrl ?? imageUrl(identity?.appleTouchIcon as unknown, 180),
