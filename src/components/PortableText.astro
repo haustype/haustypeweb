@@ -1,5 +1,6 @@
 ---
 import { PortableText as PortableTextInternal } from 'astro-portabletext';
+import PortableTextCaption from './PortableTextCaption.astro';
 import PortableTextImage from './PortableTextImage.astro';
 import PortableTextLink from './PortableTextLink.astro';
 
@@ -12,6 +13,9 @@ const { value } = Astro.props;
 const components = {
   type: {
     image: PortableTextImage,
+  },
+  block: {
+    caption: PortableTextCaption,
   },
   mark: {
     link: PortableTextLink,

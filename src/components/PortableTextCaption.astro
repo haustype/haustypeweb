@@ -1,0 +1,12 @@
+---
+/**
+ * Portable Text “Caption” style — same visual language as content-segment aside.
+ */
+import type { HTMLAttributes } from 'astro/types';
+
+type Props = HTMLAttributes<'p'>;
+
+const { class: className, ...attrs } = Astro.props;
+---
+
+<p class:list={['pt-caption', className]} {...attrs}><slot /></p>

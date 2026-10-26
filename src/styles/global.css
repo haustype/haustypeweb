@@ -334,6 +334,34 @@ h4, h5, h6,
   color: var(--site-fg);
 }
 
+/* Portable Text Caption style — matches content-segment aside */
+.pt-caption,
+.prose .pt-caption {
+  margin: 0;
+  font-size: 13px;
+  line-height: var(--site-line-height);
+  color: var(--site-fg-muted);
+}
+
+.pt-caption + .pt-caption,
+.prose .pt-caption + .pt-caption {
+  margin-top: 0.75em;
+}
+
+.pt-caption :where(a),
+.prose .pt-caption :where(a) {
+  color: var(--site-fg);
+  opacity: 0.72;
+  text-decoration: none;
+  transition: opacity 0.25s ease;
+}
+
+.pt-caption :where(a:hover),
+.prose .pt-caption :where(a:hover),
+.prose .pt-caption :where(a:focus-visible) {
+  opacity: 1;
+}
+
 .prose :where(ul > li, ol > li)::marker {
   color: var(--site-fg);
 }
