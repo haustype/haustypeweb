@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import CookieConsent from '../components/CookieConsent.astro';
 import Footer from '../components/Footer.astro';
 import Screensaver from '../components/Screensaver.astro';
 import SiteFloatingControls from '../components/SiteFloatingControls.astro';
@@ -147,19 +148,6 @@ const screensaver = !isBlog && !is404Page ? await loadScreensaverOptions() : nul
     {preloadImages.map((src) => (
       <link rel="preload" as="image" href={new URL(src, Astro.url).href} />
     ))}
-    {gaId && (
-      <>
-        <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></script>
-        <script is:inline define:vars={{ gaId }}>
-          window.dataLayer = window.dataLayer || [];
-          function gtag() {
-            dataLayer.push(arguments);
-          }
-          gtag('js', new Date());
-          gtag('config', gaId);
-        </script>
-      </>
-    )}
     <script is:inline>
       try {
         var siteBg = localStorage.getItem('site-bg');
@@ -221,6 +209,7 @@ const screensaver = !isBlog && !is404Page ? await loadScreensaverOptions() : nul
     </div>
     <Footer />
     <SiteFloatingControls buyCollectionId={buyCollectionId} trialFontsHref={trialFontsHref} />
+    <CookieConsent gaId={gaId} />
     <script is:inline>
       window.addEventListener('pageshow', function (e) {
         try {
